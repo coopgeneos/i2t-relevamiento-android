@@ -26,11 +26,11 @@ export default class HomeScreen extends React.Component {
               <Row >
                 <Button iconLeft transparent block onPress={() => this.props.navigation.navigate('Schedule')}>
                   <Icon name='calendar' />
-                  <Text>{this.state.locura}</Text>
+                  <Text>Agenda</Text>
                 </Button>
               </Row>
               <Row>
-                <Button iconRight transparent block onPress={() => alert('No hago nada')}>
+                <Button iconRight transparent block onPress={() => this.props.navigation.navigate('Contacts')}>
                   <Text>Contactos</Text>
                   <Icon name='contact'/>
                 </Button>
@@ -44,7 +44,7 @@ export default class HomeScreen extends React.Component {
                 </Button>
               </Row>
               <Row>
-                <Button iconRight transparent block onPress={() => this.props.navigation.navigate('Details')}>      
+                <Button iconRight transparent block onPress={() => alert('No hago nada')}>      
                   <Text>Sincronizacion</Text>
                   <Icon name='sync' />
                 </Button>

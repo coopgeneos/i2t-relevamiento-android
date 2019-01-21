@@ -1,5 +1,6 @@
 import React from 'react';
-import { Container, Header, Content, Footer, FooterTab, Text, Button, Icon, Form, Item, Label, Input } from 'native-base';
+import { Container, Header, Content, Footer, FooterTab, Text, Button, 
+         Icon, Form, Item, Label, Input } from 'native-base';
 import { Cell, DataTable, HeaderCell, Row } from 'react-native-data-table';
 import { ListView } from 'react-native';
 import globalStyles from './Styles';
@@ -102,7 +103,10 @@ export default class ActivitiesScreen extends React.Component {
             {item.fecha}
         </Cell>
         <Cell style={globalStyles.cell} textStyle={globalStyles.text} width={1} >
-            {item.editar}
+          <Item inlineLabel>
+            <Icon name='create' onPress={() => this.props.navigation.navigate('Activity',{contacto: this.state.dataMock[0].contacto, domicilio: this.state.dataMock[0].domicilio, detalle: item.detalle})}/>  
+            <Icon name='clock'/>
+          </Item>
         </Cell>
       </Row>
     );

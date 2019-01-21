@@ -1,14 +1,15 @@
 import React from 'react';
+//import { Button } from 'react-native';
 import { Container, Header, Content, Footer, FooterTab, Text, 
-         Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
-         Input } from 'native-base';
+  Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
+  Input } from 'native-base';
 
-export default class ScheduleScreen extends React.Component {
+export default class ContactsScreen extends React.Component {
   constructor() {
     super();
-    this.dataList = ['Hoy a trabajar','Mañana tambien','Pasado, el doble','...'];
+    this.dataList = ['Juan Perez / 24945687559 / Buzon 2345','Jose Fantasia / 4654876546 / Segundo sombra 25666'];
     this.state = {
-      now : new Date(), 
+      name: 'Pablocho88'
     };
   }
 
@@ -16,7 +17,7 @@ export default class ScheduleScreen extends React.Component {
     let itemList = [];
     for(i=0; i< this.dataList.length; i++){
       itemList.push(
-        <ListItem onPress={() => this.props.navigation.navigate('Activities')} key={this.dataList[i]}>
+        <ListItem onPress={() => this.props.navigation.navigate('Activities')}  key={this.dataList[i]} >
           <Text>{this.dataList[i]}</Text>
         </ListItem>
       )
@@ -30,8 +31,8 @@ export default class ScheduleScreen extends React.Component {
         <Content>
           <Form>
             <Item inlineLabel last>
-              <Label>Fecha</Label>
-              <Input value={this.state.now.toString()} editable={false}/>
+              <Label>Nombre</Label>
+              <Input value={this.state.name} editable={false}/>
             </Item>
             <Item inlineLabel last>
               <Label>Cercanos</Label>
@@ -39,7 +40,7 @@ export default class ScheduleScreen extends React.Component {
             </Item>
             <List>
               <ListItem itemHeader first>
-                <Text>Agenda</Text>
+                <Text>Contactos</Text>
               </ListItem>
               {itemList}
             </List>
@@ -75,5 +76,5 @@ export default class ScheduleScreen extends React.Component {
         </Footer>
       </Container>
     );
-  }  
+  }
 }
