@@ -3,20 +3,29 @@ import { Container, Header, Content, Footer, FooterTab, Text,
          Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
          Input } from 'native-base';
 
+import styles from "./Styles";
+
 export default class ScheduleScreen extends React.Component {
   constructor() {
     super();
-    this.dataList = ['Hoy a trabajar','Mañana tambien','Pasado, el doble','...'];
+    this.dataList = ['Hoy a trabajar','Mañana tambien','Pasado, el doble'];
     this.state = {
-      now : new Date(), 
+      now : '2019-01-05',
+      cercanos: true 
     };
+  }
+
+  toggleNears(){
+    this.setState(prevState => (
+      {cercanos: !prevState.cercanos}
+    ))
   }
 
   render() {
     let itemList = [];
     for(i=0; i< this.dataList.length; i++){
       itemList.push(
-        <ListItem onPress={() => this.props.navigation.navigate('Activities')} key={this.dataList[i]}>
+        <ListItem style={styles.listItem} onPress={() => this.props.navigation.navigate('Activities')} key={this.dataList[i]}>
           <Text>{this.dataList[i]}</Text>
         </ListItem>
       )
@@ -25,33 +34,35 @@ export default class ScheduleScreen extends React.Component {
     return (
       <Container>
         <Header>
-          <Text>Agenda</Text>
+          <Text style={styles.header}>Agenda</Text>
         </Header>
         <Content>
           <Form>
-            <Item inlineLabel last>
+            <Item inlineLabel>
               <Label>Fecha</Label>
-              <Input value={this.state.now.toString()} editable={false}/>
+              <Input value={this.state.now} editable={false}/>
             </Item>
-            <Item inlineLabel last>
+            <Item inlineLabel>
               <Label>Cercanos</Label>
-              <CheckBox checked={true} onPress={() => {alert('No hago naranja'); this.checked = !this.checked}}/>
+              <CheckBox checked={this.state.cercanos} onPress={() => {this.toggleNears()}}/>
             </Item>
-            <List>
-              <ListItem itemHeader first>
-                <Text>Agenda</Text>
+          </Form>
+          <Item style={styles.listContainer}>
+            <List style={styles.list}>
+              <ListItem itemHeader first style={styles.listItem}>
+                <Text style={styles.listHeaderText}>Eventos</Text>
               </ListItem>
               {itemList}
             </List>
-            <Item inlineLabel last>
-              <Button onPress={() => this.props.navigation.navigate('Home')}>
-                <Text>Salir</Text>
-              </Button>
-              <Button onPress={() => alert('MAPA')}>
-                <Text>Mapa</Text>
-              </Button>
-            </Item>
-          </Form>
+          </Item>
+          <Item inlineLabel style={styles.bottomButtons}>
+            <Button onPress={() => this.props.navigation.navigate('Home')}>
+              <Text>Salir</Text>
+            </Button>
+            <Button onPress={() => this.props.navigation.navigate('Map')}>
+              <Text>Mapa</Text>
+            </Button>
+          </Item>         
         </Content>
         <Footer>
           <FooterTab>

@@ -3,7 +3,7 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button,
          Icon, Form, Item, Label, Input } from 'native-base';
 import { Cell, DataTable, HeaderCell, Row } from 'react-native-data-table';
 import { ListView } from 'react-native';
-import globalStyles from './Styles';
+import styles from './Styles';
 
 export default class ActivitiesScreen extends React.Component {
   constructor() {
@@ -40,8 +40,8 @@ export default class ActivitiesScreen extends React.Component {
         headerCells.push(
           <HeaderCell
             key={key}
-            style={globalStyles.headerCell}
-            textStyle={globalStyles.text}
+            style={styles.headerCell}
+            textStyle={styles.text}
             width={1}
             text={key}
           />
@@ -49,15 +49,15 @@ export default class ActivitiesScreen extends React.Component {
       }
     }
     return (
-      <Header style={globalStyles.header}>
+      <Header style={styles.header}>
         {headerCells}
       </Header>
     );*/
     return (
-      <Header style={globalStyles.header}>
-        <HeaderCell text={'Detalle'} style={globalStyles.headerCell} textStyle={globalStyles.text} width={1} />
-        <HeaderCell text={'Fecha'} style={globalStyles.headerCell} textStyle={globalStyles.text} width={1} />
-        <HeaderCell text={''} style={globalStyles.headerCell} textStyle={globalStyles.text} width={1} />
+      <Header style={styles.header}>
+        <HeaderCell text={'Detalle'} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
+        <HeaderCell text={'Fecha'} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
+        <HeaderCell text={''} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
       </Header>
     );
   }
@@ -78,8 +78,8 @@ export default class ActivitiesScreen extends React.Component {
         cells.push(
           <Cell
             key={key}
-            style={globalStyles.cell}
-            textStyle={globalStyles.text}
+            style={styles.cell}
+            textStyle={styles.text}
             width={1}
           >
             {itemString}
@@ -88,21 +88,21 @@ export default class ActivitiesScreen extends React.Component {
       }
     }
     return (
-      <Row style={globalStyles.row}>
+      <Row style={styles.row}>
         {cells}
       </Row>
     );*/
     return (
-      <Row style={globalStyles.row}>
-        <Cell style={globalStyles.cell} textStyle={globalStyles.text} width={1} >
+      <Row style={styles.row}>
+        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
             <Text onPress={() => this.props.navigation.navigate('Survey',{contacto: this.state.dataMock[0].contacto, domicilio: this.state.dataMock[0].domicilio, detalle: item.detalle})}>
               {item.detalle}
             </Text>
         </Cell>
-        <Cell style={globalStyles.cell} textStyle={globalStyles.text} width={1} >
+        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
             {item.fecha}
         </Cell>
-        <Cell style={globalStyles.cell} textStyle={globalStyles.text} width={1} >
+        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
           <Item inlineLabel>
             <Icon name='create' onPress={() => this.props.navigation.navigate('Activity',{contacto: this.state.dataMock[0].contacto, domicilio: this.state.dataMock[0].domicilio, detalle: item.detalle})}/>  
             <Icon name='clock'/>
@@ -116,7 +116,7 @@ export default class ActivitiesScreen extends React.Component {
     return (
       <Container>
         <Header>
-          <Text>Actividades</Text>
+          <Text style={styles.header}>Actividades</Text>
         </Header>
         <Content>
           <Form>
@@ -129,13 +129,15 @@ export default class ActivitiesScreen extends React.Component {
               <Input value={this.state.dataMock[0].domicilio} editable={false}/>
             </Item>
           </Form>
-
-          <DataTable
-            style={globalStyles.container}
-            dataSource={this.state.dataSource}
-            renderRow={this.renderRow}
-            renderHeader={this.renderHeader}
-          />
+          <Item style={styles.dataTableContainer}>
+            <Item style={styles.dataTable}>
+              <DataTable  
+                dataSource={this.state.dataSource}
+                renderRow={this.renderRow}
+                renderHeader={this.renderHeader}
+              />
+            </Item>
+          </Item>
 
           <Button onPress={() => this.props.navigation.navigate('Schedule')}>
             <Text>Volver</Text>
