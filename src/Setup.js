@@ -1,8 +1,10 @@
 import * as Expo from "expo";
 import React, { Component } from "react";
-//import { StyleProvider } from "native-base";
+import { StyleProvider } from "native-base";
 
 import Navigation from "./navigation";
+import getTheme from "../native-base-theme/components";
+import variables from "../native-base-theme/variables/commonColor";
 
 export default class Setup extends Component {
   constructor() {
@@ -26,8 +28,10 @@ export default class Setup extends Component {
     if (!this.state.isReady) {
       return <Expo.AppLoading />;
     }
-    return (     
-      <Navigation />
+    return (
+      <StyleProvider style={getTheme(variables)}>
+        <Navigation />
+      </StyleProvider>
     );
   }
 }

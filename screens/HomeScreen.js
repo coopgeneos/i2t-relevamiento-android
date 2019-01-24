@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Header, Content, Icon, Text, Button, Item,
         Form, Input, Label, Left, Spinner } from 'native-base';
 import {formatDate} from '../src/utils';
-import styles from "./Styles";
+// import styles from "./Styles";
 
 export default class HomeScreen extends React.Component { 
   constructor() {
@@ -51,21 +51,21 @@ export default class HomeScreen extends React.Component {
     return (
       <Container>
         <Header>
-          <Text style={styles.header}>App's de Relevamiento</Text>
+          <Text >App's de Relevamiento</Text>
         </Header>
         <Content>
-          <Item style={styles.homeContainerIcons}>
-            <Button style={styles.homeButton} transparent onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name='calendar' style={styles.homeButtonIcons}/>       
+          <Item>
+            <Button transparent onPress={() => this.props.navigation.navigate('Schedule')}>
+              <Icon name='calendar'/>       
             </Button>
-            <Button style={styles.homeButton} transparent onPress={() => this.props.navigation.navigate('Contacts')}>                 
-              <Icon name='contact' style={styles.homeButtonIcons}/>
+            <Button transparent onPress={() => this.props.navigation.navigate('Contacts')}>                 
+              <Icon name='contact'/>
             </Button>
-            <Button style={styles.homeButton}  transparent onPress={() => alert('No hago nada')}>
-              <Icon name='settings' style={styles.homeButtonIcons}/>                 
+            <Button transparent onPress={() => alert('No hago nada')}>
+              <Icon name='settings'/>                 
             </Button>       
-            <Button style={styles.homeButton} transparent onPress={() => alert('No hago nada')}>                      
-              <Icon name='sync' style={styles.homeButtonIcons}/>
+            <Button transparent onPress={() => alert('No hago nada')}>                      
+              <Icon name='sync'/>
             </Button>
           </Item>
           {formItem}
