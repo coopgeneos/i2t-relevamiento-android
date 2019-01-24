@@ -1,34 +1,73 @@
 import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, 
-         Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
-         Input } from 'native-base';
-
+        Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
+        Input, Left, Right, Spinner} from 'native-base';
+import {formatDate} from '../src/utils';
 import styles from "./Styles";
 
 export default class ScheduleScreen extends React.Component {
   constructor() {
     super();
-    this.dataList = ['Hoy a trabajar','Mañana tambien','Pasado, el doble'];
     this.state = {
-      now : '2019-01-05',
-      cercanos: true 
+      date : '',
+      nears: false,
+      events: null 
     };
+  }
+
+  // Metodo donde llamar a los WS iniciales
+  componentDidMount() {
+    //simulo al WS
+    setTimeout(() => {
+      let response = {
+        date: new Date(),
+        nears: true,
+        events: [
+          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Tandil', zipCode: '6546', title: 'Evento 1'},
+          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Ayacucho', zipCode: '6546', title: 'Evento 2'},
+          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: '9 de Julio', zipCode: '7866', title: 'Evento 3'},
+          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Azul', zipCode: '4567', title: 'Evento 4'},
+          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Olavarria', zipCode: '4546', title: 'Evento 5'},
+        ]
+      };
+      this.setState ({
+        date: formatDate(response.date),
+        nears: response.nears,
+        events: response.events
+      });
+    }, 1000);
   }
 
   toggleNears(){
     this.setState(prevState => (
-      {cercanos: !prevState.cercanos}
+      {nears: !prevState.nears}
     ))
   }
 
+  onPressRow(event){
+    this.props.navigation.navigate('Activities', {
+      agency: event.agency, 
+      address: event.address+' - '+event.city+'('+event.zipCode+')'
+    })
+  }
+
   render() {
-    let itemList = [];
-    for(i=0; i< this.dataList.length; i++){
-      itemList.push(
-        <ListItem style={styles.listItem} onPress={() => this.props.navigation.navigate('Activities')} key={this.dataList[i]}>
-          <Text>{this.dataList[i]}</Text>
-        </ListItem>
-      )
+    let itemList
+    if(this.state.events == null){
+      itemList = <Spinner color='blue'/>
+    } else {
+      itemList = [];
+      for(i=0; i< this.state.events.length; i++){
+        itemList.push(
+          <ListItem style={styles.listItem} 
+            onPress={this.onPressRow.bind(this, this.state.events[i])}
+            key={i}>
+            <Text>{this.state.events[i].agency}</Text>
+            <Text>{this.state.events[i].address+' - '+this.state.events[i].city+'('+this.state.events[i].zipCode+')'}</Text>
+            <Text>{this.state.events[i].title}</Text>
+          </ListItem>
+        )
+      } 
     }
 
     return (
@@ -37,18 +76,20 @@ export default class ScheduleScreen extends React.Component {
           <Text style={styles.header}>Agenda</Text>
         </Header>
         <Content>
-          <Form>
-            <Item inlineLabel>
-              <Label>Fecha</Label>
-              <Input value={this.state.now} editable={false}/>
-            </Item>
-            <Item inlineLabel>
-              <Label>Cercanos</Label>
-              <CheckBox checked={this.state.cercanos} onPress={() => {this.toggleNears()}}/>
-            </Item>
+          <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
+            
+              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
+                <Label>Fecha</Label>
+                <Input value={this.state.date} editable={false} />               
+              </Item>
+              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '30%'}}>               
+                <Label>Cercanos</Label>
+                <CheckBox checked={this.state.nears} onPress={() => {this.toggleNears()}} />               
+              </Item>
+            
           </Form>
           <Item style={styles.listContainer}>
-            <List style={styles.list}>
+            <List scrollEnabled style={styles.list}>
               <ListItem itemHeader first style={styles.listItem}>
                 <Text style={styles.listHeaderText}>Eventos</Text>
               </ListItem>
@@ -66,11 +107,11 @@ export default class ScheduleScreen extends React.Component {
         </Content>
         <Footer>
           <FooterTab>
-            <Button vertical onPress={() => this.props.navigation.navigate('Home')}>
+            <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
               <Icon name="calendar" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical>
+            <Button vertical onPress={() => this.props.navigation.navigate('Contacts')}>
               <Icon name="person" />
               <Text>Contactos</Text>
             </Button>

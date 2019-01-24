@@ -6,53 +6,41 @@ import { ListView } from 'react-native';
 import styles from './Styles';
 
 export default class ActivitiesScreen extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+    //En esta vista es necesario que las props recibidas sean parte del state
+    const { navigation } = this.props;
+    const contact = navigation.getParam('agency', 'SIN CONTACTO');
+    const address = navigation.getParam('address', 'SIN DOMICILIO');
+    
     const dataSource = new ListView.DataSource({
       rowHasChanged: (row1, row2) => row1 !== row2,
     });
 
     this.state = {
-      dataMock: [{contacto: 'Juan Garcia', domicilio: 'Buzini 455'}],
-      dataSource: dataSource,
+      contact: contact,
+      address: address,
+      dataSource: dataSource
     };
 
     this.renderHeader = this.renderHeader.bind(this);
     this.renderRow = this.renderRow.bind(this);
   }
 
-  componentWillMount() {
-    const data =  [
-      {detalle: 'Hola', fecha: '2018-01-01', editar: true},
-      {detalle: 'Hola', fecha: '2018-01-01', editar: true}
-     ];
-    this.setState({
-      data: data,
-      dataSource: this.state.dataSource.cloneWithRows(data),
-    });
-}
+  componentDidMount() {
+    setTimeout(() => {
+      let response = [
+        {detail: 'Actividad 1', date: '2018-01-01', state: 'completed'},
+        {detail: 'Actividad 2', date: '2018-01-01', state: 'draft'}
+      ];
+      this.setState({
+        data: response,
+        dataSource: this.state.dataSource.cloneWithRows(response),
+      });
+    }, 2000); 
+  }
   
   renderHeader() {
-    /*const headerCells = [];
-    if (this.state.data && this.state.data.length > 0) {
-      const firstObject = this.state.data[0];
-      for (const [key] of Object.entries(firstObject)) {
-        headerCells.push(
-          <HeaderCell
-            key={key}
-            style={styles.headerCell}
-            textStyle={styles.text}
-            width={1}
-            text={key}
-          />
-        );
-      }
-    }
-    return (
-      <Header style={styles.header}>
-        {headerCells}
-      </Header>
-    );*/
     return (
       <Header style={styles.header}>
         <HeaderCell text={'Detalle'} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
@@ -63,49 +51,27 @@ export default class ActivitiesScreen extends React.Component {
   }
 
   renderRow(item) {
-    /*const cells = [];
-    if (this.state.data && this.state.data.length > 0) {
-      const firstObject = this.state.data[0];
-      for (const [key] of Object.entries(firstObject)) {
-        let itemString = item[key]
-          && ((typeof item[key] === 'string')
-          || (typeof item[key] === 'number')
-          || (typeof item[key].getMonth === 'function'))
-          && String(item[key]);
-        if (!itemString && item[key] && item[key].length) itemString = item[key].length;
-        if (typeof item[key] === 'boolean') itemString = item[key] ? 'True' : 'False';
-        if (!itemString && item[key] && item[key].id) itemString = item[key].id;
-        cells.push(
-          <Cell
-            key={key}
-            style={styles.cell}
-            textStyle={styles.text}
-            width={1}
-          >
-            {itemString}
-          </Cell>
-        );
-      }
+    let action = [];
+    if(item.state == 'draft'){
+      action.push(<Icon key={item.detail+'_create'} name='create' onPress={() => this.props.navigation.navigate('Activity',{contact: this.state.contact, address: this.state.address, detail: item.detail})}/>);
+      action.push(<Icon key={item.detail+'_clock'} name='clock'/>);
     }
+    if(item.state == 'completed')
+      action.push(<Icon key={item.detail+'_check'} name='md-checkmark-circle'/>)
+
     return (
-      <Row style={styles.row}>
-        {cells}
-      </Row>
-    );*/
-    return (
-      <Row style={styles.row}>
+      <Row style={styles.row} key={item.detail}>
         <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-            <Text onPress={() => this.props.navigation.navigate('Survey',{contacto: this.state.dataMock[0].contacto, domicilio: this.state.dataMock[0].domicilio, detalle: item.detalle})}>
-              {item.detalle}
+            <Text onPress={() => this.props.navigation.navigate('Survey',{contact: this.state.contact, address: this.state.address, detail: item.detail})}>
+              {item.detail}
             </Text>
         </Cell>
         <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-            {item.fecha}
+            {item.date}
         </Cell>
         <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
           <Item inlineLabel>
-            <Icon name='create' onPress={() => this.props.navigation.navigate('Activity',{contacto: this.state.dataMock[0].contacto, domicilio: this.state.dataMock[0].domicilio, detalle: item.detalle})}/>  
-            <Icon name='clock'/>
+            {action}
           </Item>
         </Cell>
       </Row>
@@ -122,11 +88,11 @@ export default class ActivitiesScreen extends React.Component {
           <Form>
             <Item inlineLabel>
               <Label>Contacto</Label>
-              <Input value={this.state.dataMock[0].contacto} editable={false}/>
+              <Input value={this.state.contact} editable={false}/>
             </Item>
             <Item inlineLabel last>
               <Label>Domicilio</Label>
-              <Input value={this.state.dataMock[0].domicilio} editable={false}/>
+              <Input value={this.state.address} editable={false}/>
             </Item>
           </Form>
           <Item style={styles.dataTableContainer}>
@@ -150,7 +116,7 @@ export default class ActivitiesScreen extends React.Component {
               <Text>Agenda</Text>
             </Button>
             <Button vertical>
-              <Icon name="person" />
+              <Icon name="person" onPress={() => this.props.navigation.navigate('Contact')}/>
               <Text>Contactos</Text>
             </Button>
             <Button vertical active>

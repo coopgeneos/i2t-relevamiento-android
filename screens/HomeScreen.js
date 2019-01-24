@@ -1,59 +1,53 @@
 import React from 'react';
 import { Container, Header, Content, Icon, Text, Button, Item,
-         Form, Input, Label } from 'native-base';
-import { Col, Row, Grid } from 'react-native-easy-grid';
-
-import styles from "./Styles"
+        Form, Input, Label, Left, Spinner } from 'native-base';
+import {formatDate} from '../src/utils';
+import styles from "./Styles";
 
 export default class HomeScreen extends React.Component { 
   constructor() {
-    super();
+    super();   
     this.state = {
-      user: 'Luis Segundo',
-      lastSync: '2019-01-05 10:55',
-      pendingSyncs: '5'
-    };
+      user: '',
+      lastSync : '',
+      pendingSyncs : ''
+    };    
+  }
+
+  // Metodo donde llamar a los WS iniciales
+  componentDidMount() {
+    //simulo al WS
+    setTimeout(() => {
+      let loggedUser = {name: 'Luis', lastName: 'Segundo', email: 'luissegundo@unmail.com',lastSync: new Date(), pendingSyncs: 5};
+      this.setState ({
+        user: loggedUser.email,
+        lastSync: formatDate(loggedUser.lastSync),
+        pendingSyncs: loggedUser.pendingSyncs.toString()
+      });
+    }, 1000);    
   }
   
-  /*render() {
-    return (
-      <Container>
-        <Header>
-          <Text style={styles.header}>Este seria el header</Text>
-        </Header>
-        <Content >
-          <Grid style={styles.homeContainerIcons}>
-            <Col>
-              <Row >
-                <Button iconCenter transparent block onPress={() => this.props.navigation.navigate('Schedule')}>
-                  <Icon name='calendar' style={styles.homeButtonIcons}/>       
-                </Button>
-              </Row>
-              <Row>
-                <Button iconCenter transparent block onPress={() => this.props.navigation.navigate('Contacts')}>                 
-                  <Icon name='contact' style={styles.homeButtonIcons}/>
-                </Button>
-              </Row>
-            </Col>
-            <Col>
-              <Row>
-                <Button iconCenter transparent block onPress={() => alert('No hago nada')}>
-                  <Icon name='settings' style={styles.homeButtonIcons}/>                 
-                </Button>
-              </Row>
-              <Row>
-                <Button iconCenter transparent block onPress={() => alert('No hago nada')}>                      
-                  <Icon name='sync' style={styles.homeButtonIcons}/>
-                </Button>
-              </Row>
-            </Col>
-          </Grid>
-        </Content>
-      </Container>
-    );
-  }*/
-  
   render() {
+    let formItem;
+    if(this.state.user == ''){
+      formItem = <Spinner color='blue'/>
+    } else {
+      formItem = <Form>
+                  <Item inlineLabel>
+                    <Left style={{flexShrink: 2}}><Label>Usuario</Label></Left>
+                    <Left style={{flexGrow: 2}}><Input value={this.state.user} editable={false}/></Left>
+                  </Item>
+                  <Item inlineLabel>
+                    <Left><Label>Ultima sincronización</Label></Left>
+                    <Left><Input value={this.state.lastSync} editable={false}/></Left>
+                  </Item>
+                  <Item inlineLabel last>
+                    <Left><Label>Pendientes sincronización</Label></Left>
+                    <Left><Input value={this.state.pendingSyncs} editable={false}/></Left>
+                  </Item>
+                </Form>
+    }
+
     return (
       <Container>
         <Header>
@@ -74,20 +68,7 @@ export default class HomeScreen extends React.Component {
               <Icon name='sync' style={styles.homeButtonIcons}/>
             </Button>
           </Item>
-          <Form>
-            <Item inlineLabel>
-              <Label>Usuario</Label>
-              <Input value={this.state.user} editable={false} style={{textAlign: 'right'}}/>
-            </Item>
-            <Item inlineLabel>
-              <Label>Ultima sincronización</Label>
-              <Input value={this.state.lastSync} editable={false}/>
-            </Item>
-            <Item inlineLabel last>
-              <Label>Pendientes sincronización</Label>
-              <Input value={this.state.pendingSyncs} editable={false}/>
-            </Item>
-          </Form>
+          {formItem}
         </Content>
       </Container>
     );

@@ -19,9 +19,9 @@ export default class ScheduleScreen extends React.Component {
 
   render() {
     const { navigation } = this.props;
-    const contacto = navigation.getParam('contacto', 'SIN CONTACTO');
-    const domicilio = navigation.getParam('domicilio', 'SIN DOMICILIO');
-    const detalle = navigation.getParam('detalle', 'SIN DETALLE');
+    const contact = navigation.getParam('contact', 'SIN CONTACTO');
+    const address = navigation.getParam('address', 'SIN DOMICILIO');
+    const detail = navigation.getParam('detail', 'SIN DETALLE');
 
     return (
       <Container>
@@ -32,15 +32,15 @@ export default class ScheduleScreen extends React.Component {
           <Form>
             <Item inlineLabel>
               <Label>Contacto</Label>
-              <Input value={contacto} editable={false}/>
+              <Input value={contact} editable={false}/>
             </Item>
             <Item inlineLabel last>
               <Label>Domicilio</Label>
-              <Input value={domicilio} editable={false}/>
+              <Input value={address} editable={false}/>
             </Item>
             <Item inlineLabel last>
               <Label>Detalle</Label>
-              <Input value={detalle} editable={false}/>
+              <Input value={detail} editable={false}/>
             </Item>
             <Item>
               <Label>Notas</Label>

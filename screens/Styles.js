@@ -15,9 +15,9 @@ export default StyleSheet.create({
     alignItems: 'center'
   },
   homeButton: {
-    //flex: 2,
-    width: '50%',
-    height: '50%'
+    marginLeft: '2.5%',
+    width: '45%',
+    height: '45%'
   },
   homeButtonIcons: {
     fontSize: 150
@@ -27,12 +27,14 @@ export default StyleSheet.create({
     //flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    
   },
   list: {
     width: '80%', 
     borderWidth: 1,
   },
   listItem: {
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
   },
