@@ -47,7 +47,7 @@ export default class ScheduleScreen extends React.Component {
   onPressRow(event){
     this.props.navigation.navigate('Activities', {
       agency: event.agency, 
-      address: event.address+' - '+event.city+'('+event.zipCode+')'
+      address: event.address+' - '+event.city+' ('+event.zipCode+')'
     })
   }
 
@@ -63,7 +63,7 @@ export default class ScheduleScreen extends React.Component {
             onPress={this.onPressRow.bind(this, this.state.events[i])}
             key={i}>
             <Text>{this.state.events[i].agency}</Text>
-            <Text>{this.state.events[i].address+' - '+this.state.events[i].city+'('+this.state.events[i].zipCode+')'}</Text>
+            <Text>{this.state.events[i].address+' - '+this.state.events[i].city+' ('+this.state.events[i].zipCode+')'}</Text>
             <Text>{this.state.events[i].title}</Text>
           </ListItem>
         )

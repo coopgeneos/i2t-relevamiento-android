@@ -22,7 +22,8 @@ export default class HomeScreen extends React.Component {
       this.setState ({
         user: loggedUser.email,
         lastSync: formatDate(loggedUser.lastSync),
-        pendingSyncs: loggedUser.pendingSyncs.toString()
+        pendingSyncs: loggedUser.pendingSyncs.toString(),
+        completeName: loggedUser.name+' '+loggedUser.lastName,
       });
     }, 1000);    
   }
@@ -58,7 +59,7 @@ export default class HomeScreen extends React.Component {
             <Button style={styles.homeButton} transparent onPress={() => this.props.navigation.navigate('Schedule')}>
               <Icon name='calendar' style={styles.homeButtonIcons}/>       
             </Button>
-            <Button style={styles.homeButton} transparent onPress={() => this.props.navigation.navigate('Contacts')}>                 
+            <Button style={styles.homeButton} transparent onPress={() => this.props.navigation.navigate('Contacts', {name: this.state.completeName})}>                 
               <Icon name='contact' style={styles.homeButtonIcons}/>
             </Button>
             <Button style={styles.homeButton}  transparent onPress={() => alert('No hago nada')}>

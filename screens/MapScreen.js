@@ -48,11 +48,11 @@ export default class MapScreen extends React.Component {
         </Content>
         <Footer>
           <FooterTab>
-            <Button vertical onPress={() => this.props.navigation.navigate('Home')}>
+            <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
               <Icon name="calendar" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical>
+            <Button vertical onPress={() => this.props.navigation.navigate('Contacts')}>
               <Icon name="person" />
               <Text>Contactos</Text>
             </Button>

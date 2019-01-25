@@ -12,26 +12,19 @@ export default class ActivitiesScreen extends React.Component {
     const { navigation } = this.props;
     const contact = navigation.getParam('agency', 'SIN CONTACTO');
     const address = navigation.getParam('address', 'SIN DOMICILIO');
-    
-    const dataSource = new ListView.DataSource({
-      rowHasChanged: (row1, row2) => row1 !== row2,
-    });
 
     this.state = {
       contact: contact,
       address: address,
-      dataSource: dataSource
-    };
-
-    this.renderHeader = this.renderHeader.bind(this);
-    this.renderRow = this.renderRow.bind(this);
+      dataSource: []
+    };   
   }
 
   componentDidMount() {
     setTimeout(() => {
       let response = [
-        {detail: 'Actividad 1', date: '2018-01-01', state: 'completed'},
-        {detail: 'Actividad 2', date: '2018-01-01', state: 'draft'}
+        {detail: 'Actividad 1', date: '2018-01-01'},
+        {detail: 'Actividad 2', date: '2018-01-01'}
       ];
       this.setState({
         data: response,

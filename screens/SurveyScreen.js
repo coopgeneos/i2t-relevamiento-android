@@ -20,22 +20,26 @@ export default class SurveyScreen extends React.Component {
   componentDidMount() {
     setTimeout(() => {
       let response = [
-        {title: 'Foto exterior', type: 'image', img_uri: 'https://facebook.github.io/react-native/docs/assets/favicon.png', boton: 'Guardar y seguir'},
-        {title: 'Foto interior', type: 'image', img_uri: 'https://xeelha.files.wordpress.com/2017/01/img_2477.jpg?w=600', boton: 'Guardar y seguir'},
-        {title: 'Uso del Display', type: 'radio', values: ['No usa', 'Usa el de CAS', 'Usa otro'], boton: 'Guardar y seguir'},
-        {title: 'Uso del espacio', type: 'radio', values: ['100%', '80% - 20%', '50% - 50%', '20% - 80%', '0%'], boton: 'Guardar y salir'}
+        {title: 'Foto exterior', type: 'image', img_uri: 'https://facebook.github.io/react-native/docs/assets/favicon.png', button_msg: 'Guardar y seguir'},
+        {title: 'Foto interior', type: 'image', img_uri: 'https://xeelha.files.wordpress.com/2017/01/img_2477.jpg?w=600', button_msg: 'Guardar y seguir'},
+        {title: 'Uso del Display', type: 'radio', values: ['No usa', 'Usa el de CAS', 'Usa otro'], button_msg: 'Guardar y seguir'},
+        {title: 'Uso del espacio', type: 'radio', values: ['100%', '80% - 20%', '50% - 50%', '20% - 80%', '0%'], button_msg: 'Guardar y salir'}
       ];
       this.setState({
         dataSource: response,
-        max_step: response.length
+        max_step: response.length - 1
       });
     }, 1000); 
   }
   
   save() {
+    if(this.state.max_step && this.state.step == this.state.max_step){
+      return this.props.navigation.navigate('Activities');
+    }
+
     this.setState(prevState => (
       {step: prevState.step + 1}
-    ))
+    ))   
   }
   
   render() {
@@ -43,10 +47,6 @@ export default class SurveyScreen extends React.Component {
     const contact = navigation.getParam('contact', 'SIN CONTACTO');
     const address = navigation.getParam('address', 'SIN DOMICILIO');
     const detail = navigation.getParam('detail', 'SIN DETALLE');
- 
-    if(this.state.max_step && this.state.step >= this.state.max_step){
-      return this.props.navigation.navigate('Activities');
-    }
 
     let blockWithData;
     if(!this.state.dataSource){
@@ -85,9 +85,9 @@ export default class SurveyScreen extends React.Component {
         field
       );
       blockWithData.push(
-        <Item inlineLabel last key={'buttons_nact'}>
+        <Item inlineLabel last key={'buttons_act'}>
           <Button onPress={() => this.save()}>
-            <Text>{this.state.dataSource[this.state.step].boton}</Text>
+            <Text>{this.state.dataSource[this.state.step].button_msg}</Text>
           </Button>
           <Button onPress={() => alert('Omitiendo...')}>
             <Text>Omitir</Text>
@@ -131,7 +131,7 @@ export default class SurveyScreen extends React.Component {
               <Icon name="calendar" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical onPress={() => this.props.navigation.navigate('Contact')}>
+            <Button vertical onPress={() => this.props.navigation.navigate('Contacts')}>
               <Icon name="person" />
               <Text>Contactos</Text>
             </Button>
