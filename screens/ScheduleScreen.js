@@ -73,14 +73,43 @@ export default class ScheduleScreen extends React.Component {
     return (
       <Container>
         <Header>
-          <Text style={styles.header}>Agenda</Text>
+          <Left>
+            <Button transparent>
+              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+            </Button>
+          </Left>
+          <Body>
+            <Title>Agenda</Title>
+          </Body>
+          <Right>
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
+              <Icon name='home'/>
+            </Button>
+            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
+              <Icon name='map'/>
+            </Button>
+          </Right>
         </Header>
         <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
-                <Label>Fecha</Label>
-                <Input value={this.state.date} editable={false} />               
+                <Label>Fecha</Label> 
+                <DatePicker
+                  defaultDate={new Date(2018, 4, 4)}
+                  minimumDate={new Date(2018, 1, 1)}
+                  maximumDate={new Date(2018, 12, 31)}
+                  locale={"es"}
+                  timeZoneOffsetInMinutes={undefined}
+                  modalTransparent={false}
+                  animationType={"fade"}
+                  androidMode={"default"}
+                  placeHolderText="Ingresar Fecha"
+                  textStyle={{ color: "#F08377" }}
+                  placeHolderTextStyle={{ color: "#CCC" }}
+                  onDateChange={this.setDate}
+                  disabled={false}
+                />            
               </Item>
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '30%'}}>               
                 <Label>Cercanos</Label>
@@ -88,22 +117,35 @@ export default class ScheduleScreen extends React.Component {
               </Item>
             
           </Form>
-          <Item style={styles.listContainer}>
-            <List scrollEnabled style={styles.list}>
-              <ListItem itemHeader first style={styles.listItem}>
-                <Text style={styles.listHeaderText}>Eventos</Text>
-              </ListItem>
-              {itemList}
-            </List>
-          </Item>
-          <Item inlineLabel style={styles.bottomButtons}>
-            <Button onPress={() => this.props.navigation.navigate('Home')}>
-              <Text>Salir</Text>
-            </Button>
-            <Button onPress={() => this.props.navigation.navigate('Map')}>
-              <Text>Mapa</Text>
-            </Button>
-          </Item>         
+
+
+          <List
+            dataArray={datas}
+            renderRow={data =>
+              <ListItem thumbnail onPress={()=>{this.props.navigation.navigate('Activities',{agency: data.city})}}>
+                <Left>
+                  <Thumbnail square source={img_sample} />
+                </Left>
+                <Body>
+                  <Text>
+                    {data.agency}
+                  </Text>
+                  <Text numberOfLines={1} note>
+                    {data.address} - {data.city} - {data.zipCode}
+                  </Text>
+                  <Text numberOfLines={1} note>
+                    {data.event}
+                  </Text>
+                </Body>
+                <Right>
+                  <Button transparent>
+                    <Text>View</Text>
+                  </Button>
+                </Right>
+              </ListItem>}
+          />
+
+    
         </Content>
         <Footer>
           <FooterTab>

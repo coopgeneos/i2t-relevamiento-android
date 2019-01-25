@@ -52,23 +52,47 @@ export default class HomeScreen extends React.Component {
     return (
       <Container>
         <Header>
-          <Text style={styles.header}>App's de Relevamiento</Text>
+          <Left>
+            <Button transparent>
+              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+            </Button>
+          </Left>
+          <Body>
+            <Title>Relevamiento</Title>
+          </Body>
+          <Right>
+            <Button transparent>
+              <Icon name='menu'/>
+            </Button>
+          </Right>
         </Header>
-        <Content>
-          <Item style={styles.homeContainerIcons}>
-            <Button style={styles.homeButton} transparent onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name='calendar' style={styles.homeButtonIcons}/>       
+        <Content style={{padding: 10}}>
+        <Grid style={{ alignItems: 'center', backgroundColor: "#635DB7" }}>
+          <Row>
+            <Col>
+            <Button transparent onPress={() => this.props.navigation.navigate('Schedule')} block style={{flex: 1}}>
+              <Icon name='calendar'/>       
             </Button>
-            <Button style={styles.homeButton} transparent onPress={() => this.props.navigation.navigate('Contacts', {name: this.state.completeName})}>                 
-              <Icon name='contact' style={styles.homeButtonIcons}/>
+            </Col>
+            <Col>
+            <Button transparent onPress={() => this.props.navigation.navigate('Contacts')} block style={{flex: 1}}>                 
+              <Icon name='contact'/>
             </Button>
-            <Button style={styles.homeButton}  transparent onPress={() => alert('No hago nada')}>
-              <Icon name='settings' style={styles.homeButtonIcons}/>                 
-            </Button>       
-            <Button style={styles.homeButton} transparent onPress={() => alert('No hago nada')}>                      
-              <Icon name='sync' style={styles.homeButtonIcons}/>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+            <Button transparent onPress={() => alert('No hago nada')}>
+              <Icon name='settings'/>                 
             </Button>
-          </Item>
+            </Col>
+            <Col>
+            <Button transparent onPress={() => alert('No hago nada')}>                      
+              <Icon name='sync'/>
+            </Button>
+            </Col>
+          </Row>
+        </Grid>
           {formItem}
         </Content>
       </Container>

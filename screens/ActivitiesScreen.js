@@ -11,6 +11,7 @@ export default class ActivitiesScreen extends React.Component {
     //En esta vista es necesario que las props recibidas sean parte del state
     const { navigation } = this.props;
     const contact = navigation.getParam('agency', 'SIN CONTACTO');
+    console.log(contact);
     const address = navigation.getParam('address', 'SIN DOMICILIO');
     
     const dataSource = new ListView.DataSource({
