@@ -1,7 +1,8 @@
 import React from 'react';
 import { Container, Header, Content, Icon, Text, Button, Item,
-        Form, Input, Label, Left, Spinner } from 'native-base';
+        Form, Input, Label, Left, Spinner, Body, Right, Title } from 'native-base';
 import {formatDate} from '../src/utils';
+import { Grid, Row, Col } from "react-native-easy-grid";
 // import styles from "./Styles";
 
 export default class HomeScreen extends React.Component { 
@@ -51,24 +52,48 @@ export default class HomeScreen extends React.Component {
     return (
       <Container>
         <Header>
-          <Text >App's de Relevamiento</Text>
+          <Left>
+            <Button transparent>
+              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+            </Button>
+          </Left>
+          <Body>
+            <Title>Relevamiento</Title>
+          </Body>
+          <Right>
+            <Button transparent>
+              <Icon name='menu'/>
+            </Button>
+          </Right>
         </Header>
-        <Content>
-          <Item>
+        <Content style={{padding: 10}}>
+        <Grid style={{ alignItems: 'center', backgroundColor: "#635DB7" }}>
+          <Row>
+            <Col>
             <Button transparent onPress={() => this.props.navigation.navigate('Schedule')}>
               <Icon name='calendar'/>       
             </Button>
+            </Col>
+            <Col>
             <Button transparent onPress={() => this.props.navigation.navigate('Contacts')}>                 
               <Icon name='contact'/>
             </Button>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
             <Button transparent onPress={() => alert('No hago nada')}>
               <Icon name='settings'/>                 
-            </Button>       
+            </Button>
+            </Col>
+            <Col>
             <Button transparent onPress={() => alert('No hago nada')}>                      
               <Icon name='sync'/>
             </Button>
-          </Item>
-          {formItem}
+            </Col>
+          </Row>
+        </Grid>
+        {formItem}
         </Content>
       </Container>
     );

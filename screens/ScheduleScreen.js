@@ -1,9 +1,22 @@
 import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, 
-        Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
-        Input, Left, Right, Spinner} from 'native-base';
+        Button, Icon, CheckBox, List, ListItem, Thumbnail, Form, Item, Label,
+        Input, Left, Right, Spinner, Title, Body, DatePicker} from 'native-base';
 import {formatDate} from '../src/utils';
 import styles from "./Styles";
+
+
+const img_sample = require("../assets/icon.png");
+
+// Ver como meter datas adentro de la llamada a los WS
+
+const datas = [
+  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Tandil', zipCode: '6546', title: 'Evento 1'},
+  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Ayacucho', zipCode: '6546', title: 'Evento 2'},
+  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: '9 de Julio', zipCode: '7866', title: 'Evento 3'},
+  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Azul', zipCode: '4567', title: 'Evento 4'},
+  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Olavarria', zipCode: '4546', title: 'Evento 5'},
+];
 
 export default class ScheduleScreen extends React.Component {
   constructor() {
@@ -11,8 +24,10 @@ export default class ScheduleScreen extends React.Component {
     this.state = {
       date : '',
       nears: false,
-      events: null 
+      events: null,
+      chosenDate: new Date() 
     };
+    this.setDate = this.setDate.bind(this);
   }
 
   // Metodo donde llamar a los WS iniciales
@@ -51,36 +66,72 @@ export default class ScheduleScreen extends React.Component {
     })
   }
 
+  setDate(newDate) {
+    this.setState({ chosenDate: newDate });
+  }
+
   render() {
     let itemList
     if(this.state.events == null){
       itemList = <Spinner color='blue'/>
     } else {
-      itemList = [];
-      for(i=0; i< this.state.events.length; i++){
-        itemList.push(
-          <ListItem style={styles.listItem} 
-            onPress={this.onPressRow.bind(this, this.state.events[i])}
-            key={i}>
-            <Text>{this.state.events[i].agency}</Text>
-            <Text>{this.state.events[i].address+' - '+this.state.events[i].city+'('+this.state.events[i].zipCode+')'}</Text>
-            <Text>{this.state.events[i].title}</Text>
-          </ListItem>
-        )
-      } 
+
+      // Usando List ya no sería necesario
+
+      // itemList = [];
+      // for(i=0; i< this.state.events.length; i++){
+      //   itemList.push(
+      //     <ListItem style={styles.listItem} 
+      //       onPress={this.onPressRow.bind(this, this.state.events[i])}
+      //       key={i}>
+      //       <Text>{this.state.events[i].agency}</Text>
+      //       <Text>{this.state.events[i].address+' - '+this.state.events[i].city+'('+this.state.events[i].zipCode+')'}</Text>
+      //       <Text>{this.state.events[i].title}</Text>
+      //     </ListItem>
+      //   )
+      // } 
     }
 
     return (
       <Container>
         <Header>
-          <Text style={styles.header}>Agenda</Text>
+          <Left>
+            <Button transparent>
+              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+            </Button>
+          </Left>
+          <Body>
+            <Title>Agenda</Title>
+          </Body>
+          <Right>
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
+              <Icon name='home'/>
+            </Button>
+            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
+              <Icon name='map'/>
+            </Button>
+          </Right>
         </Header>
         <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
-                <Label>Fecha</Label>
-                <Input value={this.state.date} editable={false} />               
+                <Label>Fecha</Label> 
+                <DatePicker
+                  defaultDate={new Date(2018, 4, 4)}
+                  minimumDate={new Date(2018, 1, 1)}
+                  maximumDate={new Date(2018, 12, 31)}
+                  locale={"es"}
+                  timeZoneOffsetInMinutes={undefined}
+                  modalTransparent={false}
+                  animationType={"fade"}
+                  androidMode={"default"}
+                  placeHolderText="Ingresar Fecha"
+                  textStyle={{ color: "#F08377" }}
+                  placeHolderTextStyle={{ color: "#CCC" }}
+                  onDateChange={this.setDate}
+                  disabled={false}
+                />            
               </Item>
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '30%'}}>               
                 <Label>Cercanos</Label>
@@ -88,22 +139,35 @@ export default class ScheduleScreen extends React.Component {
               </Item>
             
           </Form>
-          <Item style={styles.listContainer}>
-            <List scrollEnabled style={styles.list}>
-              <ListItem itemHeader first style={styles.listItem}>
-                <Text style={styles.listHeaderText}>Eventos</Text>
-              </ListItem>
-              {itemList}
-            </List>
-          </Item>
-          <Item inlineLabel style={styles.bottomButtons}>
-            <Button onPress={() => this.props.navigation.navigate('Home')}>
-              <Text>Salir</Text>
-            </Button>
-            <Button onPress={() => this.props.navigation.navigate('Map')}>
-              <Text>Mapa</Text>
-            </Button>
-          </Item>         
+
+
+          <List
+            dataArray={datas}
+            renderRow={data =>
+              <ListItem thumbnail>
+                <Left>
+                  <Thumbnail square source={img_sample} />
+                </Left>
+                <Body>
+                  <Text>
+                    {data.agency}
+                  </Text>
+                  <Text numberOfLines={1} note>
+                    {data.address} - {data.city} - {data.zipCode}
+                  </Text>
+                  <Text numberOfLines={1} note>
+                    {data.event}
+                  </Text>
+                </Body>
+                <Right>
+                  <Button transparent>
+                    <Text>View</Text>
+                  </Button>
+                </Right>
+              </ListItem>}
+          />
+
+    
         </Content>
         <Footer>
           <FooterTab>
