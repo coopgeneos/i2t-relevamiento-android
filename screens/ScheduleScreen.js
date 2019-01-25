@@ -144,7 +144,7 @@ export default class ScheduleScreen extends React.Component {
           <List
             dataArray={datas}
             renderRow={data =>
-              <ListItem thumbnail>
+              <ListItem thumbnail onPress={()=>{this.props.navigation.navigate('Activities',{agency: data.agency, city: data.city, address: data.address})}}>
                 <Left>
                   <Thumbnail square source={img_sample} />
                 </Left>

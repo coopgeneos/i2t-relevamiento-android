@@ -7,7 +7,7 @@ export default (variables /*: * */ = variable) => {
   const platform = variables.platform;
   const transparentBtnCommon = {
     "NativeBase.Text": {
-      fontSize: variables.DefaultFontSize - 3,
+      fontSize: variables.DefaultFontSize + 3,
       color: variables.sTabBarActiveTextColor
     },
     "NativeBase.Icon": {

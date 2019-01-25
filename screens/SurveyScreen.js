@@ -1,10 +1,10 @@
 import React from 'react';
+
 import {Image} from 'react-native'
-import { Container, Header, Content, Footer, FooterTab, 
-         Text, Button, Icon, CheckBox, List, ListItem,
-         Form, Item, Label, Input, Left, Right, Radio,
-         Spinner } from 'native-base';
-import styles from './Styles';
+
+import { Container, Header, Content, Footer, FooterTab, Text, 
+        Button, Icon, CheckBox, List, ListItem, Thumbnail, Form, Item, Label,
+        Input, Left, Right, Spinner, Title, Body, DatePicker} from 'native-base';
 
 export default class SurveyScreen extends React.Component {
   constructor() {
@@ -104,7 +104,22 @@ export default class SurveyScreen extends React.Component {
     return (      
       <Container>
         <Header>
-          <Text style={styles.header}>Relevamiento</Text>
+          <Left>
+            <Button transparent>
+              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+            </Button>
+          </Left>
+          <Body>
+            <Title>Encuesta</Title>
+          </Body>
+          <Right>
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
+              <Icon name='home'/>
+            </Button>
+            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
+              <Icon name='map'/>
+            </Button>
+          </Right>
         </Header>
         <Content>
           <Form>         

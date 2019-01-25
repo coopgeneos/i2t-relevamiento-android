@@ -67,28 +67,28 @@ export default class HomeScreen extends React.Component {
           </Right>
         </Header>
         <Content style={{padding: 10}}>
-        <Grid style={{ alignItems: 'center', backgroundColor: "#635DB7" }}>
-          <Row>
+        <Grid style={{ alignItems: 'center', backgroundColor: "#534D64" }}>
+          <Row  style={{ height: 120 }}>
             <Col>
-            <Button transparent onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name='calendar'/>       
+            <Button transparent onPress={() => this.props.navigation.navigate('Schedule')} block style={{flex: 1, fontSize: 80}}>
+              <Icon name='calendar' style={{fontSize: 80}}/>
             </Button>
             </Col>
             <Col>
-            <Button transparent onPress={() => this.props.navigation.navigate('Contacts')}>                 
-              <Icon name='contact'/>
+            <Button transparent onPress={() => this.props.navigation.navigate('Contacts')} block style={{flex: 1}}>
+              <Icon name='contact' style={{fontSize: 80}}/>
             </Button>
             </Col>
           </Row>
-          <Row>
+          <Row  style={{ height: 120 }}>
             <Col>
-            <Button transparent onPress={() => alert('No hago nada')}>
-              <Icon name='settings'/>                 
+            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}}>
+              <Icon name='settings' style={{fontSize: 80}}/>
             </Button>
             </Col>
             <Col>
-            <Button transparent onPress={() => alert('No hago nada')}>                      
-              <Icon name='sync'/>
+            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}}>
+              <Icon name='sync' style={{fontSize: 80 }}/>
             </Button>
             </Col>
           </Row>

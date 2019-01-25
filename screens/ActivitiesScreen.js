@@ -1,6 +1,8 @@
 import React from 'react';
+
 import { Container, Header, Content, Footer, FooterTab, Text, Button, 
-         Icon, Form, Item, Label, Input } from 'native-base';
+         Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
+
 import { Cell, DataTable, HeaderCell, Row } from 'react-native-data-table';
 import { ListView } from 'react-native';
 import styles from './Styles';
@@ -12,6 +14,10 @@ export default class ActivitiesScreen extends React.Component {
     const { navigation } = this.props;
     const contact = navigation.getParam('agency', 'SIN CONTACTO');
     const address = navigation.getParam('address', 'SIN DOMICILIO');
+    const city = navigation.getParam('city', 'SIN CONTACTO');
+
+    console.log(contact);
+    console.log(address);
     
     const dataSource = new ListView.DataSource({
       rowHasChanged: (row1, row2) => row1 !== row2,
@@ -20,6 +26,7 @@ export default class ActivitiesScreen extends React.Component {
     this.state = {
       contact: contact,
       address: address,
+      city: city,
       dataSource: dataSource
     };
 
@@ -82,19 +89,45 @@ export default class ActivitiesScreen extends React.Component {
     return (
       <Container>
         <Header>
-          <Text style={styles.header}>Actividades</Text>
+          <Left>
+            <Button transparent>
+              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+            </Button>
+          </Left>
+          <Body>
+            <Title>Actividades</Title>
+          </Body>
+          <Right>
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
+              <Icon name='home'/>
+            </Button>
+            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
+              <Icon name='map'/>
+            </Button>
+          </Right>
         </Header>
         <Content>
-          <Form>
-            <Item inlineLabel>
-              <Label>Contacto</Label>
-              <Input value={this.state.contact} editable={false}/>
-            </Item>
-            <Item inlineLabel last>
-              <Label>Domicilio</Label>
-              <Input value={this.state.address} editable={false}/>
-            </Item>
-          </Form>
+          
+          <Card>
+            <CardItem header style={{color:'#534D64', backgroundColor: '#778591'}}>                        
+            <Text>Datos de Contacto</Text>
+            </CardItem>
+
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact}</Text>
+            </CardItem>
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.address}</Text>
+            </CardItem>
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
+            </CardItem>
+
+            <CardItem footer style={{ height: 10, backgroundColor: '#94A6B5'}}>                        
+            <Text></Text>
+            </CardItem>
+          </Card>
+
           <Item style={styles.dataTableContainer}>
             <Item style={styles.dataTable}>
               <DataTable  
@@ -105,9 +138,6 @@ export default class ActivitiesScreen extends React.Component {
             </Item>
           </Item>
 
-          <Button onPress={() => this.props.navigation.navigate('Schedule')}>
-            <Text>Volver</Text>
-          </Button>
         </Content>
         <Footer>
           <FooterTab>

@@ -15,6 +15,11 @@ export default {
   platformStyle,
   platform,
 
+  //Home Styles App
+  home_link_icons : {
+    fontSize: 80
+  },
+
   //Accordion
   headerStyle: "#edebed",
   iconStyle: "#000",
@@ -88,8 +93,8 @@ export default {
 
   // Card
   cardDefaultBg: "#fff",
-  cardBorderColor: "#ccc",
-  cardBorderRadius: 2,
+  cardBorderColor: "#778591",
+  cardBorderRadius: 1,
   cardItemPadding: platform === "ios" ? 10 : 12,
 
   // CheckBox
