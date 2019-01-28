@@ -23,7 +23,8 @@ export default class HomeScreen extends React.Component {
       this.setState ({
         user: loggedUser.email,
         lastSync: formatDate(loggedUser.lastSync),
-        pendingSyncs: loggedUser.pendingSyncs.toString()
+        pendingSyncs: loggedUser.pendingSyncs.toString(),
+        completeName: loggedUser.name+' '+loggedUser.lastName,
       });
     }, 1000);    
   }
@@ -89,6 +90,7 @@ export default class HomeScreen extends React.Component {
             <Col>
             <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}}>
               <Icon name='sync' style={{fontSize: 80 }}/>
+
             </Button>
             </Col>
           </Row>

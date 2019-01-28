@@ -62,7 +62,7 @@ export default class ScheduleScreen extends React.Component {
   onPressRow(event){
     this.props.navigation.navigate('Activities', {
       agency: event.agency, 
-      address: event.address+' - '+event.city+'('+event.zipCode+')'
+      address: event.address+' - '+event.city+' ('+event.zipCode+')'
     })
   }
 
@@ -90,6 +90,7 @@ export default class ScheduleScreen extends React.Component {
       //     </ListItem>
       //   )
       // } 
+
     }
 
     return (

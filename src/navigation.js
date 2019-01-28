@@ -8,6 +8,7 @@ import ActivitiesScreen from '../screens/ActivitiesScreen'
 import SurveyScreen from '../screens/SurveyScreen'
 import ActivityScreen from '../screens/ActivityScreen'
 import MapScreen from '../screens/MapScreen'
+import ContactActScreen from '../screens/ContactActScreen'
 
 const AppNavigator = createStackNavigator(
   {
@@ -17,7 +18,8 @@ const AppNavigator = createStackNavigator(
     Activities: {screen: ActivitiesScreen },
     Survey: {screen: SurveyScreen },
     Activity: {screen: ActivityScreen },
-    Map: {screen: MapScreen }
+    Map: {screen: MapScreen },
+    ContactAct: { screen: ContactActScreen },
   }, 
   {
     initialRouteName: 'Home',
