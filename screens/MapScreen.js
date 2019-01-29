@@ -1,118 +1,150 @@
 import React from 'react';
-/*import { Container, Header, Content, Footer, FooterTab, Text, 
-         Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
-         Input } from 'native-base';
-import MapView from 'react-native-maps';
-import openMap from 'react-native-open-maps';*/
-import { Text, View, StyleSheet } from 'react-native';
-import { Constants, MapView, Location, Permissions } from 'expo';
-
-//import styles from "./Styles";
+import { StyleSheet, Text, View } from 'react-native'
+import { FileSystem, MapView, Constants } from 'expo'
+import { Button } from 'react-native-elements'
+import AppConstans from '../constants/constants'
+import DownloadSettings from '../components/DownloadSettings'
 
 export default class MapScreen extends React.Component {
-  /*constructor() {
+  constructor() {
     super();
-    state = {
-      mapRegion: null,
-      hasLocationPermissions: false,
-      locationResult: null
-    };
-  }*/
-
-  //https://snack.expo.io/@schazers/expo-map-and-location-example
-  //https://snack.expo.io/@rbnacharya/mapview-example
-
-  state = {
-    mapRegion: null,
-    hasLocationPermissions: false,
-    locationResult: null
-  };
-
+    this.state = {
+      isOffline: false,
+      showDownloadSettings: false,
+      /*urlTemplate: `${AppConstans.MAP_URL_OSM}/{z}/{x}/{y}.png`,
+      offlineUrlTemplate: `${AppConstans.TILE_FOLDER}/{z}/{x}/{y}.png`,*/
+      urlTemplate: `${AppConstans.MAP_URL_GOOGLE}&x={x}&y={y}&z={z}.png`,
+      offlineUrlTemplate: `${AppConstans.TILE_FOLDER}/{x}/{y}/{z}.png`,
+      mapRegion: { //Tandil
+        latitude: -37.3348,
+        longitude: -59.1305,
+        latitudeDelta: 1,
+        longitudeDelta: 1,
+      },
+      markers: []
+    }
+  }
+  
   componentDidMount() {
-    this._getLocationAsync();
+    setTimeout(() => {
+      let response = [
+        {title: 'Geneos', description: 'Coop de trabajo', coords: { latitude: -37.32655, longitude: -59.13119}},
+        {title: 'Plaza', description: 'Lugar de descanso', coords: { latitude: -37.32861, longitude: -59.13709}},
+      ];
+      this.setState({
+        markers: response
+      });
+    }, 500); 
   }
 
-  _handleMapRegionChange = mapRegion => {
-    console.log(mapRegion);
-    this.setState({ mapRegion });
-  };
+  clearTiles = async () => {
+    try {
+      await FileSystem.deleteAsync(AppConstans.TILE_FOLDER)
+    } catch (error) {
+      console.log('Tiles allready deleted')
+    }
+  }
 
-  _getLocationAsync = async () => {
-   let { status } = await Permissions.askAsync(Permissions.LOCATION);
-   if (status !== 'granted') {
-     this.setState({
-       locationResult: 'Permission to access location was denied',
-     });
-   } else {
-     this.setState({ hasLocationPermissions: true });
-   }
+  handleMapRegionChange = mapRegion => {
+    this.setState({
+      mapRegion,
+    })
+  }
 
-   let location = await Location.getCurrentPositionAsync({});
-   this.setState({ locationResult: JSON.stringify(location) });
-   
-   // Center the map on the location we just fetched.
-    this.setState({mapRegion: { latitude: location.coords.latitude, longitude: location.coords.longitude, latitudeDelta: 0.0922, longitudeDelta: 0.0421 }});
-  };
+  downloadMaps = () => {
+    var old = this.state.showDownloadSettings;
+    this.setState({ showDownloadSettings: !old })
+  }
 
   render() {
+    const { isOffline, showDownloadSettings } = this.state
+    const urlTemplate = isOffline
+      ? this.state.offlineUrlTemplate
+      : this.state.urlTemplate
+
+    var markers_onMap = []
+    this.state.markers.forEach(elem => {
+      markers_onMap.push(
+        <MapView.Marker key={elem.title}
+          coordinate= {elem.coords}
+          title = {elem.title}
+          description= {elem.description}
+        />
+      )
+    });
+
     return (
       <View style={styles.container}>
-        <Text style={styles.paragraph}>
-          Pan, zoom, and tap on the map!
-        </Text>
+        <View style={styles.actionContainer}>
+          <Button
+            raised
+            borderRadius={5}
+            title={'Descargar'}
+            onPress={() => this.downloadMaps()}
+          />
+          <Button
+            raised
+            borderRadius={5}
+            title={'Limpiar mapas'}
+            onPress={this.clearTiles}
+          />
+          <Button
+            raised
+            borderRadius={5}
+            title={isOffline ? 'Online' : 'Offline'}
+            onPress={() => {
+              isOffline
+                ? this.setState({ isOffline: false })
+                : this.setState({ isOffline: true })
+            }}
+          />
+        </View>
+
         <MapView
-              style={{ alignSelf: 'stretch', height: 400 }}
-              region={this.state.mapRegion}
-              onRegionChange={this._handleMapRegionChange}
-              initialRegion={{
-                latitude: 37.78825,
-                longitude: -122.4324,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
-            />
-        {
-          this.state.locationResult === null ?
-          <Text>Finding your current location...</Text> :
-          this.state.hasLocationPermissions === false ?
-            <Text>Location permissions are not granted.</Text> :
-            this.state.mapRegion === null ?
-            <Text>Map region doesn't exist.</Text> :
-            <MapView
-              style={{ alignSelf: 'stretch', height: 400 }}
-              region={this.state.mapRegion}
-              onRegionChange={this._handleMapRegionChange}
-              initialRegion={{
-                latitude: 37.78825,
-                longitude: -122.4324,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}
-            />
-        }
-        
-        <Text>
-          Location: {this.state.locationResult}
-        </Text>
+          style={{ flex: 1 }}
+          initialRegion={{ //Tandil
+            latitude: -37.3348,
+            longitude: -59.1305,
+            latitudeDelta: 1,
+            longitudeDelta: 1,
+          }}
+          onRegionChange={this.handleMapRegionChange}>
+          <MapView.UrlTile urlTemplate={urlTemplate} zIndex={1} />
+
+          {markers_onMap}
+
+        </MapView>
+
+        {this.state.showDownloadSettings && (
+          <DownloadSettings
+            mapRegion={this.state.mapRegion}
+            onSuccess={() => {
+              this.setState({ showDownloadSettings: false })
+            }}
+          />
+        )}
       </View>
-        
-    );
+    )
   }
 }
 
 const styles = StyleSheet.create({
+  actionContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    padding: 15,
+    paddingTop: Constants.statusBarHeight + 15,
+    zIndex: 999,
+    justifyContent: 'space-around',
+  },
+  button: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+  },
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: Constants.statusBarHeight,
-    backgroundColor: '#ecf0f1',
   },
-  paragraph: {
-    margin: 24,
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#34495e',
-  },
-});
+})

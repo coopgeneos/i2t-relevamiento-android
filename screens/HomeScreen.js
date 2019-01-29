@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Header, Content, Icon, Text, Button, Item,
         Form, Input, Label, Left, Spinner, Body, Right, Title } from 'native-base';
-import {formatDate} from '../src/utils';
+import {formatDate} from '../utilities/utils';
 import { Grid, Row, Col } from "react-native-easy-grid";
 // import styles from "./Styles";
 

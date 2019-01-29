@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, 
         Button, Icon, CheckBox, List, ListItem, Thumbnail, Form, Item, Label,
         Input, Left, Right, Spinner, Title, Body, DatePicker} from 'native-base';
-import {formatDate} from '../src/utils';
+import {formatDate} from '../utilities/utils';
 import styles from "./Styles";
 
 

@@ -2,7 +2,7 @@ import * as Expo from "expo";
 import React, { Component } from "react";
 import { StyleProvider } from "native-base";
 
-import Navigation from "./navigation";
+import Navigation from "../navigation/navigation";
 import getTheme from "../native-base-theme/components";
 import variables from "../native-base-theme/variables/commonColor";
 
