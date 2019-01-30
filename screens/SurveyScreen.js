@@ -6,53 +6,40 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
 
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 
-
-
-
-
-
-
 export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
-    //En esta vista es necesario que las props recibidas sean parte del state
-    const { navigation } = this.props;
-    const contact = navigation.getParam('agency', 'SIN CONTACTO');
-    console.log(contact);
-    const address = navigation.getParam('address', 'SIN DOMICILIO');
-    const city = navigation.getParam('city', 'SIN CONTACTO');
-
-    console.log(contact);
-    console.log(address);
- 
-    this.state = {
-      seg: 2,
-      contact: contact,
-      address: address,
-      city: city,
-      tableHead: ['DETALLE', 'ACCIONES'],
-      tableData: [
-        ['Relevamiento fotográfico',  'A'],
-        ['Encuesta de calidad',  'A'],
-        ['Relevamiento fotográfico',  'A'],
-        ['Encuesta de calidad',  'A']
-      ]
-
-    };
-
+    this.state = {}
   };
 
+  componentDidMount() {
+    //simulo al WS
+    setTimeout(() => {
+      let response = {
+        ext_img_uri: ''
+      };
+      this.setState ({
+        ext_img_uri: 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png',
+        int_img_uri: 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png',
+        display_use: 'No usa',
+        space_use: '50-50'
+      });
+    }, 1500);
+  }
+
+  setDisplay(value){
+    this.setState({display_use: value})
+  }
+
+  setSpace(value){
+    this.setState({space_use: value})
+  }
 
   _alertIndex(index) {
     Alert.alert(`This is row ${index + 1}`);
   }
 
-
-
-
-
   render() {
-
     const state = this.state;
 
     const cardOne = require("../assets/icon.png");
@@ -63,148 +50,123 @@ export default class ContactActScreen extends React.Component {
     let cards = [
       {
         text: "Foto de Frente",
-        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: 'https://blog.zingchart.com/content/images/2016/06/react-1.png'}} /></CardItem>,
+        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: this.state.ext_img_uri ? this.state.ext_img_uri : 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png'}} /></CardItem>,
         image: cardOne
       },
       {
         text: "Foto de Interior",
-        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: 'https://blog.zingchart.com/content/images/2016/06/react-1.png'}} /></CardItem>,
+        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: this.state.int_img_uri ? this.state.int_img_uri : 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png'}} /></CardItem>,
         image: cardTwo
       },
       {
         text: "Uso de Display",
         info: <View>
-                                        <ListItem
-                                          selected={this.state.radio1}
-                                          onPress={() => this.toggleRadio1()}
-                                        >
-                                          <Left>
-                                            <Text>No usa.</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio1}
-                                              onPress={() => this.toggleRadio1()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                        <ListItem
-                                          selected={this.state.radio2}
-                                          onPress={() => this.toggleRadio2()}
-                                        >
-                                          <Left>
-                                            <Text>Usa el de CAS.</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio2}
-                                              onPress={() => this.toggleRadio2()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                        <ListItem
-                                          selected={this.state.radio3}
-                                          onPress={() => this.toggleRadio3()}
-                                        >
-                                          <Left>
-                                            <Text>Usa uno propio.</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio3}
-                                              onPress={() => this.toggleRadio3()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                      </View>,
+                <ListItem>
+                  <Left>
+                    <Text>No usa.</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.display_use === 'No usa' ? true : false }
+                      onPress={() => this.setDisplay('No usa')}
+                    />
+                  </Right>
+                </ListItem>
+                <ListItem>
+                  <Left>
+                    <Text>Usa el de CAS.</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.display_use === 'Usa CAS' ? true : false }
+                      onPress={() => this.setDisplay('Usa CAS')}
+                    />
+                  </Right>
+                </ListItem>
+                <ListItem>
+                  <Left>
+                    <Text>Usa uno propio.</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.display_use === 'Usa propio' ? true : false }
+                      onPress={() => this.setDisplay('Usa propio')}
+                    />
+                  </Right>
+                </ListItem>
+              </View>,
         image: cardThree
       },
       {
         text: "Uso de Espacio",
         info: <View>
-                                        <ListItem
-                                          selected={this.state.radio1}
-                                          onPress={() => this.toggleRadio1()}
-                                        >
-                                          <Left>
-                                            <Text>100%</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio1}
-                                              onPress={() => this.toggleRadio1()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                        <ListItem
-                                          selected={this.state.radio2}
-                                          onPress={() => this.toggleRadio2()}
-                                        >
-                                          <Left>
-                                            <Text>80% - 20%</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio2}
-                                              onPress={() => this.toggleRadio2()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                        <ListItem
-                                          selected={this.state.radio3}
-                                          onPress={() => this.toggleRadio3()}
-                                        >
-                                          <Left>
-                                            <Text>50% - 50%</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio3}
-                                              onPress={() => this.toggleRadio3()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                        <ListItem
-                                          selected={this.state.radio4}
-                                          onPress={() => this.toggleRadio4()}
-                                        >
-                                          <Left>
-                                            <Text>20% - 80%</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio4}
-                                              onPress={() => this.toggleRadio4()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                        <ListItem
-                                          selected={this.state.radio5}
-                                          onPress={() => this.toggleRadio5()}
-                                        >
-                                          <Left>
-                                            <Text>Mínimo</Text>
-                                          </Left>
-                                          <Right>
-                                            <Radio
-                                              selected={this.state.radio5}
-                                              onPress={() => this.toggleRadio5()}
-                                            />
-                                          </Right>
-                                        </ListItem>
-                                      </View>,
+                <ListItem>
+                  <Left>
+                    <Text>100%</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.space_use == '100'}
+                      onPress={() => this.setSpace('100')}
+                    />
+                  </Right>
+                </ListItem>
+                <ListItem>
+                  <Left>
+                    <Text>80% - 20%</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.space_use == '80-20'}
+                      onPress={() => this.setSpace('80-20')}
+                    />
+                  </Right>
+                </ListItem>
+                <ListItem>
+                  <Left>
+                    <Text>50% - 50%</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.space_use == '50-50'}
+                      onPress={() => this.setSpace('50-50')}
+                    />
+                  </Right>
+                </ListItem>
+                <ListItem>
+                  <Left>
+                    <Text>20% - 80%</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.space_use == '20-80'}
+                      onPress={() => this.setSpace('20-80')}
+                    />
+                  </Right>
+                </ListItem>
+                <ListItem>
+                  <Left>
+                    <Text>Mínimo</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={this.state.space_use == '0'}
+                      onPress={() => this.setSpace('0')}
+                    />
+                  </Right>
+                </ListItem>
+              </View>,
         image: cardFour
       }
     ];
 
+    const { navigation } = this.props;
+    const contact = navigation.getParam('agency', 'SIN CONTACTO');
+    const address = navigation.getParam('address', 'SIN DOMICILIO');
+    const city = navigation.getParam('city', 'SIN CONTACTO');
+    const detail = navigation.getParam('detail', 'SIN DETALLE');
 
-
-
-    if(!this.state.tableData){
-      table = <Spinner color='blue'/>
-    } else {
-
-    }
+    var areData = this.state.ext_img_uri ? true : false
 
     return (
       <Container>
@@ -231,78 +193,86 @@ export default class ContactActScreen extends React.Component {
           
           <Card>
             <CardItem header>                        
-            <Text>Datos de Contacto</Text>
+              <Text>Datos de Contacto</Text>
             </CardItem>
 
             <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact}</Text>
+              <Label style={{ width: 80 }}>Contacto</Label><Text>{contact}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.address}</Text>
+              <Label style={{ width: 80 }}>Domicilio</Label><Text>{address}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
+              <Label style={{ width: 80 }}>Ciudad</Label><Text>{city}</Text>
+            </CardItem>
+            <CardItem>                        
+              <Label style={{ width: 80 }}>Detalle</Label><Text>{detail}</Text>
             </CardItem>
 
             <CardItem footer>                        
-            <Text></Text>
+              <Text></Text>
             </CardItem>
           </Card>
 
+          {
+            !areData ? 
+              (<Spinner color='blue'/>)
+              : (
+                <View style={{ height: 430, backgroundColor: '#778591', flex: 1, padding: 12 }}>
+                  <DeckSwiper
+                    ref={mr => (this._deckSwiper = mr)}
+                    dataSource={cards}
+                    looping={false}
+                    renderEmpty={() =>
+                      <View style={{ alignSelf: "center" }}>
+                        <View>
+                        <CardItem>
+                        <Text style={{fontSize: 16}}>Fin del Relevamiento</Text>
+                        </CardItem>
+                        <CardItem>
+                        <Text>(X) Items Completos - </Text><Text style={{color: '#F00'}}>(X) Items Incompletos</Text>
+                        </CardItem>
+                        <CardItem  style={styles.btn_card}>
+                        <Button style={styles.btn} onPress={() => this.props.navigation.navigate('ContactAct')}>
+                          <Text>Volver al Contacto</Text>
+                          <Icon name="chevron-right" />
+                        </Button>              
+                        </CardItem>
+                        </View>
+                      </View>}
+                    renderItem={item =>
+                      <Card style={{ elevation: 3, height: 400 }}>
+                        <CardItem>
+                          <Left>
+                            <Body>
+                              <Text>
+                                Consigna: {item.text}
+                              </Text>
+                            </Body>
+                          </Left>
+                        </CardItem>
 
-          <View style={{ height: 430, backgroundColor: '#778591', flex: 1, padding: 12 }}>
-          <DeckSwiper
-            ref={mr => (this._deckSwiper = mr)}
-            dataSource={cards}
-            looping={false}
-            renderEmpty={() =>
-              <View style={{ alignSelf: "center" }}>
-                <View>
-                <CardItem>
-                <Text style={{fontSize: 16}}>Fin del Relevamiento</Text>
-                </CardItem>
-                <CardItem>
-                <Text>(X) Items Completos - </Text><Text style={{color: '#F00'}}>(X) Items Incompletos</Text>
-                </CardItem>
-                <CardItem  style={styles.btn_card}>
-                <Button style={styles.btn} onPress={() => this.props.navigation.navigate('ContactActScreen')}>
-                  <Text>Volver al Contacto</Text>
-                  <Icon name="chevron-right" />
-                </Button>              
-                </CardItem>
+                        {item.info}
+
+                      <CardItem style={styles.btn_card}>
+                        <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeLeft()}>
+                          <Icon name="chevron-left" />
+                        </Button>
+                        <Button style={styles.btn} iconRight onPress={() => this._deckSwiper._root.swipeRight()}>
+                          <Text>Omitir</Text>
+                          <Icon name="chevron-right" />
+                        </Button>
+                        <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeRight()}>
+                          <Icon name="save" />
+                          <Icon name="chevron-right" />
+                        </Button>              
+                      </CardItem>
+                      </Card>}
+                  />
                 </View>
-              </View>}
-            renderItem={item =>
-              <Card style={{ elevation: 3, height: 400 }}>
-                <CardItem>
-                  <Left>
-                    <Body>
-                      <Text>
-                        Consigna: {item.text}
-                      </Text>
-                    </Body>
-                  </Left>
-                </CardItem>
-
-                {item.info}
-
-              <CardItem style={styles.btn_card}>
-                <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeLeft()}>
-                  <Icon name="chevron-left" />
-                </Button>
-                <Button style={styles.btn} iconRight onPress={() => this._deckSwiper._root.swipeRight()}>
-                  <Text>Omitir</Text>
-                  <Icon name="chevron-right" />
-                </Button>
-                <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeRight()}>
-                  <Icon name="save" />
-                  <Icon name="chevron-right" />
-                </Button>              
-              </CardItem>
-              </Card>}
-              />
-            </View>
-
+              )
+          }
+          
         </Content>
         
         <Footer>

@@ -10,53 +10,51 @@ import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 export default class ActivitiesScreen extends React.Component {
   constructor(props) {
     super(props);
-    //En esta vista es necesario que las props recibidas sean parte del state
-    const { navigation } = this.props;
-    const contact = navigation.getParam('agency', 'SIN CONTACTO');
-    console.log(contact);
-    const address = navigation.getParam('address', 'SIN DOMICILIO');
-    const city = navigation.getParam('city', 'SIN CONTACTO');
-
-    console.log(contact);
-    console.log(address);
-    
+     
     const dataSource = new ListView.DataSource({
       rowHasChanged: (row1, row2) => row1 !== row2,
     });
 
     this.state = {
-      contact: contact,
-      address: address,
-      city: city,
       dataSource: dataSource,
       tableHead: ['Actividad', 'Fecha', ''],
-      tableData: [
-        ['Relevamiento fotográfico', '28/02/2019', 'A'],
-        ['Encuesta de calidad', '28/03/2019', 'A'],
-        ['Encuesta de satisfacción', '28/04/2019', 'A'],
-        ['Relevamiento fotográfico', '28/02/2019', 'A'],
-        ['Encuesta de calidad', '28/03/2019', 'A'],
-        ['Encuesta de satisfacción', '28/04/2019', 'A'],
-        ['Relevamiento fotográfico', '28/02/2019', 'A'],
-        ['Encuesta de calidad', '28/03/2019', 'A'],
-        ['Encuesta de satisfacción', '28/04/2019', 'A'],
-        ['Relevamiento fotográfico', '28/02/2019', 'A'],
-        ['Encuesta de calidad', '28/03/2019', 'A'],
-        ['Encuesta de satisfacción', '28/04/2019', 'A']
-      ]
-
     };
-
   }
 
+  componentDidMount() {
+    //simulo al WS
+    setTimeout(() => {
+      let response = {
+        tableData: [
+          ['Relevamiento fotográfico', '28/02/2019', 'A'],
+          ['Encuesta de calidad', '28/03/2019', 'A'],
+          ['Encuesta de satisfacción', '28/04/2019', 'A'],
+          ['Relevamiento fotográfico', '28/02/2019', 'A'],
+          ['Encuesta de calidad', '28/03/2019', 'A'],
+          ['Encuesta de satisfacción', '28/04/2019', 'A'],
+          ['Relevamiento fotográfico', '28/02/2019', 'A'],
+          ['Encuesta de calidad', '28/03/2019', 'A'],
+          ['Encuesta de satisfacción', '28/04/2019', 'A'],
+          ['Relevamiento fotográfico', '28/02/2019', 'A'],
+          ['Encuesta de calidad', '28/03/2019', 'A'],
+          ['Encuesta de satisfacción', '28/04/2019', 'A']
+        ]
+      };
+      this.setState ({
+        tableData: response.tableData
+      });
+    }, 1000);
+  }
   
-  
-
   render() {
-
     let table;
-
     const state = this.state;
+
+    //En esta vista es necesario que las props recibidas sean parte del state
+    const { navigation } = this.props;
+    const contact = navigation.getParam('agency', 'SIN CONTACTO');
+    const address = navigation.getParam('address', 'SIN DOMICILIO');
+    const city = navigation.getParam('city', 'SIN CONTACTO');
 
     const element = (data, index) => (
       <TouchableOpacity onPress={() => this._alertIndex(index)}>
@@ -71,19 +69,30 @@ export default class ActivitiesScreen extends React.Component {
       </TouchableOpacity>
     );
 
-
     if(!this.state.tableData){
-      table = <Spinner/>
+      table = <Spinner color='blue'/>
     } else {
       table = <View style={styles.container}>
                 <Table borderStyle={{borderColor: 'transparent'}}>
-                  <Row data={state.tableHead} style={styles.head} textStyle={styles.text}/>
+                  <Row data={state.tableHead} style={styles.head} textStyle={styles.text_head} />
                   {
                     state.tableData.map((rowData, index) => (
                       <TableWrapper key={index} style={styles.row}>
                         {
                           rowData.map((cellData, cellIndex) => (
-                            <Cell key={cellIndex} data={cellIndex === 2 ? element(cellData, index) : cellData} textStyle={cellIndex === 2 ? styles.text_head : styles.text}/>
+                            <Cell key={cellIndex} 
+                              data={cellIndex === 2 ? element(cellData, index) : cellData} 
+                              textStyle={cellIndex === 2 ? styles.text_head : styles.text}
+                              onPress={() => 
+                                this.props.navigation.navigate('Survey', 
+                                  {
+                                    agency: contact,
+                                    address: address,
+                                    city: city,
+                                    detail: cellData
+                                  })
+                              }
+                            />
                           ))
                         }
                       </TableWrapper>
@@ -121,13 +130,13 @@ export default class ActivitiesScreen extends React.Component {
             </CardItem>
 
             <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact}</Text>
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{contact}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.address}</Text>
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{address}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
+            <Label style={{ width: 80 }}>Ciudad</Label><Text>{city}</Text>
             </CardItem>
 
             <CardItem footer>                        
@@ -135,9 +144,7 @@ export default class ActivitiesScreen extends React.Component {
             </CardItem>
           </Card>
 
-
           {table}
-
 
         </Content>
 

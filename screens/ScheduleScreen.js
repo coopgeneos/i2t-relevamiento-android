@@ -71,27 +71,7 @@ export default class ScheduleScreen extends React.Component {
   }
 
   render() {
-    let itemList
-    if(this.state.events == null){
-      itemList = <Spinner color='blue'/>
-    } else {
-
-      // Usando List ya no sería necesario
-
-      // itemList = [];
-      // for(i=0; i< this.state.events.length; i++){
-      //   itemList.push(
-      //     <ListItem style={styles.listItem} 
-      //       onPress={this.onPressRow.bind(this, this.state.events[i])}
-      //       key={i}>
-      //       <Text>{this.state.events[i].agency}</Text>
-      //       <Text>{this.state.events[i].address+' - '+this.state.events[i].city+'('+this.state.events[i].zipCode+')'}</Text>
-      //       <Text>{this.state.events[i].title}</Text>
-      //     </ListItem>
-      //   )
-      // } 
-
-    }
+    var areThereEvents = this.state.events == null ? false : true;
 
     return (
       <Container>
@@ -141,34 +121,37 @@ export default class ScheduleScreen extends React.Component {
             
           </Form>
 
-
-          <List
-            dataArray={datas}
-            renderRow={data =>
-              <ListItem thumbnail>
-                <Left>
-                  <Thumbnail square source={img_sample} />
-                </Left>
-                <Body>
-                  <Text>
-                    {data.agency}
-                  </Text>
-                  <Text numberOfLines={2} note>
-                    {data.address} - {data.city} - {data.zipCode}
-                  </Text>
-                  <Text numberOfLines={1} note>
-                    {data.event}
-                  </Text>
-                </Body>
-                <Right>
-                  <Button transparent onPress={()=>{this.props.navigation.navigate('Activities',{agency: data.agency, city: data.city, address: data.address})}} style={{fontSize: 32}}>
-                    <Icon name='search'/>
-                  </Button>
-                </Right>
-              </ListItem>}
-          />
-
-    
+          {
+            !areThereEvents ? 
+              (<Spinner color='blue'/>)
+              : (
+                <List
+                  dataArray={this.state.events}
+                  renderRow={data =>
+                    <ListItem thumbnail>
+                      <Left>
+                        <Thumbnail square source={img_sample} />
+                      </Left>
+                      <Body>
+                        <Text>
+                          {data.agency}
+                        </Text>
+                        <Text numberOfLines={2} note>
+                          {data.address} - {data.city} - {data.zipCode}
+                        </Text>
+                        <Text numberOfLines={1} note>
+                          {data.event}
+                        </Text>
+                      </Body>
+                      <Right>
+                        <Button transparent onPress={()=>{this.props.navigation.navigate('Activities',{agency: data.agency, city: data.city, address: data.address})}} style={{fontSize: 32}}>
+                          <Icon name='search'/>
+                        </Button>
+                      </Right>
+                    </ListItem>}
+                />
+            )
+          }    
         </Content>
         <Footer>
           <FooterTab>

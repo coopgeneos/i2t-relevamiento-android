@@ -4,6 +4,7 @@ import { FileSystem, MapView, Constants } from 'expo'
 import { Button } from 'react-native-elements'
 import AppConstans from '../constants/constants'
 import DownloadSettings from '../components/DownloadSettings'
+import {formatFolderMap, formatUrlMap} from '../utilities/utils'
 
 export default class MapScreen extends React.Component {
   constructor() {
@@ -11,8 +12,6 @@ export default class MapScreen extends React.Component {
     this.state = {
       isOffline: false,
       showDownloadSettings: false,
-      /*urlTemplate: `${AppConstans.MAP_URL_OSM}/{z}/{x}/{y}.png`,
-      offlineUrlTemplate: `${AppConstans.TILE_FOLDER}/{z}/{x}/{y}.png`,*/
       urlTemplate: `${AppConstans.MAP_URL_GOOGLE}&x={x}&y={y}&z={z}.png`,
       offlineUrlTemplate: `${AppConstans.TILE_FOLDER}/{x}/{y}/{z}.png`,
       mapRegion: { //Tandil

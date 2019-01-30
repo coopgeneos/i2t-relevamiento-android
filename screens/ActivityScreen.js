@@ -71,10 +71,10 @@ export default class ScheduleScreen extends React.Component {
             </CardItem>
 
             <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact}</Text>
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{contact}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.address}</Text>
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{address}</Text>
             </CardItem>
             <CardItem>                        
             <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
