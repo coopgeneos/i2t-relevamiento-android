@@ -4,6 +4,8 @@ import { Container, Header, Content, Footer, FooterTab, Text,
   Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
   Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
 
+  import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+
 
 const img_sample = require("../assets/icon.png");
 
@@ -69,11 +71,11 @@ export default class ContactsScreen extends React.Component {
       let itemList = [];
       for(i=0; i< this.state.contacts.length; i++){
         itemList.push(
-          <ListItem style={styles.listItem} key={'item_'+i}  
+          <ListItem key={'item_'+i}  
             onPress={this.onPressRow.bind(this, this.state.contacts[i])} >
             <Text>{this.state.contacts[i].agency}</Text>
-            <Text>{this.state.contacts[i].address+' - '+this.state.contacts[i].city+' ('+this.state.contacts[i].zipCode+')'}</Text>
-            <Text>{this.state.contacts[i].phone+' - '+this.state.contacts[i].email}</Text>
+            <Text>{this.state.contacts[i].address}</Text>
+            <Text>{this.state.contacts[i].city}</Text>
           </ListItem>
         )
       }
@@ -92,7 +94,7 @@ export default class ContactsScreen extends React.Component {
         <Header>
           <Left>
             <Button transparent>
-              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
             </Button>
           </Left>
           <Body>
@@ -103,7 +105,7 @@ export default class ContactsScreen extends React.Component {
               <Icon name='home'/>
             </Button>
             <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
-              <Icon name='map'/>
+              <Icon name='map-marker'/>
             </Button>
           </Right>
         </Header>
@@ -132,7 +134,7 @@ export default class ContactsScreen extends React.Component {
                   <Text>
                     {data.agency}
                   </Text>
-                  <Text numberOfLines={1} note>
+                  <Text numberOfLines={2} note>
                     {data.address} - {data.city} - {data.zipCode}
                   </Text>
                   <Text numberOfLines={1} note>
@@ -140,8 +142,8 @@ export default class ContactsScreen extends React.Component {
                   </Text>
                 </Body>
                 <Right>
-                  <Button transparent>
-                    <Text>View</Text>
+                  <Button transparent style={styles.btn} onPress={() => this.props.navigation.navigate('ContactAct',{contact: 'JUAN', address: 'ALBERDI', detail: 'MAS O MENOS'})}>
+                    <Text>+ Actividad</Text>
                   </Button>
                 </Right>
               </ListItem>}
@@ -151,19 +153,19 @@ export default class ContactsScreen extends React.Component {
         <Footer>
           <FooterTab>
             <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="calendar" />
+              <Icon name="tasks" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical onPress={() => this.props.navigation.navigate('Contacts')}>
-              <Icon name="person" />
+            <Button vertical active>
+              <Icon name="address-book" onPress={() => this.props.navigation.navigate('Contacts')}/>
               <Text>Contactos</Text>
             </Button>
-            <Button vertical active>
-              <Icon active name="settings" />
+            <Button vertical>
+              <Icon active name="cog" />
               <Text>Config</Text>
             </Button>
             <Button vertical>
-              <Icon name="sync" />
+              <Icon name="retweet" />
               <Text>Sinc</Text>
             </Button>
           </FooterTab>
@@ -172,3 +174,15 @@ export default class ContactsScreen extends React.Component {
     );
   }
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  head: { height: 40, backgroundColor: '#94A6B5' },
+  text: { margin: 6 },
+  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#94A6B5', height: 40 },
+  cellAction: { margin: 6, width: 100 },
+  btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12, color: 'white'},
+  btn_cont: { flexDirection: 'row'},
+  btn_card: { flexDirection: 'row', justifyContent: 'space-around' },
+  btnText: { textAlign: 'center', color: '#fff' }
+});

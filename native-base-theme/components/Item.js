@@ -225,15 +225,18 @@ export default (variables /*: * */ = variable) => {
       marginLeft: 0
     },
 
-    borderWidth: variables.borderWidth * 2,
-    borderTopWidth: 0,
-    borderRightWidth: 0,
-    borderLeftWidth: 0,
+    // borderWidth: variables.borderWidth * 2,
+    // borderTopWidth: 0,
+    // borderRightWidth: 0,
+    // borderLeftWidth: 0,
+    borderWidth: 0,
     borderColor: variables.inputBorderColor,
     backgroundColor: "transparent",
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 2
+    marginLeft: 2,
+    padding: 5,
+    width: '95%'
   };
 
   return itemTheme;

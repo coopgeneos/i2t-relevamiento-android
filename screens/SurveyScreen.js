@@ -1,161 +1,326 @@
 import React from 'react';
 
-import {Image} from 'react-native'
+import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
+          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, IconNB,
+          DeckSwiper, Thumbnail, List, ListItem, Radio} from 'native-base';
 
-import { Container, Header, Content, Footer, FooterTab, Text, 
-        Button, Icon, CheckBox, List, ListItem, Thumbnail, Form, Item, Label,
-        Input, Left, Right, Spinner, Title, Body, DatePicker} from 'native-base';
+import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 
-export default class SurveyScreen extends React.Component {
-  constructor() {
-    super();
 
+
+
+
+
+
+export default class ContactActScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    //En esta vista es necesario que las props recibidas sean parte del state
+    const { navigation } = this.props;
+    const contact = navigation.getParam('agency', 'SIN CONTACTO');
+    console.log(contact);
+    const address = navigation.getParam('address', 'SIN DOMICILIO');
+    const city = navigation.getParam('city', 'SIN CONTACTO');
+
+    console.log(contact);
+    console.log(address);
+ 
     this.state = {
-      step: 0,
+      seg: 2,
+      contact: contact,
+      address: address,
+      city: city,
+      tableHead: ['DETALLE', 'ACCIONES'],
+      tableData: [
+        ['Relevamiento fotográfico',  'A'],
+        ['Encuesta de calidad',  'A'],
+        ['Relevamiento fotográfico',  'A'],
+        ['Encuesta de calidad',  'A']
+      ]
+
     };
 
-    this.save = this.save.bind(this);
+  };
+
+
+  _alertIndex(index) {
+    Alert.alert(`This is row ${index + 1}`);
   }
 
-  componentDidMount() {
-    setTimeout(() => {
-      let response = [
-        {title: 'Foto exterior', type: 'image', img_uri: 'https://facebook.github.io/react-native/docs/assets/favicon.png', button_msg: 'Guardar y seguir'},
-        {title: 'Foto interior', type: 'image', img_uri: 'https://xeelha.files.wordpress.com/2017/01/img_2477.jpg?w=600', button_msg: 'Guardar y seguir'},
-        {title: 'Uso del Display', type: 'radio', values: ['No usa', 'Usa el de CAS', 'Usa otro'], button_msg: 'Guardar y seguir'},
-        {title: 'Uso del espacio', type: 'radio', values: ['100%', '80% - 20%', '50% - 50%', '20% - 80%', '0%'], button_msg: 'Guardar y salir'}
-      ];
-      this.setState({
-        dataSource: response,
-        max_step: response.length - 1
-      });
-    }, 1000); 
-  }
-  
-  save() {
-    if(this.state.max_step && this.state.step == this.state.max_step){
-      return this.props.navigation.navigate('Activities');
-    }
 
-    this.setState(prevState => (
-      {step: prevState.step + 1}
-    ))   
-  }
-  
+
+
+
   render() {
-    const { navigation } = this.props;
-    const contact = navigation.getParam('contact', 'SIN CONTACTO');
-    const address = navigation.getParam('address', 'SIN DOMICILIO');
-    const detail = navigation.getParam('detail', 'SIN DETALLE');
 
-    let blockWithData;
-    if(!this.state.dataSource){
-      blockWithData = <Spinner color='blue'/>
-    } else {
-      let field;
-      if(this.state.dataSource[this.state.step].type == 'image') {
-        field = <Item key={'image'}><Image style={{width: 150, height: 150}} source={{uri: this.state.dataSource[this.state.step].img_uri}} /></Item>
-      } else {
-        field = []; 
-        for(i=0; i<this.state.dataSource[this.state.step].values.length; i++){
-          field.push( 
-            <ListItem selected={false} key={this.state.dataSource[this.state.step].values[i]}>
-              <Left>
-                <Radio
-                  color={"#f0ad4e"}
-                  selectedColor={"#5cb85c"}
-                  selected={false}
-                />
-              </Left>
-              <Right>
-                <Text>{this.state.dataSource[this.state.step].values[i]}</Text>
-              </Right>
-            </ListItem>
-          );
-        }
+    const state = this.state;
+
+    const cardOne = require("../assets/icon.png");
+    const cardTwo = require("../assets/icon.png");
+    const cardThree = require("../assets/icon.png");
+    const cardFour = require("../assets/icon.png");
+
+    let cards = [
+      {
+        text: "Foto de Frente",
+        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: 'https://blog.zingchart.com/content/images/2016/06/react-1.png'}} /></CardItem>,
+        image: cardOne
+      },
+      {
+        text: "Foto de Interior",
+        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: 'https://blog.zingchart.com/content/images/2016/06/react-1.png'}} /></CardItem>,
+        image: cardTwo
+      },
+      {
+        text: "Uso de Display",
+        info: <View>
+                                        <ListItem
+                                          selected={this.state.radio1}
+                                          onPress={() => this.toggleRadio1()}
+                                        >
+                                          <Left>
+                                            <Text>No usa.</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio1}
+                                              onPress={() => this.toggleRadio1()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                        <ListItem
+                                          selected={this.state.radio2}
+                                          onPress={() => this.toggleRadio2()}
+                                        >
+                                          <Left>
+                                            <Text>Usa el de CAS.</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio2}
+                                              onPress={() => this.toggleRadio2()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                        <ListItem
+                                          selected={this.state.radio3}
+                                          onPress={() => this.toggleRadio3()}
+                                        >
+                                          <Left>
+                                            <Text>Usa uno propio.</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio3}
+                                              onPress={() => this.toggleRadio3()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                      </View>,
+        image: cardThree
+      },
+      {
+        text: "Uso de Espacio",
+        info: <View>
+                                        <ListItem
+                                          selected={this.state.radio1}
+                                          onPress={() => this.toggleRadio1()}
+                                        >
+                                          <Left>
+                                            <Text>100%</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio1}
+                                              onPress={() => this.toggleRadio1()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                        <ListItem
+                                          selected={this.state.radio2}
+                                          onPress={() => this.toggleRadio2()}
+                                        >
+                                          <Left>
+                                            <Text>80% - 20%</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio2}
+                                              onPress={() => this.toggleRadio2()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                        <ListItem
+                                          selected={this.state.radio3}
+                                          onPress={() => this.toggleRadio3()}
+                                        >
+                                          <Left>
+                                            <Text>50% - 50%</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio3}
+                                              onPress={() => this.toggleRadio3()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                        <ListItem
+                                          selected={this.state.radio4}
+                                          onPress={() => this.toggleRadio4()}
+                                        >
+                                          <Left>
+                                            <Text>20% - 80%</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio4}
+                                              onPress={() => this.toggleRadio4()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                        <ListItem
+                                          selected={this.state.radio5}
+                                          onPress={() => this.toggleRadio5()}
+                                        >
+                                          <Left>
+                                            <Text>Mínimo</Text>
+                                          </Left>
+                                          <Right>
+                                            <Radio
+                                              selected={this.state.radio5}
+                                              onPress={() => this.toggleRadio5()}
+                                            />
+                                          </Right>
+                                        </ListItem>
+                                      </View>,
+        image: cardFour
       }
+    ];
 
-      blockWithData = [];
-      blockWithData.push(
-        <Item inlineLabel last key={'title'}>
-          <Label>title</Label>
-          <Input value={this.state.dataSource[this.state.step].title} editable={false}/>
-        </Item>);
-      blockWithData.push(
-        field
-      );
-      blockWithData.push(
-        <Item inlineLabel last key={'buttons_act'}>
-          <Button onPress={() => this.save()}>
-            <Text>{this.state.dataSource[this.state.step].button_msg}</Text>
-          </Button>
-          <Button onPress={() => alert('Omitiendo...')}>
-            <Text>Omitir</Text>
-          </Button>
-        </Item> 
-      );
-      blockWithData.push(
-        <Button onPress={() => this.props.navigation.navigate('Activities')} key={'button_back'}>
-          <Text>Volver</Text>
-        </Button>
-      );
+
+
+
+    if(!this.state.tableData){
+      table = <Spinner color='blue'/>
+    } else {
+
     }
-    
-    return (      
+
+    return (
       <Container>
         <Header>
           <Left>
             <Button transparent>
-              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
             </Button>
           </Left>
           <Body>
-            <Title>Encuesta</Title>
+            <Title>Relevamiento</Title>
           </Body>
           <Right>
             <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
               <Icon name='home'/>
             </Button>
             <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
-              <Icon name='map'/>
+              <Icon name='map-marker'/>
             </Button>
           </Right>
         </Header>
+
         <Content>
-          <Form>         
-            <Item inlineLabel>
-              <Label>Contacto</Label>
-              <Input value={contact} editable={false}/>
-            </Item>
-            <Item inlineLabel last>
-              <Label>Domicilio</Label>
-              <Input value={address} editable={false}/>
-            </Item>
-            <Item inlineLabel last>
-              <Label>Detalle</Label>
-              <Input value={detail} editable={false}/>
-            </Item>
+          
+          <Card>
+            <CardItem header>                        
+            <Text>Datos de Contacto</Text>
+            </CardItem>
 
-            {blockWithData}
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact}</Text>
+            </CardItem>
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.address}</Text>
+            </CardItem>
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
+            </CardItem>
 
-          </Form>        
+            <CardItem footer>                        
+            <Text></Text>
+            </CardItem>
+          </Card>
+
+
+          <View style={{ height: 430, backgroundColor: '#778591', flex: 1, padding: 12 }}>
+          <DeckSwiper
+            ref={mr => (this._deckSwiper = mr)}
+            dataSource={cards}
+            looping={false}
+            renderEmpty={() =>
+              <View style={{ alignSelf: "center" }}>
+                <View>
+                <CardItem>
+                <Text style={{fontSize: 16}}>Fin del Relevamiento</Text>
+                </CardItem>
+                <CardItem>
+                <Text>(X) Items Completos - </Text><Text style={{color: '#F00'}}>(X) Items Incompletos</Text>
+                </CardItem>
+                <CardItem  style={styles.btn_card}>
+                <Button style={styles.btn} onPress={() => this.props.navigation.navigate('ContactActScreen')}>
+                  <Text>Volver al Contacto</Text>
+                  <Icon name="chevron-right" />
+                </Button>              
+                </CardItem>
+                </View>
+              </View>}
+            renderItem={item =>
+              <Card style={{ elevation: 3, height: 400 }}>
+                <CardItem>
+                  <Left>
+                    <Body>
+                      <Text>
+                        Consigna: {item.text}
+                      </Text>
+                    </Body>
+                  </Left>
+                </CardItem>
+
+                {item.info}
+
+              <CardItem style={styles.btn_card}>
+                <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeLeft()}>
+                  <Icon name="chevron-left" />
+                </Button>
+                <Button style={styles.btn} iconRight onPress={() => this._deckSwiper._root.swipeRight()}>
+                  <Text>Omitir</Text>
+                  <Icon name="chevron-right" />
+                </Button>
+                <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeRight()}>
+                  <Icon name="save" />
+                  <Icon name="chevron-right" />
+                </Button>              
+              </CardItem>
+              </Card>}
+              />
+            </View>
+
         </Content>
+        
         <Footer>
           <FooterTab>
             <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="calendar" />
+              <Icon name="tasks" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical onPress={() => this.props.navigation.navigate('Contacts')}>
-              <Icon name="person" />
+            <Button vertical active>
+              <Icon name="address-book" onPress={() => this.props.navigation.navigate('Contacts')}/>
               <Text>Contactos</Text>
             </Button>
-            <Button vertical active>
-              <Icon active name="settings" />
+            <Button vertical>
+              <Icon active name="cog" />
               <Text>Config</Text>
             </Button>
             <Button vertical>
-              <Icon name="sync" />
+              <Icon name="retweet" />
               <Text>Sinc</Text>
             </Button>
           </FooterTab>
@@ -164,3 +329,15 @@ export default class SurveyScreen extends React.Component {
     );
   }  
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  head: { height: 40, backgroundColor: '#94A6B5' },
+  text: { margin: 6 },
+  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#94A6B5', height: 40 },
+  cellAction: { margin: 6, width: 100 },
+  btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
+  btn_cont: { flexDirection: 'row'},
+  btn_card: { flexDirection: 'row', justifyContent: 'space-around' },
+  btnText: { textAlign: 'center', color: '#fff' }
+});

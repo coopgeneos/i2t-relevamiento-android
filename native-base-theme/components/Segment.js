@@ -17,6 +17,7 @@ export default (variables /*: * */ = variable) => {
       paddingTop: 3,
       paddingBottom: 3,
       height: 30,
+      width: '70%',
       backgroundColor: "transparent",
       borderWidth: 1,
       borderLeftWidth: 0,

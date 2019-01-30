@@ -291,7 +291,7 @@ export default (variables /*: * */ = variable) => {
           ".transparent": {
             "NativeBase.Text": {
               fontSize: variables.listNoteSize,
-              color: variables.sTabBarActiveTextColor
+              color: 'white'
             }
           },
           height: null

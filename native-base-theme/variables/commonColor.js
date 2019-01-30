@@ -153,7 +153,7 @@ export default {
   tabActiveBgColor: platform === "ios" ? "#F08377" : "#F08377",
 
   // Header
-  toolbarBtnColor: platform === "ios" ? "#F08377" : "#F08377",
+  toolbarBtnColor: platform === "ios" ? "#FFF" : "#FFF",
   toolbarDefaultBg: platform === "ios" ? "#534D64" : "#534D64",
   toolbarHeight: platform === "ios" ? 64 : 56,
   toolbarSearchIconSize: platform === "ios" ? 20 : 23,
@@ -175,7 +175,7 @@ export default {
   },
 
   // Icon
-  iconFamily: "Ionicons",
+  iconFamily: "FontAwesome",
   iconFontSize: platform === "ios" ? 30 : 28,
   iconHeaderSize: platform === "ios" ? 33 : 24,
 
@@ -222,15 +222,15 @@ export default {
   },
 
   // Segment
-  segmentBackgroundColor: platform === "ios" ? "#F8F8F8" : "#3F51B5",
+  segmentBackgroundColor: platform === "ios" ? "#F8F8F8" : "#F08377",
   segmentActiveBackgroundColor: platform === "ios" ? "#007aff" : "#fff",
   segmentTextColor: platform === "ios" ? "#007aff" : "#fff",
-  segmentActiveTextColor: platform === "ios" ? "#fff" : "#3F51B5",
+  segmentActiveTextColor: platform === "ios" ? "#fff" : "#F08377",
   segmentBorderColor: platform === "ios" ? "#007aff" : "#fff",
-  segmentBorderColorMain: platform === "ios" ? "#a7a6ab" : "#3F51B5",
+  segmentBorderColorMain: platform === "ios" ? "#a7a6ab" : "#F08377",
 
   // Spinner
-  defaultSpinnerColor: "#45D56E",
+  defaultSpinnerColor: "#F08377",
   inverseSpinnerColor: "#1A191B",
 
   // Tab
@@ -245,7 +245,7 @@ export default {
   tabFontSize: 15,
 
   // Text
-  textColor: "#F08377",
+  textColor: "#000",
   inverseTextColor: "#fff",
   noteFontSize: 14,
   get defaultTextColor() {
@@ -256,8 +256,8 @@ export default {
   titleFontfamily: platform === "ios" ? "System" : "Roboto_medium",
   titleFontSize: platform === "ios" ? 17 : 19,
   subTitleFontSize: platform === "ios" ? 11 : 14,
-  subtitleColor: platform === "ios" ? "#F08377" : "#F08377",
-  titleFontColor: platform === "ios" ? "#F08377" : "#F08377",
+  subtitleColor: platform === "ios" ? "#FFF" : "#FFF",
+  titleFontColor: platform === "ios" ? "#FFF" : "#FFF",
 
   // Other
   borderRadiusBase: platform === "ios" ? 5 : 2,

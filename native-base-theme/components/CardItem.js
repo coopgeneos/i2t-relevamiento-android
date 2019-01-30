@@ -131,8 +131,9 @@ export default (variables /*: * */ = variable) => {
     },
     ".header": {
       "NativeBase.Text": {
-        fontSize: 16,
-        fontWeight: platform === "ios" ? "600" : "500"
+        fontSize: 18,
+        // fontWeight: platform === "ios" ? "600" : "500",
+        color: '#FFF'
       },
       ".bordered": {
         "NativeBase.Text": {
@@ -142,7 +143,10 @@ export default (variables /*: * */ = variable) => {
         borderBottomWidth: variables.borderWidth
       },
       borderBottomWidth: null,
-      paddingVertical: variables.cardItemPadding + 5
+      height: 30,
+      paddingVertical: variables.cardItemPadding + 5,
+      color:'#FFF',
+      backgroundColor: '#778591'
     },
     ".footer": {
       "NativeBase.Text": {
@@ -156,7 +160,9 @@ export default (variables /*: * */ = variable) => {
         },
         borderTopWidth: variables.borderWidth
       },
-      borderBottomWidth: null
+      borderBottomWidth: null,
+      height: 7,
+      backgroundColor: '#778591'
     },
     "NativeBase.Text": {
       ".note": {
@@ -189,7 +195,8 @@ export default (variables /*: * */ = variable) => {
     borderRadius: 2,
     padding: variables.cardItemPadding + 5,
     paddingVertical: variables.cardItemPadding,
-    backgroundColor: variables.cardDefaultBg
+    backgroundColor: variables.cardDefaultBg,
+    fontSize: 16,
   };
 
   return cardItemTheme;

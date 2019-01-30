@@ -1,131 +1,145 @@
 import React from 'react';
-import { Container, Header, Content, Footer, FooterTab, Text, Button, 
-         Icon, Form, Item, Label, Input, Spinner } from 'native-base';
-import { Cell, DataTable, HeaderCell, Row } from 'react-native-data-table';
-import { ListView } from 'react-native';
-import styles from './Styles';
 
-export default class ActivitiesScreen extends React.Component {
+import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
+         Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
+
+import { StyleSheet, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+
+import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
+
+export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
     //En esta vista es necesario que las props recibidas sean parte del state
     const { navigation } = this.props;
     const contact = navigation.getParam('agency', 'SIN CONTACTO');
+    console.log(contact);
     const address = navigation.getParam('address', 'SIN DOMICILIO');
+    const city = navigation.getParam('city', 'SIN CONTACTO');
 
+    console.log(contact);
+    console.log(address);
+ 
     this.state = {
       contact: contact,
       address: address,
-      dataSource: []
-    };   
+      city: city,
+      tableHead: ['Actividad', ''],
+      tableData: [
+        ['Relevamiento fotográfico',  'A'],
+        ['Encuesta de calidad',  'A'],
+        ['Relevamiento fotográfico',  'A'],
+        ['Encuesta de calidad',  'A']
+      ]
+
+    };
+
   }
 
-  componentDidMount() {
-    setTimeout(() => {
-      let response = [
-        {detail: 'Actividad 1', date: '2018-01-01'},
-        {detail: 'Actividad 2', date: '2018-01-01'}
-      ];
-      this.setState({
-        data: response,
-        dataSource: this.state.dataSource.cloneWithRows(response),
-      });
-    }, 2000); 
-  }
-  
-  renderHeader() {
-    return (
-      <Header style={styles.header}>
-        <HeaderCell text={'Detalle'} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
-        <HeaderCell text={'Fecha'} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
-        <HeaderCell text={''} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
-      </Header>
-    );
-  }
-
-  renderRow(item) {
-    let action = [];
-    if(item.state == 'draft'){
-      action.push(<Icon key={item.detail+'_create'} name='create' onPress={() => this.props.navigation.navigate('Activity',{contact: this.state.contact, address: this.state.address, detail: item.detail})}/>);
-      action.push(<Icon key={item.detail+'_clock'} name='clock'/>);
-    }
-    if(item.state == 'completed')
-      action.push(<Icon key={item.detail+'_check'} name='md-checkmark-circle'/>)
-
-    return (
-      <Row style={styles.row} key={item.detail}>
-        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-            <Text onPress={() => this.props.navigation.navigate('Survey',{contact: this.state.contact, address: this.state.address, detail: item.detail})}>
-              {item.detail}
-            </Text>
-        </Cell>
-        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-            {item.date}
-        </Cell>
-        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-          <Item inlineLabel>
-            {action}
-          </Item>
-        </Cell>
-      </Row>
-    );
+  _alertIndex(index) {
+    Alert.alert(`This is row ${index + 1}`);
   }
 
   render() {
     let table;
-    if(!this.state.data){
-      table = <Spinner color='blue'/>
+
+    const state = this.state;
+
+    const element = (data, index) => (
+        <View style={styles.btn_cont}>
+            <Button style={styles.btn} onPress={() => this.props.navigation.navigate('Survey',{contact: this.state.contact, address: this.state.address, detail: 'DETALLE'})}>
+            <Text>Iniciar</Text>
+            </Button>
+        </View>
+    );
+
+
+
+
+    if(!this.state.tableData){
+      table = <Spinner/>
     } else {
-      table = <Item style={styles.dataTableContainer}>
-                <Item style={styles.dataTable}>
-                  <DataTable  
-                    dataSource={this.state.dataSource}
-                    renderRow={this.renderRow}
-                    renderHeader={this.renderHeader}
-                  />
-                </Item>
-              </Item>
+      table = <View style={styles.container}>
+                <Table borderStyle={{borderColor: 'transparent'}}>
+                  <Row data={state.tableHead} style={styles.head} textStyle={styles.text}/>
+                  {
+                    state.tableData.map((rowData, index) => (
+                      <TableWrapper key={index} style={styles.row}>
+                        {
+                          rowData.map((cellData, cellIndex) => (
+                            <Cell key={cellIndex} data={cellIndex === 1 ? element(cellData, index) : cellData} textStyle={styles.text}/>
+                          ))
+                        }
+                      </TableWrapper>
+                    ))
+                  }
+                </Table>
+              </View>
     }
 
     return (
       <Container>
         <Header>
-          <Text style={styles.header}>Actividades</Text>
+          <Left>
+            <Button transparent>
+              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
+            </Button>
+          </Left>
+          <Body>
+            <Title>Actividades Disponibles</Title>
+          </Body>
+          <Right>
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 30}}>
+              <Icon name='home'/>
+            </Button>
+            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 30}}>
+              <Icon name='map-marker'/>
+            </Button>
+          </Right>
         </Header>
         <Content>
-          <Form>
-            <Item inlineLabel>
-              <Label>Contacto</Label>
-              <Input value={this.state.contact} editable={false}/>
-            </Item>
-            <Item inlineLabel last>
-              <Label>Domicilio</Label>
-              <Input value={this.state.address} editable={false}/>
-            </Item>
-          </Form>
+          
+          <Card>
+            <CardItem header>                        
+            <Text>Datos de Contacto</Text>
+            </CardItem>
+
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact}</Text>
+            </CardItem>
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.address}</Text>
+            </CardItem>
+            <CardItem>                        
+            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
+            </CardItem>
+
+            <CardItem footer>                        
+            <Text></Text>
+            </CardItem>
+          </Card>
+
 
           {table}
 
-          <Button onPress={() => this.props.navigation.navigate('Schedule')}>
-            <Text>Volver</Text>
-          </Button>
+
         </Content>
         <Footer>
           <FooterTab>
             <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="calendar" />
+              <Icon name="tasks" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical>
-              <Icon name="person" onPress={() => this.props.navigation.navigate('Contacts')}/>
+            <Button vertical active  onPress={() => this.props.navigation.navigate('Contacts')}>
+              <Icon name="address-book"/>
               <Text>Contactos</Text>
             </Button>
-            <Button vertical active>
-              <Icon active name="settings" />
+            <Button vertical>
+              <Icon active name="cog" />
               <Text>Config</Text>
             </Button>
             <Button vertical>
-              <Icon name="sync" />
+              <Icon name="retweet" />
               <Text>Sinc</Text>
             </Button>
           </FooterTab>
@@ -134,3 +148,14 @@ export default class ActivitiesScreen extends React.Component {
     );
   }  
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  head: { height: 40, backgroundColor: '#778591' },
+  text: { margin: 6, fontSize: 12},
+  text_head: { margin: 6, fontSize: 16, color: '#FFF',  fontSize: 18},
+  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 40 },
+  btn: { height: 22, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
+  btn_cont: { flexDirection: 'row'},
+  btnText: { textAlign: 'center', color: '#fff'}
+});

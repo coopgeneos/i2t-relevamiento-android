@@ -98,7 +98,7 @@ export default class ScheduleScreen extends React.Component {
         <Header>
           <Left>
             <Button transparent>
-              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
             </Button>
           </Left>
           <Body>
@@ -109,7 +109,7 @@ export default class ScheduleScreen extends React.Component {
               <Icon name='home'/>
             </Button>
             <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
-              <Icon name='map'/>
+              <Icon name='map-marker'/>
             </Button>
           </Right>
         </Header>
@@ -128,8 +128,8 @@ export default class ScheduleScreen extends React.Component {
                   animationType={"fade"}
                   androidMode={"default"}
                   placeHolderText="Ingresar Fecha"
-                  textStyle={{ color: "#F08377" }}
-                  placeHolderTextStyle={{ color: "#CCC" }}
+                  textStyle={{ color: '#F08377' }}
+                  placeHolderTextStyle={{ color: '#CCC' }}
                   onDateChange={this.setDate}
                   disabled={false}
                 />            
@@ -145,7 +145,7 @@ export default class ScheduleScreen extends React.Component {
           <List
             dataArray={datas}
             renderRow={data =>
-              <ListItem thumbnail onPress={()=>{this.props.navigation.navigate('Activities',{agency: data.agency, city: data.city, address: data.address})}}>
+              <ListItem thumbnail>
                 <Left>
                   <Thumbnail square source={img_sample} />
                 </Left>
@@ -153,7 +153,7 @@ export default class ScheduleScreen extends React.Component {
                   <Text>
                     {data.agency}
                   </Text>
-                  <Text numberOfLines={1} note>
+                  <Text numberOfLines={2} note>
                     {data.address} - {data.city} - {data.zipCode}
                   </Text>
                   <Text numberOfLines={1} note>
@@ -161,8 +161,8 @@ export default class ScheduleScreen extends React.Component {
                   </Text>
                 </Body>
                 <Right>
-                  <Button transparent>
-                    <Text>View</Text>
+                  <Button transparent onPress={()=>{this.props.navigation.navigate('Activities',{agency: data.agency, city: data.city, address: data.address})}} style={{fontSize: 32}}>
+                    <Icon name='search'/>
                   </Button>
                 </Right>
               </ListItem>}
@@ -172,20 +172,20 @@ export default class ScheduleScreen extends React.Component {
         </Content>
         <Footer>
           <FooterTab>
-            <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="calendar" />
+            <Button vertical active onPress={() => this.props.navigation.navigate('Schedule')}>
+              <Icon name="tasks" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical onPress={() => this.props.navigation.navigate('Contacts')}>
-              <Icon name="person" />
+            <Button vertical>
+              <Icon name="address-book" onPress={() => this.props.navigation.navigate('Contacts')}/>
               <Text>Contactos</Text>
             </Button>
-            <Button vertical active>
-              <Icon active name="settings" />
+            <Button vertical>
+              <Icon active name="cog" />
               <Text>Config</Text>
             </Button>
             <Button vertical>
-              <Icon name="sync" />
+              <Icon name="retweet" />
               <Text>Sinc</Text>
             </Button>
           </FooterTab>

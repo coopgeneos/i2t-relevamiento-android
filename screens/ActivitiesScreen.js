@@ -3,9 +3,9 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
 
-import { Cell, DataTable, HeaderCell, Row } from 'react-native-data-table';
-import { ListView } from 'react-native';
-import styles from './Styles';
+import { StyleSheet, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+
+import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 
 export default class ActivitiesScreen extends React.Component {
   constructor(props) {
@@ -28,76 +28,69 @@ export default class ActivitiesScreen extends React.Component {
       contact: contact,
       address: address,
       city: city,
-      dataSource: dataSource
+      dataSource: dataSource,
+      tableHead: ['Actividad', 'Fecha', ''],
+      tableData: [
+        ['Relevamiento fotográfico', '28/02/2019', 'A'],
+        ['Encuesta de calidad', '28/03/2019', 'A'],
+        ['Encuesta de satisfacción', '28/04/2019', 'A'],
+        ['Relevamiento fotográfico', '28/02/2019', 'A'],
+        ['Encuesta de calidad', '28/03/2019', 'A'],
+        ['Encuesta de satisfacción', '28/04/2019', 'A'],
+        ['Relevamiento fotográfico', '28/02/2019', 'A'],
+        ['Encuesta de calidad', '28/03/2019', 'A'],
+        ['Encuesta de satisfacción', '28/04/2019', 'A'],
+        ['Relevamiento fotográfico', '28/02/2019', 'A'],
+        ['Encuesta de calidad', '28/03/2019', 'A'],
+        ['Encuesta de satisfacción', '28/04/2019', 'A']
+      ]
+
     };
 
-    this.renderHeader = this.renderHeader.bind(this);
-    this.renderRow = this.renderRow.bind(this);
   }
 
-  componentDidMount() {
-    setTimeout(() => {
-      let response = [
-        {detail: 'Actividad 1', date: '2018-01-01', state: 'completed'},
-        {detail: 'Actividad 2', date: '2018-01-01', state: 'draft'}
-      ];
-      this.setState({
-        data: response,
-        dataSource: this.state.dataSource.cloneWithRows(response),
-      });
-    }, 2000); 
-  }
   
-  renderHeader() {
-    return (
-      <Header style={styles.header}>
-        <HeaderCell text={'Detalle'} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
-        <HeaderCell text={'Fecha'} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
-        <HeaderCell text={''} style={styles.headerCell} textStyle={styles.headerCellText} width={1} />
-      </Header>
-    );
-  }
-
-  renderRow(item) {
-    let action = [];
-    if(item.state == 'draft'){
-      action.push(<Icon key={item.detail+'_create'} name='create' onPress={() => this.props.navigation.navigate('Activity',{contact: this.state.contact, address: this.state.address, detail: item.detail})}/>);
-      action.push(<Icon key={item.detail+'_clock'} name='clock'/>);
-    }
-    if(item.state == 'completed')
-      action.push(<Icon key={item.detail+'_check'} name='md-checkmark-circle'/>)
-
-    return (
-      <Row style={styles.row} key={item.detail}>
-        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-            <Text onPress={() => this.props.navigation.navigate('Survey',{contact: this.state.contact, address: this.state.address, detail: item.detail})}>
-              {item.detail}
-            </Text>
-        </Cell>
-        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-            {item.date}
-        </Cell>
-        <Cell style={styles.cell} textStyle={styles.cellText} width={1} >
-          <Item inlineLabel>
-            {action}
-          </Item>
-        </Cell>
-      </Row>
-    );
-  }
+  
 
   render() {
+
     let table;
-    if(!this.state.data){
-      table = <Spinner color='blue'/>
+
+    const state = this.state;
+
+    const element = (data, index) => (
+      <TouchableOpacity onPress={() => this._alertIndex(index)}>
+        <View style={styles.btn_cont}>
+            <Button transparent onPress={() => this.props.navigation.navigate('Activity',{contact: 'JUAN', address: 'ALBERDI', detail: 'MAS O MENOS'})}>
+            <Icon name='edit'/>
+            </Button>
+            <Button transparent>
+            <Icon name='battery-2'/>
+            </Button>
+        </View>
+      </TouchableOpacity>
+    );
+
+
+    if(!this.state.tableData){
+      table = <Spinner/>
     } else {
-      table = <Item style={styles.dataTableContainer}>
-                  <DataTable  
-                    dataSource={this.state.dataSource}
-                    renderRow={this.renderRow}
-                    renderHeader={this.renderHeader}
-                  />
-              </Item>
+      table = <View style={styles.container}>
+                <Table borderStyle={{borderColor: 'transparent'}}>
+                  <Row data={state.tableHead} style={styles.head} textStyle={styles.text}/>
+                  {
+                    state.tableData.map((rowData, index) => (
+                      <TableWrapper key={index} style={styles.row}>
+                        {
+                          rowData.map((cellData, cellIndex) => (
+                            <Cell key={cellIndex} data={cellIndex === 2 ? element(cellData, index) : cellData} textStyle={cellIndex === 2 ? styles.text_head : styles.text}/>
+                          ))
+                        }
+                      </TableWrapper>
+                    ))
+                  }
+                </Table>
+              </View>
     }
 
     return (
@@ -105,25 +98,25 @@ export default class ActivitiesScreen extends React.Component {
         <Header>
           <Left>
             <Button transparent>
-              <Icon name='book' style={{fontSize: 32, color: 'white'}}/>
+              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
             </Button>
           </Left>
           <Body>
             <Title>Actividades</Title>
           </Body>
           <Right>
-            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 30}}>
               <Icon name='home'/>
             </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
-              <Icon name='map'/>
+            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 30}}>
+              <Icon name='map-marker'/>
             </Button>
           </Right>
         </Header>
         <Content>
           
           <Card>
-            <CardItem header style={{color:'#534D64', backgroundColor: '#778591'}}>                        
+            <CardItem header>                        
             <Text>Datos de Contacto</Text>
             </CardItem>
 
@@ -137,7 +130,7 @@ export default class ActivitiesScreen extends React.Component {
             <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
             </CardItem>
 
-            <CardItem footer style={{ height: 10, backgroundColor: '#94A6B5'}}>                        
+            <CardItem footer>                        
             <Text></Text>
             </CardItem>
           </Card>
@@ -147,22 +140,23 @@ export default class ActivitiesScreen extends React.Component {
 
 
         </Content>
+
         <Footer>
           <FooterTab>
-            <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="calendar" />
+            <Button vertical active onPress={() => this.props.navigation.navigate('Schedule')}>
+              <Icon name="tasks" />
               <Text>Agenda</Text>
             </Button>
             <Button vertical>
-              <Icon name="person" onPress={() => this.props.navigation.navigate('Contacts')}/>
+              <Icon name="address-book" onPress={() => this.props.navigation.navigate('Contacts')}/>
               <Text>Contactos</Text>
             </Button>
-            <Button vertical active>
-              <Icon active name="settings" />
+            <Button vertical>
+              <Icon active name="cog" />
               <Text>Config</Text>
             </Button>
             <Button vertical>
-              <Icon name="sync" />
+              <Icon name="retweet" />
               <Text>Sinc</Text>
             </Button>
           </FooterTab>
@@ -171,3 +165,14 @@ export default class ActivitiesScreen extends React.Component {
     );
   }  
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  head: { height: 40, backgroundColor: '#778591' },
+  text: { margin: 6, fontSize: 12},
+  text_head: { margin: 6, fontSize: 16, color: '#FFF',  fontSize: 18},
+  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 40 },
+  btn: { width: 58, height: 25, backgroundColor: '#F08377',  borderRadius: 2 },
+  btn_cont: { flexDirection: 'row' },
+  btnText: { textAlign: 'center', color: '#fff' }
+});

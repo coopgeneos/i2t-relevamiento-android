@@ -18,7 +18,8 @@ export default (variables /*: * */ = variable) => {
     paddingLeft: 10,
     paddingRight: 5,
     fontSize: 15,
-    textAlignVertical: "top"
+    textAlignVertical: "top",
+    width: '95%'
   };
 
   return textAreaTheme;
