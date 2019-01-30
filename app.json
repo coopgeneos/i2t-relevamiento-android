@@ -25,6 +25,9 @@
     "ios": {
       "supportsTablet": true
     },
-    "description": ""
+    "description": "",
+    "android":{
+      "package": "com.geneos.idost.relevamiento"
+    }
   }
 }
