@@ -69,7 +69,7 @@ export default class HomeScreen extends React.Component {
           <Row  style={{ height: 120 }}>
             <Col>
             <Button transparent onPress={() => this.props.navigation.navigate('Schedule')} block style={{flex: 1}}>
-              <Icon name='tasks' style={{fontSize: 60, color: 'white'}}/>
+              <Icon name='list-alt' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
@@ -104,12 +104,15 @@ export default class HomeScreen extends React.Component {
               </Left>
             </CardItem>
             <CardItem>
-              <Body>
-                <Image source={{uri: 'https://blog.zingchart.com/content/images/2016/06/react-1.png'}} style={{height: 100, width: 200, flex: 1}}/>
-                <Text>
-                  Pendientes de Sincronización [5] Contactos
-                </Text>
-              </Body>
+              <Left>
+                <Icon active name="bookmark" />
+                <Body>
+                  <Text>
+                  Pendientes de Sincronización 
+                  </Text>
+                  <Text note>[5] Contactos</Text>
+                </Body>
+              </Left>
             </CardItem>
             <CardItem>
               <Left>
