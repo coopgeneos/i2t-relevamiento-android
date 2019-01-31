@@ -5,6 +5,7 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
           DeckSwiper, Thumbnail, List, ListItem, Radio} from 'native-base';
 
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+import { ImagePicker } from 'expo';
 
 export default class ContactActScreen extends React.Component {
   constructor(props) {
@@ -19,7 +20,7 @@ export default class ContactActScreen extends React.Component {
         ext_img_uri: ''
       };
       this.setState ({
-        ext_img_uri: 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png',
+        ext_img_uri: 'http://www.ellitoral.com/diarios/2011/09/29/sucesos/SUCE-02-web-images/3_dc_fmt.jpeg',
         int_img_uri: 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png',
         display_use: 'No usa',
         space_use: '50-50'
@@ -39,6 +40,20 @@ export default class ContactActScreen extends React.Component {
     Alert.alert(`This is row ${index + 1}`);
   }
 
+  pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+
+    alert(result.uri);
+    console.log(result)
+
+    if (!result.cancelled) {
+      this.setState({ image: result.uri });
+    }
+  };
+
   render() {
     const state = this.state;
 
@@ -47,15 +62,34 @@ export default class ContactActScreen extends React.Component {
     const cardThree = require("../assets/icon.png");
     const cardFour = require("../assets/icon.png");
 
+    const { navigation } = this.props;
+    const extImg = navigation.getParam('extImg', null);
+    const intImg = navigation.getParam('intImg', null);
+    console.log(extImg)
+
     let cards = [
       {
         text: "Foto de Frente",
-        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: this.state.ext_img_uri ? this.state.ext_img_uri : 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png'}} /></CardItem>,
+        info: <CardItem>
+                <Left>
+                  <Image style={{width: 150, height: 150}} 
+                    source={{uri: extImg ? extImg : (this.state.ext_img_uri ? this.state.ext_img_uri : 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png') }} />
+                </Left>
+                <Body></Body>
+                <Right>
+                  <Button transparent onPress={() => this.props.navigation.navigate('Camera', {callFrom: 'exterior'})}  style={{fontSize: 32}}>
+                    <Icon name='camera'/>
+                  </Button>
+                  <Button transparent onPress={() => {this.pickImage()}}  style={{fontSize: 32}}>
+                    <Icon name='folder'/>
+                  </Button>
+                </Right>
+              </CardItem>,
         image: cardOne
       },
       {
         text: "Foto de Interior",
-        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: this.state.int_img_uri ? this.state.int_img_uri : 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png'}} /></CardItem>,
+        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: intImg}} /></CardItem>,
         image: cardTwo
       },
       {
@@ -160,7 +194,6 @@ export default class ContactActScreen extends React.Component {
       }
     ];
 
-    const { navigation } = this.props;
     const contact = navigation.getParam('agency', 'SIN CONTACTO');
     const address = navigation.getParam('address', 'SIN DOMICILIO');
     const city = navigation.getParam('city', 'SIN CONTACTO');

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Slider, ActivityIndicator } from 'react-native'
 import { FileSystem, Constants } from 'expo'
 import { Card, Button } from 'react-native-elements'
 import { tileGridForRegion } from '../utilities/TileGrid'
-import AppConstans from '../constants/constants'
+import AppConstants from '../constants/constants'
 import {formatFolderMap, formatUrlMap} from '../utilities/utils'
 import { checkForUpdateAsync } from 'expo/build/Updates/Updates';
 
@@ -73,15 +73,15 @@ export default class DownloadSettings extends React.Component {
     const tiles = this.state.tileGrid
 
     for(i=0; i<tiles.length; i++){
-      await this._checkAndCreateFolder(`${AppConstans.TILE_FOLDER}/${tiles[i].x}/${tiles[i].y}/${tiles[i].z}`)
+      await this._checkAndCreateFolder(`${AppConstants.TILE_FOLDER}/${tiles[i].x}/${tiles[i].y}/${tiles[i].z}`)
         .catch(err => {
           console.log('Se produjo un error al crear una carpeta: '+err);
         })
     }
     
     const tile_downloads = tiles.map(tile => {
-      const fetchUrl = `${AppConstans.MAP_URL_GOOGLE}&x=${tile.x}&y=${tile.y}&z=${tile.z}.png`
-      const localLocation = `${AppConstans.TILE_FOLDER}/${tile.x}/${tile.y}/${tile.z}.png`
+      const fetchUrl = `${AppConstants.MAP_URL_GOOGLE}&x=${tile.x}&y=${tile.y}&z=${tile.z}.png`
+      const localLocation = `${AppConstants.TILE_FOLDER}/${tile.x}/${tile.y}/${tile.z}.png`
       FileSystem.downloadAsync(fetchUrl, localLocation)
         .then(resp => {
           console.log('Se descargo: '+resp)

@@ -9,6 +9,7 @@ import SurveyScreen from '../screens/SurveyScreen'
 import ActivityScreen from '../screens/ActivityScreen'
 import MapScreen from '../screens/MapScreen'
 import ContactActScreen from '../screens/ContactActScreen'
+import CameraScreen from '../screens/CameraScreen'
 
 const AppNavigator = createStackNavigator(
   {
@@ -20,9 +21,14 @@ const AppNavigator = createStackNavigator(
     Activity: {screen: ActivityScreen },
     Map: {screen: MapScreen },
     ContactAct: { screen: ContactActScreen },
+    Camera: { screen: CameraScreen },
   }, 
   {
     initialRouteName: 'Home',
   });
+
+/*const SwitchNavigator = createSwitchNavigator({
+  Main: MainTabNavigator,
+})*/
 
 export default createAppContainer(AppNavigator);

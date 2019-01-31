@@ -3,9 +3,8 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, 
   Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
   Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
-
-  import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
-
+import FooterNavBar from '../components/FooterNavBar'
+import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 
 const img_sample = require("../assets/icon.png");
 
@@ -148,20 +147,19 @@ export default class ContactsScreen extends React.Component {
                 </Right>
               </ListItem>}
             />
-
         </Content>
         <Footer>
           <FooterTab>
-            <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
+            <Button vertical active onPress={() => this.props.navigation.navigate('Schedule')}>
               <Icon name="tasks" />
               <Text>Agenda</Text>
             </Button>
-            <Button vertical active>
+            <Button vertical>
               <Icon name="address-book" onPress={() => this.props.navigation.navigate('Contacts')}/>
               <Text>Contactos</Text>
             </Button>
             <Button vertical>
-              <Icon active name="cog" />
+              <Icon active name="cog" onPress={() => this.props.navigation.navigate('Camera')}/>
               <Text>Config</Text>
             </Button>
             <Button vertical>
