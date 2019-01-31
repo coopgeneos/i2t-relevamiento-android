@@ -222,11 +222,11 @@ export default {
   },
 
   // Segment
-  segmentBackgroundColor: platform === "ios" ? "#F8F8F8" : "#F08377",
+  segmentBackgroundColor: platform === "ios" ? "#534D64" : "#534D64",
   segmentActiveBackgroundColor: platform === "ios" ? "#007aff" : "#fff",
   segmentTextColor: platform === "ios" ? "#007aff" : "#fff",
   segmentActiveTextColor: platform === "ios" ? "#fff" : "#F08377",
-  segmentBorderColor: platform === "ios" ? "#007aff" : "#fff",
+  segmentBorderColor: platform === "ios" ? "#F08377" : "#F08377",
   segmentBorderColorMain: platform === "ios" ? "#a7a6ab" : "#F08377",
 
   // Spinner

@@ -61,7 +61,7 @@ export default class ContactActScreen extends React.Component {
     } else {
       table = <View style={styles.container}>
                 <Table borderStyle={{borderColor: 'transparent'}}>
-                  <Row data={state.tableHead} style={styles.head} textStyle={styles.text}/>
+                  <Row data={state.tableHead} style={styles.head} textStyle={styles.text_head}/>
                   {
                     state.tableData.map((rowData, index) => (
                       <TableWrapper key={index} style={styles.row}>
