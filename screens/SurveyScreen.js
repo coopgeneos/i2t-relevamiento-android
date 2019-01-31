@@ -6,6 +6,8 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
 
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 import { ImagePicker } from 'expo';
+import FooterNavBar from '../components/FooterNavBar';
+import AppConstants from '../constants/constants'
 
 export default class ContactActScreen extends React.Component {
   constructor(props) {
@@ -21,7 +23,7 @@ export default class ContactActScreen extends React.Component {
       };
       this.setState ({
         ext_img_uri: 'http://www.ellitoral.com/diarios/2011/09/29/sucesos/SUCE-02-web-images/3_dc_fmt.jpeg',
-        int_img_uri: 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png',
+        int_img_uri: AppConstants.PHOTO_DEFAULT,
         display_use: 'No usa',
         space_use: '50-50'
       });
@@ -40,17 +42,21 @@ export default class ContactActScreen extends React.Component {
     Alert.alert(`This is row ${index + 1}`);
   }
 
-  pickImage = async () => {
+  pickImage = async (callFrom) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       aspect: [4, 3],
     });
 
-    alert(result.uri);
-    console.log(result)
-
     if (!result.cancelled) {
-      this.setState({ image: result.uri });
+      switch(callFrom){
+        case 'exterior':
+          this.setState({ ext_img_uri: result.uri });
+          break;
+        case 'interior':
+          this.setState({ int_img_uri: result.uri });
+          break;
+      }  
     }
   };
 
@@ -65,7 +71,6 @@ export default class ContactActScreen extends React.Component {
     const { navigation } = this.props;
     const extImg = navigation.getParam('extImg', null);
     const intImg = navigation.getParam('intImg', null);
-    console.log(extImg)
 
     let cards = [
       {
@@ -73,14 +78,14 @@ export default class ContactActScreen extends React.Component {
         info: <CardItem>
                 <Left>
                   <Image style={{width: 150, height: 150}} 
-                    source={{uri: extImg ? extImg : (this.state.ext_img_uri ? this.state.ext_img_uri : 'https://cdn.dribbble.com/users/634336/screenshots/2246883/_____.png') }} />
+                    source={{uri: extImg ? extImg : (this.state.ext_img_uri ? this.state.ext_img_uri : AppConstants.PHOTO_DEFAULT) }} />
                 </Left>
                 <Body></Body>
                 <Right>
                   <Button transparent onPress={() => this.props.navigation.navigate('Camera', {callFrom: 'exterior'})}  style={{fontSize: 32}}>
                     <Icon name='camera'/>
                   </Button>
-                  <Button transparent onPress={() => {this.pickImage()}}  style={{fontSize: 32}}>
+                  <Button transparent onPress={() => {this.pickImage('exterior')}}  style={{fontSize: 32}}>
                     <Icon name='folder'/>
                   </Button>
                 </Right>
@@ -89,7 +94,21 @@ export default class ContactActScreen extends React.Component {
       },
       {
         text: "Foto de Interior",
-        info: <CardItem><Image style={{width: 150, height: 150}} source={{uri: intImg}} /></CardItem>,
+        info: <CardItem>
+                <Left>
+                  <Image style={{width: 150, height: 150}} 
+                    source={{uri: intImg ? intImg : (this.state.int_img_uri ? this.state.int_img_uri : AppConstants.PHOTO_DEFAULT) }} />
+                </Left>
+                <Body></Body>
+                <Right>
+                  <Button transparent onPress={() => this.props.navigation.navigate('Camera', {callFrom: 'interior'})}  style={{fontSize: 32}}>
+                    <Icon name='camera'/>
+                  </Button>
+                  <Button transparent onPress={() => {this.pickImage('interior')}}  style={{fontSize: 32}}>
+                    <Icon name='folder'/>
+                  </Button>
+                </Right>
+              </CardItem>,
         image: cardTwo
       },
       {
@@ -308,26 +327,8 @@ export default class ContactActScreen extends React.Component {
           
         </Content>
         
-        <Footer>
-          <FooterTab>
-            <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="tasks" />
-              <Text>Agenda</Text>
-            </Button>
-            <Button vertical active>
-              <Icon name="address-book" onPress={() => this.props.navigation.navigate('Contacts')}/>
-              <Text>Contactos</Text>
-            </Button>
-            <Button vertical>
-              <Icon active name="cog" />
-              <Text>Config</Text>
-            </Button>
-            <Button vertical>
-              <Icon name="retweet" />
-              <Text>Sinc</Text>
-            </Button>
-          </FooterTab>
-        </Footer>
+        <FooterNavBar navigation={this.props.navigation} />
+
       </Container>
     );
   }  

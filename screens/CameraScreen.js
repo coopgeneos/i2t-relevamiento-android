@@ -146,7 +146,10 @@ export default class CameraScreen extends React.Component {
     this.setState({dialogVisible : false})
     switch(callFrom){
       case 'exterior':
-        this.props.navigation.navigate('Survey', {extImg: this.state.lastTookImg})
+        this.props.navigation.navigate('Survey', {extImg: this.state.lastTookImg, intImg: null})
+        break;
+      case 'interior':
+        this.props.navigation.navigate('Survey', {extImg: null, intImg: this.state.lastTookImg})
         break;
       default:
         break;
