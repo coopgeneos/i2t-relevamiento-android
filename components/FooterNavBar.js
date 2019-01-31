@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Container,Footer, FooterTab, Text, Button, Icon } from 'native-base';
+import { Footer, FooterTab, Text, Button, Icon } from 'native-base';
 
 
 export default class FooterNavBar extends React.Component {
@@ -11,7 +11,7 @@ export default class FooterNavBar extends React.Component {
   render() {
     
     return (
-      <Container>
+        <Footer>
           <FooterTab>
             <Button vertical active onPress={() => this.props.navigation.navigate('Schedule')}>
               <Icon name="tasks" />
@@ -30,7 +30,7 @@ export default class FooterNavBar extends React.Component {
               <Text>Sinc</Text>
             </Button>
           </FooterTab>
-        </Container>
+        </Footer>
     );
   }  
 }
