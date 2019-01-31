@@ -7,6 +7,9 @@ import { StyleSheet, View, TouchableOpacity, Alert, ListView, ScrollView} from '
 
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 
+import FooterNavBar from '../components/FooterNavBar';
+import HeaderNavBar from '../components/HeaderNavBar';
+
 export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -79,24 +82,7 @@ export default class ContactActScreen extends React.Component {
 
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent>
-              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
-            </Button>
-          </Left>
-          <Body>
-            <Title>Actividades Disponibles</Title>
-          </Body>
-          <Right>
-            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 30}}>
-              <Icon name='home'/>
-            </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 30}}>
-              <Icon name='map-marker'/>
-            </Button>
-          </Right>
-        </Header>
+        <HeaderNavBar navigation={this.props.navigation}  title="Actividades Disponibles" />
         <Content>
           
           <Card>
@@ -124,26 +110,7 @@ export default class ContactActScreen extends React.Component {
 
 
         </Content>
-        <Footer>
-          <FooterTab>
-            <Button vertical onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="tasks" />
-              <Text>Agenda</Text>
-            </Button>
-            <Button vertical active  onPress={() => this.props.navigation.navigate('Contacts')}>
-              <Icon name="address-book"/>
-              <Text>Contactos</Text>
-            </Button>
-            <Button vertical>
-              <Icon active name="cog" />
-              <Text>Config</Text>
-            </Button>
-            <Button vertical>
-              <Icon name="retweet" />
-              <Text>Sinc</Text>
-            </Button>
-          </FooterTab>
-        </Footer>
+        <FooterNavBar navigation={this.props.navigation} />
       </Container>
     );
   }  

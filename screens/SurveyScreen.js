@@ -6,7 +6,10 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
 
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 import { ImagePicker } from 'expo';
+
 import FooterNavBar from '../components/FooterNavBar';
+import HeaderNavBar from '../components/HeaderNavBar';
+
 import AppConstants from '../constants/constants'
 
 export default class ContactActScreen extends React.Component {
@@ -222,25 +225,7 @@ export default class ContactActScreen extends React.Component {
 
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent>
-              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
-            </Button>
-          </Left>
-          <Body>
-            <Title>Relevamiento</Title>
-          </Body>
-          <Right>
-            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
-              <Icon name='home'/>
-            </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
-              <Icon name='map-marker'/>
-            </Button>
-          </Right>
-        </Header>
-
+        <HeaderNavBar navigation={this.props.navigation}  title="Relevamiento" />
         <Content>
           
           <Card>

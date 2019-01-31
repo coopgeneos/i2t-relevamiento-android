@@ -80,12 +80,12 @@ export default class HomeScreen extends React.Component {
           </Row>
           <Row  style={{ height: 120 }}>
             <Col>
-            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}}>
+            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}} onPress={() => this.props.navigation.navigate('Configuration')}>
               <Icon name='cog' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
-            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}}>
+            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}} onPress={() => this.props.navigation.navigate('Sincronize')}>
               <Icon name='retweet' style={{fontSize: 60, color: 'white'}}/>
 
             </Button>

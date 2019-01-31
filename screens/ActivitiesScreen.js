@@ -107,7 +107,7 @@ export default class ActivitiesScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar title="Actividades" />
+        <HeaderNavBar navigation={this.props.navigation}  title="Actividades" />
         <Content>
           
           <Card>

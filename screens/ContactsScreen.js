@@ -3,8 +3,11 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, 
   Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
   Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
-import FooterNavBar from '../components/FooterNavBar'
+
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+
+import FooterNavBar from '../components/FooterNavBar';
+import HeaderNavBar from '../components/HeaderNavBar';
 
 const img_sample = require("../assets/icon.png");
 
@@ -90,25 +93,8 @@ export default class ContactsScreen extends React.Component {
 
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent>
-              <Icon name='yelp' style={{fontSize: 34, color: 'white'}}/>
-            </Button>
-          </Left>
-          <Body>
-            <Title>Contactos</Title>
-          </Body>
-          <Right>
-            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 32}}>
-              <Icon name='home'/>
-            </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 32}}>
-              <Icon name='map-marker'/>
-            </Button>
-          </Right>
-        </Header>
-        <Content>
+          <HeaderNavBar title="Actividades" />
+          <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
@@ -148,26 +134,7 @@ export default class ContactsScreen extends React.Component {
               </ListItem>}
             />
         </Content>
-        <Footer>
-          <FooterTab>
-            <Button vertical active onPress={() => this.props.navigation.navigate('Schedule')}>
-              <Icon name="tasks" />
-              <Text>Agenda</Text>
-            </Button>
-            <Button vertical>
-              <Icon name="address-book" onPress={() => this.props.navigation.navigate('Contacts')}/>
-              <Text>Contactos</Text>
-            </Button>
-            <Button vertical>
-              <Icon active name="cog" onPress={() => this.props.navigation.navigate('Camera')}/>
-              <Text>Config</Text>
-            </Button>
-            <Button vertical>
-              <Icon name="retweet" />
-              <Text>Sinc</Text>
-            </Button>
-          </FooterTab>
-        </Footer>
+        <FooterNavBar navigation={this.props.navigation} />
       </Container>
     );
   }
