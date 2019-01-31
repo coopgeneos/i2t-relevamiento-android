@@ -10,6 +10,8 @@ import ActivityScreen from '../screens/ActivityScreen'
 import MapScreen from '../screens/MapScreen'
 import ContactActScreen from '../screens/ContactActScreen'
 import CameraScreen from '../screens/CameraScreen'
+import ConfigurationScreen from '../screens/ConfigurationScreen'
+import SincronizeScreen from '../screens/SincronizeScreen'
 
 const AppNavigator = createStackNavigator(
   {
@@ -22,6 +24,8 @@ const AppNavigator = createStackNavigator(
     Map: {screen: MapScreen },
     ContactAct: { screen: ContactActScreen },
     Camera: { screen: CameraScreen },
+    Configuration: { screen: ConfigurationScreen },
+    Sincronize: { screen: SincronizeScreen },
   }, 
   {
     initialRouteName: 'Home',
