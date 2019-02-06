@@ -93,7 +93,7 @@ export default class ContactsScreen extends React.Component {
 
     return (
       <Container>
-          <HeaderNavBar title="Actividades" />
+          <HeaderNavBar navigation={this.props.navigation} title="Actividades" />
           <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             

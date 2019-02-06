@@ -24,13 +24,13 @@ export default class HomeScreen extends React.Component {
       let loggedUser = {name: 'Luis', lastName: 'Segundo', email: 'luissegundo@unmail.com',lastSync: new Date(), pendingSyncs: 5};
       this.setState ({
         user: loggedUser.email,
-        lastSync: formatDate(loggedUser.lastSync),
+        lastSync: loggedUser.lastSync,
         pendingSyncs: loggedUser.pendingSyncs.toString(),
         completeName: loggedUser.name+' '+loggedUser.lastName,
       });
     }, 1000);    
   }
-  
+
   render() {
     let formItem;
     if(this.state.user == ''){
@@ -43,7 +43,7 @@ export default class HomeScreen extends React.Component {
                   </Item>
                   <Item inlineLabel>
                     <Left><Label>Ultima sincronización</Label></Left>
-                    <Left><Input value={this.state.lastSync} editable={false}/></Left>
+                    <Left><Input value={formatDate(this.state.lastSync)} editable={false}/></Left>
                   </Item>
                   <Item inlineLabel last>
                     <Left><Label>Pendientes sincronización</Label></Left>
@@ -80,12 +80,12 @@ export default class HomeScreen extends React.Component {
           </Row>
           <Row  style={{ height: 120 }}>
             <Col>
-            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}} onPress={() => this.props.navigation.navigate('Configuration')}>
+            <Button transparent onPress={() => this.props.navigation.navigate('Configuration')} block style={{flex: 1}}>
               <Icon name='cog' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
-            <Button transparent onPress={() => alert('No hago nada')} block style={{flex: 1}} onPress={() => this.props.navigation.navigate('Sincronize')}>
+            <Button transparent onPress={() => this.props.navigation.navigate('Sincronize')} block style={{flex: 1}}>
               <Icon name='retweet' style={{fontSize: 60, color: 'white'}}/>
 
             </Button>
@@ -110,7 +110,7 @@ export default class HomeScreen extends React.Component {
                   <Text>
                   Pendientes de Sincronización 
                   </Text>
-                  <Text note>[5] Contactos</Text>
+                  <Text note>[{this.state.pendingSyncs}] Contactos</Text>
                 </Body>
               </Left>
             </CardItem>
@@ -118,7 +118,7 @@ export default class HomeScreen extends React.Component {
               <Left>
                 <Button transparent textStyle={{color: '#87838B'}}>
                   <Icon name="retweet" />
-                  <Text style={{fontSize: 12}}>Ultima Sincronización 12/1/2018</Text>
+                  <Text style={{fontSize: 12}}>Ultima Sincronización {formatDate(this.state.lastSync)}</Text>
                 </Button>
               </Left>
             </CardItem>

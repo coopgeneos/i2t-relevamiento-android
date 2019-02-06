@@ -6,7 +6,6 @@ import { Footer, FooterTab, Text, Button, Icon } from 'native-base';
 export default class FooterNavBar extends React.Component {
   constructor(props) {
     super(props);
-    console.log(this.props.navigation.state.routeName);
   }
   
   render() {
