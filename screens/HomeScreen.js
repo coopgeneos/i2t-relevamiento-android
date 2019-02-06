@@ -3,13 +3,15 @@ import { Container, Header, Content, Icon, Text, Button, Item,
         Form, Input, Label, Left, Spinner, Body, Right, Title, Card, CardItem, Thumbnail, } from 'native-base';
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 import {formatDate} from '../utilities/utils';
+import SQLite from 'expo';
 
 import { Grid, Row, Col } from "react-native-easy-grid";
 // import styles from "./Styles";
 
 export default class HomeScreen extends React.Component { 
   constructor() {
-    super();   
+    super();
+    //DB = SQLite.openDatabase('relevamiento.db');   
     this.state = {
       user: '',
       lastSync : '',
@@ -19,16 +21,28 @@ export default class HomeScreen extends React.Component {
 
   // Metodo donde llamar a los WS iniciales
   componentDidMount() {
-    //simulo al WS
-    setTimeout(() => {
-      let loggedUser = {name: 'Luis', lastName: 'Segundo', email: 'luissegundo@unmail.com',lastSync: new Date(), pendingSyncs: 5};
-      this.setState ({
-        user: loggedUser.email,
-        lastSync: loggedUser.lastSync,
-        pendingSyncs: loggedUser.pendingSyncs.toString(),
-        completeName: loggedUser.name+' '+loggedUser.lastName,
-      });
-    }, 1000);    
+    console.log(DB)
+    //Esto deberia ser global, pero por alguna razon no esta funcionando
+    var DB = Expo.SQLite.openDatabase('relevamiento.db');
+    DB.transaction(tx => {
+      tx.executeSql(
+        'select * from User;',
+        [],
+        (_, { rows }) => {
+          //Me quedo con el primer usuario que encuentro para probar
+          var loggedUser = rows._array[0];
+          this.setState ({
+            user: loggedUser.email,
+            lastSync: new Date(),
+            pendingSyncs: '5',
+            completeName: loggedUser.name,
+          });
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });   
   }
 
   render() {
