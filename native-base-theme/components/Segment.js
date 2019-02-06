@@ -7,6 +7,8 @@ export default (variables /*: * */ = variable) => {
 
   const segmentTheme = {
     height: 45,
+    width: 300,
+    alignSelf: "center",
     borderColor: variables.segmentBorderColorMain,
     flexDirection: "row",
     justifyContent: "space-around",
@@ -19,7 +21,7 @@ export default (variables /*: * */ = variable) => {
       paddingLeft: 5,
       paddingRight: 5,
       height: 30,
-      width: '70%',
+      // width: '50%',
       backgroundColor: "transparent",
       borderWidth: 0,
       borderLeftWidth: 0,

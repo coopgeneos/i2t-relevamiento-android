@@ -222,12 +222,12 @@ export default {
   },
 
   // Segment
-  segmentBackgroundColor: platform === "ios" ? "#534D64" : "#534D64",
-  segmentActiveBackgroundColor: platform === "ios" ? "#007aff" : "#fff",
-  segmentTextColor: platform === "ios" ? "#007aff" : "#fff",
-  segmentActiveTextColor: platform === "ios" ? "#fff" : "#F08377",
-  segmentBorderColor: platform === "ios" ? "#F08377" : "#F08377",
-  segmentBorderColorMain: platform === "ios" ? "#a7a6ab" : "#F08377",
+  segmentBackgroundColor: platform === "ios" ? "#778591" : "#778591",
+  segmentActiveBackgroundColor: platform === "ios" ? "#F08377" : "#F08377",
+  segmentTextColor: platform === "ios" ? "#FFF" : "#FFF",
+  segmentActiveTextColor: platform === "ios" ? "#FFF" : "#FFF",
+  segmentBorderColor: platform === "ios" ? "#000" : "#000",
+  segmentBorderColorMain: platform === "ios" ? "#000" : "#000",
 
   // Spinner
   defaultSpinnerColor: "#F08377",

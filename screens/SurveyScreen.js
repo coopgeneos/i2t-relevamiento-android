@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
           Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, IconNB,
-          DeckSwiper, Thumbnail, List, ListItem, Radio} from 'native-base';
+          DeckSwiper, Thumbnail, List, ListItem, Radio, Segment} from 'native-base';
 
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 import { ImagePicker } from 'expo';
@@ -11,11 +11,14 @@ import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
 import AppConstants from '../constants/constants'
+import { Divider } from 'react-native-elements';
 
 export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {}
+    this.state = {
+      seg: 1
+    }
   };
 
   componentDidMount() {
@@ -223,6 +226,8 @@ export default class ContactActScreen extends React.Component {
 
     var areData = this.state.ext_img_uri ? true : false
 
+    console.log("Leña para el carbón: " + this.state.seg);
+
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Relevamiento" />
@@ -253,59 +258,45 @@ export default class ContactActScreen extends React.Component {
 
           {
             !areData ? 
-              (<Spinner color='blue'/>)
+              (<Spinner />)
               : (
-                <View style={{ height: 430, backgroundColor: '#778591', flex: 1, padding: 12 }}>
-                  <DeckSwiper
-                    ref={mr => (this._deckSwiper = mr)}
-                    dataSource={cards}
-                    looping={false}
-                    renderEmpty={() =>
-                      <View style={{ alignSelf: "center" }}>
-                        <View>
-                        <CardItem>
-                        <Text style={{fontSize: 16}}>Fin del Relevamiento</Text>
-                        </CardItem>
-                        <CardItem>
-                        <Text>(X) Items Completos - </Text><Text style={{color: '#F00'}}>(X) Items Incompletos</Text>
-                        </CardItem>
-                        <CardItem  style={styles.btn_card}>
-                        <Button style={styles.btn} onPress={() => this.props.navigation.navigate('ContactAct')}>
-                          <Text>Volver al Contacto</Text>
-                          <Icon name="chevron-right" />
-                        </Button>              
-                        </CardItem>
-                        </View>
-                      </View>}
-                    renderItem={item =>
-                      <Card style={{ elevation: 3, height: 400 }}>
-                        <CardItem>
-                          <Left>
-                            <Body>
-                              <Text>
-                                Consigna: {item.text}
-                              </Text>
-                            </Body>
-                          </Left>
-                        </CardItem>
+                <View style={styles.container}>
 
-                        {item.info}
+                <Segment>
+                  <Button
+                    last
+                    active={this.state.seg === 1 ? false : true}
+                    onPress={() => this.setState(prevState => ({seg: prevState.seg - 1}))}
+                    disabled={this.state.seg === 1 ? true : false}
+                  >
+                    <Icon name="arrow-circle-left" />
+                  </Button>
+                  <Button
+                    first
+                    active={this.state.seg === 4 ? false : true}
+                    disabled={this.state.seg === 4 ? true : false}
+                    onPress={() => this.setState(prevState => ({seg: prevState.seg + 1}))}
+                  >
+                    <Text>OMITIR</Text>
+                  </Button>
+                  <Button
+                    first
+                    active={this.state.seg === 4 ? false : true}
+                    disabled={this.state.seg === 4 ? true : false}
+                    onPress={() => this.setState(prevState => ({seg: prevState.seg + 1}))}
+                  >
+                    <Icon name="save" />
+                    <Icon name="arrow-circle-right" />
+                  </Button>
 
-                      <CardItem style={styles.btn_card}>
-                        <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeLeft()}>
-                          <Icon name="chevron-left" />
-                        </Button>
-                        <Button style={styles.btn} iconRight onPress={() => this._deckSwiper._root.swipeRight()}>
-                          <Text>Omitir</Text>
-                          <Icon name="chevron-right" />
-                        </Button>
-                        <Button style={styles.btn} onPress={() => this._deckSwiper._root.swipeRight()}>
-                          <Icon name="save" />
-                          <Icon name="chevron-right" />
-                        </Button>              
-                      </CardItem>
-                      </Card>}
-                  />
+                </Segment>
+                <Content padder>
+                  {this.state.seg === 1 && cards[0].info}
+                  {this.state.seg === 2 && cards[1].info}
+                  {this.state.seg === 3 && cards[2].info}
+                  {this.state.seg === 4 && cards[3].info}
+                </Content>
+
                 </View>
               )
           }
@@ -320,7 +311,7 @@ export default class ContactActScreen extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  container: { flex: 1, justifyContent: "center", marginBottom: 80, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#94A6B5' },
   text: { margin: 6 },
   row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#94A6B5', height: 40 },
