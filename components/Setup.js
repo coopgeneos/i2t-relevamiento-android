@@ -64,7 +64,7 @@ export default class Setup extends Component {
               }
             )                         
           } else {
-            console.info('Se estableció correctamente la base de datos');
+            console.log('\x1b[47m\x1b[30mSe estableció correctamente la base de datos\x1b[0m\x1b[40m');
             global.DB = Expo.SQLite.openDatabase('relevamiento.db');
             resolve('Instaciada')
           }

@@ -14,6 +14,8 @@ stms.push(`
 		user_id INTEGER,
 		description TEXT,
 		address TEXT,
+		city TEXT,
+		zipCode TEXT,
 		phone TEXT,
 		email TEXT,
 		hours TEXT,
@@ -27,7 +29,7 @@ stms.push(`
 		user_id INTEGER,
 		contact_id INTEGER,
 		type TEXT,
-		priority TEXT,
+		priority INTEGER,
 		planned_date TEXT,
 		observations TEXT,
 		state TEXT,
@@ -64,8 +66,8 @@ stms.push(`
 		schedule_id INTEGER NOT NULL,
 		activityType_id INTEGER NOT NULL,
 		contact_id INTEGER NOT NULL,
-		answer_image BLOB NOT NULL,
-		answer_text TEXT NOT NULL,
+		answer_image BLOB,
+		answer_text TEXT,
 		FOREIGN KEY(schedule_id) REFERENCES Schedule(id),
 		FOREIGN KEY(activityType_id) REFERENCES ActivityType(id),
 		FOREIGN KEY(contact_id) REFERENCES Contact(id)
@@ -85,7 +87,20 @@ stms.push(`
 		value TEXT
 	);`);
 
-stms.push(`INSERT INTO user(email, name, username, password, lastSync) values ('luis@unmail.com', 'Luis Juan', 'ljuan', 'robi123', '2019/01/16');`);
+stms.push(`INSERT INTO User(email, name, username, password, lastSync) values ('luis@unmail.com', 'Luis Juan', 'ljuan', 'robi123', '2019/01/16');`);
+stms.push(`INSERT INTO Contact(user_id, description, address, city, zipCode, phone, email, hours, latitude, longitude) 
+	values (1, 'Jose Suarez (Dueño)', 'Buzon 456', 'Tandil', '7000', '2494875465', 'jsuarez@unmail.com', '8 a 16 hs', -37.3214476 , -59.1179599);`);
+stms.push(`INSERT INTO Schedule(user_id, contact_id, type, priority, planned_date, observations, state, exec_date, latitude, longitude)
+	values (1, 1,'Comun', 2, '2019/03/06', '', 'Sin visitar', '2019/03/10', -37.353535, -59.125458);`);
+stms.push(`INSERT INTO ActivityType (description) values ('Relevamiento fotográfico exterior');`);
+stms.push(`INSERT INTO ActivityType (description) values ('Uso del display');`);
+stms.push(`INSERT INTO ItemActType (activityType_id, type) values (1, 'imagen');`);
+stms.push(`INSERT INTO ItemActType (activityType_id, type) values (1, 'lista');`);
+stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (2, 'No usa');`);
+stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (2, 'Usa el de CAS');`);
+stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (2, 'Usa uno propio');`);
+stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, answer_text)
+	values (1, 2, 1, 'Usa el de CAS');`);
 
 export default {
 	SCHEMA: stms

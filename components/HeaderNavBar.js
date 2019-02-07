@@ -6,11 +6,9 @@ import { Header, Left, Title, Body, Right, Text, Button, Icon } from 'native-bas
 export default class HeaderNavBar extends React.Component {
   constructor(props) {
     super(props);
-    
   }
   
   render() {
-    
     return (
         <Header>
           <Left>
@@ -25,7 +23,7 @@ export default class HeaderNavBar extends React.Component {
             <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 30}}>
               <Icon name='home'/>
             </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Map')}   style={{fontSize: 30}}>
+            <Button transparent onPress={() => this.props.navigation.navigate('Map', {markers: this.props.markers})}   style={{fontSize: 30}}>
               <Icon name='map-marker'/>
             </Button>
           </Right>

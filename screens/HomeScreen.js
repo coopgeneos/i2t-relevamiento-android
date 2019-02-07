@@ -21,20 +21,22 @@ export default class HomeScreen extends React.Component {
 
   // Metodo donde llamar a los WS iniciales
   componentDidMount() {
-    console.log(DB)
     //Esto deberia ser global, pero por alguna razon no esta funcionando
     var DB = Expo.SQLite.openDatabase('relevamiento.db');
     DB.transaction(tx => {
       tx.executeSql(
-        'select * from User;',
+        ` select u.*, count(s.id) as pendingSyncs 
+          from user u
+          inner join schedule s on (u.id =s.user_id)
+          where s.state != 'Completa'`,
         [],
         (_, { rows }) => {
           //Me quedo con el primer usuario que encuentro para probar
           var loggedUser = rows._array[0];
           this.setState ({
             user: loggedUser.email,
-            lastSync: new Date(),
-            pendingSyncs: '5',
+            lastSync: loggedUser.lastSync,
+            pendingSyncs: loggedUser.pendingSyncs,
             completeName: loggedUser.name,
           });
         },

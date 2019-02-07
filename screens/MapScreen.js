@@ -7,33 +7,25 @@ import DownloadSettings from '../components/DownloadSettings'
 import {formatFolderMap, formatUrlMap} from '../utilities/utils'
 
 export default class MapScreen extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+
     this.state = {
       isOffline: false,
       showDownloadSettings: false,
       urlTemplate: `${AppConstans.MAP_URL_GOOGLE}&x={x}&y={y}&z={z}.png`,
       offlineUrlTemplate: `${AppConstans.TILE_FOLDER}/{x}/{y}/{z}.png`,
-      mapRegion: { //Tandil
-        latitude: -37.3348,
-        longitude: -59.1305,
+      mapRegion: {
+        latitude: -35.8241454,
+        longitude: -59.8613362,
         latitudeDelta: 1,
         longitudeDelta: 1,
-      },
-      markers: []
+      }
     }
   }
   
   componentDidMount() {
-    setTimeout(() => {
-      let response = [
-        {title: 'Geneos', description: 'Coop de trabajo', coords: { latitude: -37.32655, longitude: -59.13119}},
-        {title: 'Plaza', description: 'Lugar de descanso', coords: { latitude: -37.32861, longitude: -59.13709}},
-      ];
-      this.setState({
-        markers: response
-      });
-    }, 500); 
+    
   }
 
   clearTiles = async () => {
@@ -62,15 +54,18 @@ export default class MapScreen extends React.Component {
       : this.state.urlTemplate
 
     var markers_onMap = []
-    this.state.markers.forEach(elem => {
-      markers_onMap.push(
-        <MapView.Marker key={elem.title}
-          coordinate= {elem.coords}
-          title = {elem.title}
-          description= {elem.description}
-        />
-      )
-    });
+    var markers = this.props.navigation.getParam('markers', []);
+    if(markers != null) {
+      markers.forEach(elem => {
+        markers_onMap.push(
+          <MapView.Marker key={elem.title}
+            coordinate= {elem.coords}
+            title = {elem.title}
+            description= {elem.description}
+          />
+        )
+      });
+    }
 
     return (
       <View style={styles.container}>
@@ -101,11 +96,11 @@ export default class MapScreen extends React.Component {
 
         <MapView
           style={{ flex: 1 }}
-          initialRegion={{ //Tandil
-            latitude: -37.3348,
-            longitude: -59.1305,
+          initialRegion={{
+            latitude: -38.1973369,
+            longitude: -61.9635813,
             latitudeDelta: 1,
-            longitudeDelta: 1,
+            longitudeDelta: 1
           }}
           onRegionChange={this.handleMapRegionChange}>
           <MapView.UrlTile urlTemplate={urlTemplate} zIndex={1} />

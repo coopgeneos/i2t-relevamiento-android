@@ -10,22 +10,10 @@ import HeaderNavBar from '../components/HeaderNavBar';
 
 const img_sample = require("../assets/icon.png");
 
-
-// Ver como meter datas adentro de la llamada a los WS
-
-const datas = [
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Tandil', zipCode: '6546', title: 'Evento 1'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Ayacucho', zipCode: '6546', title: 'Evento 2'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: '9 de Julio', zipCode: '7866', title: 'Evento 3'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Azul', zipCode: '4567', title: 'Evento 4'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Olavarria', zipCode: '4546', title: 'Evento 5'},
-];
-
 export default class ScheduleScreen extends React.Component {
   constructor() {
     super();
     this.state = {
-      date : '',
       nears: false,
       events: null,
       chosenDate: new Date() 
@@ -33,27 +21,25 @@ export default class ScheduleScreen extends React.Component {
     this.setDate = this.setDate.bind(this);
   }
 
-  // Metodo donde llamar a los WS iniciales
   componentDidMount() {
-    //simulo al WS
-    setTimeout(() => {
-      let response = {
-        date: new Date(),
-        nears: true,
-        events: [
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Tandil', zipCode: '6546', title: 'Evento 1'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Ayacucho', zipCode: '6546', title: 'Evento 2'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: '9 de Julio', zipCode: '7866', title: 'Evento 3'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Azul', zipCode: '4567', title: 'Evento 4'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Olavarria', zipCode: '4546', title: 'Evento 5'},
-        ]
-      };
-      this.setState ({
-        date: formatDate(response.date),
-        nears: response.nears,
-        events: response.events
-      });
-    }, 1000);
+    var DB = Expo.SQLite.openDatabase('relevamiento.db');
+    DB.transaction(tx => {
+      tx.executeSql(
+        ` select s.id, c.description as agency, c.city, c.zipCode, c.address, c.latitude, c.longitude    
+          from Schedule s
+          inner join Contact c on (c.id = s.contact_id)
+          where s.state != 'Complete';`,
+        [],
+        (_, { rows }) => {
+          this.setState ({
+            events: rows._array
+          });
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
   }
 
   toggleNears(){
@@ -76,18 +62,25 @@ export default class ScheduleScreen extends React.Component {
   render() {
     var areThereEvents = this.state.events == null ? false : true;
 
+    var markers = [];
+    if (areThereEvents) {
+      this.state.events.forEach(item => {
+        markers.push({title: item.agency, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
+      })
+    }
+
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation}  title="Agenda" />
+        <HeaderNavBar navigation={this.props.navigation} title="Agenda" markers={markers} />
         <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
                 <Label>Fecha</Label> 
                 <DatePicker
-                  defaultDate={new Date(2018, 4, 4)}
+                  defaultDate={new Date()}
                   minimumDate={new Date(2018, 1, 1)}
-                  maximumDate={new Date(2018, 12, 31)}
+                  maximumDate={new Date(2050, 12, 31)}
                   locale={"es"}
                   timeZoneOffsetInMinutes={undefined}
                   modalTransparent={false}
@@ -109,7 +102,7 @@ export default class ScheduleScreen extends React.Component {
 
           {
             !areThereEvents ? 
-              (<Spinner color='blue'/>)
+              (<Spinner />)
               : (
                 <List
                   dataArray={this.state.events}
