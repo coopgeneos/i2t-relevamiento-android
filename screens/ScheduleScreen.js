@@ -22,7 +22,7 @@ export default class ScheduleScreen extends React.Component {
   }
 
   componentDidMount() {
-    var DB = Expo.SQLite.openDatabase('relevamiento.db');
+    //var DB = Expo.SQLite.openDatabase('relevamiento.db');
     DB.transaction(tx => {
       tx.executeSql(
         ` select s.id, c.description as agency, c.city, c.zipCode, c.address, c.latitude, c.longitude    

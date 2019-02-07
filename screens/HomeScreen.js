@@ -1,12 +1,11 @@
 import React from 'react';
 import { Container, Header, Content, Icon, Text, Button, Item,
         Form, Input, Label, Left, Spinner, Body, Right, Title, Card, CardItem, Thumbnail, } from 'native-base';
-import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 import {formatDate} from '../utilities/utils';
-import SQLite from 'expo';
-
 import { Grid, Row, Col } from "react-native-easy-grid";
 // import styles from "./Styles";
+
+const DB = Expo.SQLite.openDatabase('relevamiento.db');
 
 export default class HomeScreen extends React.Component { 
   constructor() {
@@ -22,7 +21,7 @@ export default class HomeScreen extends React.Component {
   // Metodo donde llamar a los WS iniciales
   componentDidMount() {
     //Esto deberia ser global, pero por alguna razon no esta funcionando
-    var DB = Expo.SQLite.openDatabase('relevamiento.db');
+    //var DB = Expo.SQLite.openDatabase('relevamiento.db');
     DB.transaction(tx => {
       tx.executeSql(
         ` select u.*, count(s.id) as pendingSyncs 

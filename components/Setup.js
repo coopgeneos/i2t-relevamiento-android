@@ -77,7 +77,7 @@ export default class Setup extends Component {
   }
 
   testDatabase(){
-    var DB = Expo.SQLite.openDatabase('relevamiento.db');
+    //var DB = Expo.SQLite.openDatabase('relevamiento.db');
     DB.transaction(tx => {
       tx.executeSql(
         `select * from User;`,

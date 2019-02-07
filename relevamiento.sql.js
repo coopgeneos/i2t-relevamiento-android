@@ -1,6 +1,6 @@
 var stms = [];
 stms.push(`
-	CREATE TABLE User (
+	CREATE TABLE if not exists User (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		email TEXT NOT NULL,
 		name TEXT NOT NULL,
@@ -9,7 +9,7 @@ stms.push(`
 		lastSync TEXT
 	);`);
 stms.push(`
-	CREATE TABLE Contact (
+	CREATE TABLE if not exists Contact (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER,
 		description TEXT,
@@ -24,7 +24,7 @@ stms.push(`
 		FOREIGN KEY(user_id) REFERENCES User(id)
 	);`);
 stms.push(`
-	CREATE TABLE Schedule (
+	CREATE TABLE if not exists Schedule (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER,
 		contact_id INTEGER,
@@ -42,26 +42,26 @@ stms.push(`
 		FOREIGN KEY(contact_id) REFERENCES Contact(id)
 	);`);
 stms.push(`
-	CREATE TABLE ActivityType (
+	CREATE TABLE if not exists ActivityType (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		description TEXT NOT NULL
 	);`);
 stms.push(`
-	CREATE TABLE ItemActType (
+	CREATE TABLE if not exists ItemActType (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		activityType_id INTEGER NOT NULL,
 		type TEXT NOT NULL,
 		FOREIGN KEY(activityType_id) REFERENCES ActivityType(id)
 	);`);
 stms.push(`
-	CREATE TABLE ListItemAct (
+	CREATE TABLE if not exists ListItemAct (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		itemActType_id INTEGER NOT NULL,
 		value TEXT NOT NULL,
 		FOREIGN KEY(itemActType_id) REFERENCES ItemActType(id)
 	);`);
 stms.push(`
-	CREATE TABLE Activity (
+	CREATE TABLE if not exists Activity (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		schedule_id INTEGER NOT NULL,
 		activityType_id INTEGER NOT NULL,
@@ -73,7 +73,7 @@ stms.push(`
 		FOREIGN KEY(contact_id) REFERENCES Contact(id)
 	);`);
 stms.push(`
-	CREATE TABLE Contact_ActType (
+	CREATE TABLE if not exists Contact_ActType (
 		contact_id INTEGER NOT NULL,
 		activity_id INTEGER NOT NULL,
 		PRIMARY KEY (contact_id, activity_id),
@@ -81,7 +81,7 @@ stms.push(`
 		FOREIGN KEY(activity_id) REFERENCES Activity(id)
 	);`);
 stms.push(`
-	CREATE TABLE Configuration (
+	CREATE TABLE if not exists Configuration (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		key TEXT NOT NULL,
 		value TEXT
