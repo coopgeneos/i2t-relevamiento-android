@@ -5,7 +5,7 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
           DeckSwiper, Thumbnail, List, ListItem, Radio, Segment} from 'native-base';
 
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
-import { ImagePicker } from 'expo';
+import { ImagePicker, Permissions, FileSystem } from 'expo';
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -16,217 +16,258 @@ import { Divider } from 'react-native-elements';
 export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      seg: 1
+      seg: 1,
+      seg_max: null,
+      activity_id: this.props.navigation.getParam('activity_id', null),
+      cardsData: null,
+      cards: [],
+      answers: null,
+      permissionsCamera: false,
+      permissionsCameraRoll: false
     }
   };
 
   componentDidMount() {
-    //simulo al WS
-    setTimeout(() => {
-      let response = {
-        ext_img_uri: ''
-      };
-      this.setState ({
-        ext_img_uri: 'http://www.ellitoral.com/diarios/2011/09/29/sucesos/SUCE-02-web-images/3_dc_fmt.jpeg',
-        int_img_uri: AppConstants.PHOTO_DEFAULT,
-        display_use: 'No usa',
-        space_use: '50-50'
-      });
-    }, 1500);
+    var acttype_id = this.props.navigation.getParam('acttype_id', null);
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, a.id as answer_id, a.activity_id, a.text_val, a.img_val 
+          from ItemActType iat 
+          left join Answer a on (iat.id = a.itemActType_id) 
+          where iat.activityType_id = ?`,
+        [acttype_id],
+        (_, { rows }) => {
+          this.loadCards(rows._array, true)
+          this.setState ({
+            cardsData: rows._array,
+            seg_max: rows._array.length + 1
+          });
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
   }
 
-  setDisplay(value){
-    this.setState({display_use: value})
-  }
+  async loadCards(data, firstTime) {
+    var cards = [];
+    
+    var answers = this.state.answers;
+    /*Si es la primera vez que entro (cuando creo la vista), 
+      entonces creo en memoria el arreglo de respuestas*/
+    if(firstTime) {
+      answers = [];
+    }
+    
+    for(i=0; i<data.length; i++) {
+      var item = data[i];
+      var card = null;
+      if(firstTime){
+        if(item.img_val){
+          var name = new Date();
+          name = name.getTime().toString()
+          FileSystem.writeAsStringAsync(`${FileSystem.documentDirectory}photos/${name}.jpg`, item.img_val, {encoding: FileSystem.EncodingTypes.Base64})
+            .catch(err => {
+              console.log(`ERROR creando archivo temporal: ${err}`)
+            })
+          item.img_val = `${FileSystem.documentDirectory}photos/${name}.jpg`;
+        }
 
-  setSpace(value){
-    this.setState({space_use: value})
+        var answer = {
+          id: item.answer_id, //Si answer_id viene en null, es porque nunca se respondió.
+          activity_id: this.state.activity_id,
+          itemActType_id: item.itemActType_id,
+          text_val: item.text_val,
+          img_val: item.img_val,
+          img_val_change: false
+        }
+        answers.push(answer);
+      }
+      if(item.type == 'lista') {
+        card = await this.buildListCard(item.description, answers[i])
+          .catch(err => {
+            reject(err)
+          })
+      }
+      if(item.type == 'imagen') {
+        card = this.buildImageCard(item.description, answers[i])
+          
+      }
+      cards.push(card);
+    }
+    /*Promise.all(promises)
+      .then(values => {
+        values.forEach(item => {
+          cards.push(item)
+        })
+      })*/ 
+    this.setState({
+      cards: cards,
+      answers: answers
+    });
+    return;
   }
 
   _alertIndex(index) {
     Alert.alert(`This is row ${index + 1}`);
   }
 
-  pickImage = async (callFrom) => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
+  async grantPermissions() {
+    var statusCameraRoll = null;
+    var statusCamera = null;
+    if(!this.state.permissionsCameraRoll){
+      statusCameraRoll = await Permissions.askAsync(Permissions.CAMERA_ROLL)
+        .catch(err => {
+          console.log(`PERMISSION ERROR: ${err}`)
+        })
+    }
+    if(!this.state.permissionsCamera){
+      statusCamera = await Permissions.askAsync(Permissions.CAMERA)
+        .catch(err => {
+          console.log(`PERMISSION ERROR: ${err}`)
+        })
+    }
+    this.setState({ 
+      permissionsCameraRoll: statusCameraRoll === 'granted', 
+      permissionsCamera: statusCamera === 'granted'});
+    return (statusCameraRoll && statusCamera)
+  }
 
-    if (!result.cancelled) {
-      switch(callFrom){
-        case 'exterior':
-          this.setState({ ext_img_uri: result.uri });
-          break;
-        case 'interior':
-          this.setState({ int_img_uri: result.uri });
-          break;
-      }  
+  async pickImage(takePhoto) {
+    if(this.grantPermissions()){
+      let result = null;
+      if(takePhoto){
+        result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        });
+      } else {
+        result = await ImagePicker.launchImageLibraryAsync({
+          allowsEditing: true,
+          aspect: [4, 3],
+        });
+      }
+      if (!result.cancelled) {
+        this.state.answers[this.state.seg - 1].img_val = result.uri;
+        this.state.answers[this.state.seg - 1].img_val_change = true;
+        this.loadCards(this.state.cardsData, false);
+      }
     }
   };
 
-  render() {
-    const state = this.state;
+  async saveAnswer() {
+    var answer = this.state.answers[this.state.seg - 1];
+    var base64 = null;
+    if(answer.img_val && answer.img_val_change){ //Solo se guarda si
+      base64 = await FileSystem.readAsStringAsync(answer.img_val, {encoding: FileSystem.EncodingTypes.Base64})
+        .catch(err => {
+          console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
+        })
+    }
 
-    const cardOne = require("../assets/icon.png");
-    const cardTwo = require("../assets/icon.png");
-    const cardThree = require("../assets/icon.png");
-    const cardFour = require("../assets/icon.png");
-
-    const { navigation } = this.props;
-    const extImg = navigation.getParam('extImg', null);
-    const intImg = navigation.getParam('intImg', null);
-
-    let cards = [
-      {
-        text: "Foto de Frente",
-        info: <CardItem>
-                <Left>
-                  <Image style={{width: 150, height: 150}} 
-                    source={{uri: extImg ? extImg : (this.state.ext_img_uri ? this.state.ext_img_uri : AppConstants.PHOTO_DEFAULT) }} />
-                </Left>
-                <Body></Body>
-                <Right>
-                  <Button transparent onPress={() => this.props.navigation.navigate('Camera', {callFrom: 'exterior'})}  style={{fontSize: 32}}>
-                    <Icon name='camera'/>
-                  </Button>
-                  <Button transparent onPress={() => {this.pickImage('exterior')}}  style={{fontSize: 32}}>
-                    <Icon name='folder'/>
-                  </Button>
-                </Right>
-              </CardItem>,
-        image: cardOne
-      },
-      {
-        text: "Foto de Interior",
-        info: <CardItem>
-                <Left>
-                  <Image style={{width: 150, height: 150}} 
-                    source={{uri: intImg ? intImg : (this.state.int_img_uri ? this.state.int_img_uri : AppConstants.PHOTO_DEFAULT) }} />
-                </Left>
-                <Body></Body>
-                <Right>
-                  <Button transparent onPress={() => this.props.navigation.navigate('Camera', {callFrom: 'interior'})}  style={{fontSize: 32}}>
-                    <Icon name='camera'/>
-                  </Button>
-                  <Button transparent onPress={() => {this.pickImage('interior')}}  style={{fontSize: 32}}>
-                    <Icon name='folder'/>
-                  </Button>
-                </Right>
-              </CardItem>,
-        image: cardTwo
-      },
-      {
-        text: "Uso de Display",
-        info: <View>
-                <ListItem>
-                  <Left>
-                    <Text>No usa.</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.display_use === 'No usa' ? true : false }
-                      onPress={() => this.setDisplay('No usa')}
-                    />
-                  </Right>
-                </ListItem>
-                <ListItem>
-                  <Left>
-                    <Text>Usa el de CAS.</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.display_use === 'Usa CAS' ? true : false }
-                      onPress={() => this.setDisplay('Usa CAS')}
-                    />
-                  </Right>
-                </ListItem>
-                <ListItem>
-                  <Left>
-                    <Text>Usa uno propio.</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.display_use === 'Usa propio' ? true : false }
-                      onPress={() => this.setDisplay('Usa propio')}
-                    />
-                  </Right>
-                </ListItem>
-              </View>,
-        image: cardThree
-      },
-      {
-        text: "Uso de Espacio",
-        info: <View>
-                <ListItem>
-                  <Left>
-                    <Text>100%</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.space_use == '100'}
-                      onPress={() => this.setSpace('100')}
-                    />
-                  </Right>
-                </ListItem>
-                <ListItem>
-                  <Left>
-                    <Text>80% - 20%</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.space_use == '80-20'}
-                      onPress={() => this.setSpace('80-20')}
-                    />
-                  </Right>
-                </ListItem>
-                <ListItem>
-                  <Left>
-                    <Text>50% - 50%</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.space_use == '50-50'}
-                      onPress={() => this.setSpace('50-50')}
-                    />
-                  </Right>
-                </ListItem>
-                <ListItem>
-                  <Left>
-                    <Text>20% - 80%</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.space_use == '20-80'}
-                      onPress={() => this.setSpace('20-80')}
-                    />
-                  </Right>
-                </ListItem>
-                <ListItem>
-                  <Left>
-                    <Text>Mínimo</Text>
-                  </Left>
-                  <Right>
-                    <Radio
-                      selected={this.state.space_use == '0'}
-                      onPress={() => this.setSpace('0')}
-                    />
-                  </Right>
-                </ListItem>
-              </View>,
-        image: cardFour
+    var sql = '';
+    if(answer.id){
+      var upd_img = '';
+      if(answer.img_val_change){
+        upd_img = `img_val = '${base64}',`
       }
-    ];
+      sql = `update Answer set ${upd_img} text_val = '${answer.text_val}' where id = ${answer.id}`;
+    } else {
+      sql = `insert into Answer (activity_id, itemActType_id, text_val, img_val) values (${answer.activity_id}, ${answer.itemActType_id}, '${answer.text_val}', '${base64}')`;
+    }
+    
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        sql,
+        [],
+        (_, { rows }) => {},
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
+    this.setState(prevState => ({seg: prevState.seg + 1}))
+  }
 
+  buildImageCard(title, answer) {
+    return {
+      text: title,
+      info: <CardItem>
+              <Left>
+                <Image style={{width: 150, height: 150}} 
+                  source={{ uri: answer.img_val ? answer.img_val : AppConstants.PHOTO_DEFAULT }} />
+              </Left>
+              <Body></Body>
+              <Right>
+                <Button transparent onPress={() => this.pickImage(true)}  style={{fontSize: 32}}>
+                  <Icon name='camera'/>
+                </Button>
+                <Button transparent onPress={() => {this.pickImage(false)}}  style={{fontSize: 32}}>
+                  <Icon name='folder'/>
+                </Button>
+              </Right>
+            </CardItem>
+    }
+  }
+
+  buildListCard(title, answer) {
+    return new Promise(async (resolve, reject) => {
+      let listItems = [];
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` select * 
+            from ListItemAct 
+            where itemActType_id = ?`,
+          [answer.itemActType_id],
+          (_, { rows }) => {
+            var r = rows._array
+            r.forEach(reg => {
+              listItems.push(
+                <ListItem key={reg.value}>
+                  <Left>
+                    <Text>{reg.value}</Text>
+                  </Left>
+                  <Right>
+                    <Radio
+                      selected={answer.text_val == reg.value ? true : false }
+                      onPress={() => {this.chooseOption(reg.value)}}
+                    />
+                  </Right>
+                </ListItem>
+              )
+            })
+            resolve({
+              text: title,
+              info: <View>
+                      {listItems}
+                    </View>         
+            })
+          },
+          (_, err) => {
+            console.error(`ERROR consultando DB: ${err}`)
+            reject(err)
+          }
+        )
+      });
+    })
+  }
+
+  chooseOption(value, index) {
+    this.state.answers[this.state.seg - 1].text_val = value;
+    this.loadCards(this.state.cardsData, false)
+  }
+
+  render() {
+    const { navigation } = this.props;
     const contact = navigation.getParam('agency', 'SIN CONTACTO');
     const address = navigation.getParam('address', 'SIN DOMICILIO');
-    const city = navigation.getParam('city', 'SIN CONTACTO');
+    const city = navigation.getParam('city', 'SIN CIUDAD');
     const detail = navigation.getParam('detail', 'SIN DETALLE');
 
-    var areData = this.state.ext_img_uri ? true : false
-
-    console.log("Leña para el carbón: " + this.state.seg);
+    var isThereData = this.state.cardsData ? true : false;
 
     return (
       <Container>
@@ -257,7 +298,7 @@ export default class ContactActScreen extends React.Component {
           </Card>
 
           {
-            !areData ? 
+            !isThereData ? 
               (<Spinner />)
               : (
                 <View style={styles.container}>
@@ -273,28 +314,25 @@ export default class ContactActScreen extends React.Component {
                   </Button>
                   <Button
                     first
-                    active={this.state.seg === 4 ? false : true}
-                    disabled={this.state.seg === 4 ? true : false}
+                    active={this.state.seg === this.state.seg_max ? false : true}
+                    disabled={this.state.seg === this.state.seg_max ? true : false}
                     onPress={() => this.setState(prevState => ({seg: prevState.seg + 1}))}
                   >
                     <Text>OMITIR</Text>
                   </Button>
                   <Button
                     first
-                    active={this.state.seg === 4 ? false : true}
-                    disabled={this.state.seg === 4 ? true : false}
-                    onPress={() => this.setState(prevState => ({seg: prevState.seg + 1}))}
+                    active={this.state.seg === this.state.seg_max ? false : true}
+                    disabled={this.state.seg === this.state.seg_max ? true : false}
+                    onPress={() => this.saveAnswer()}
                   >
                     <Icon name="save" />
                     <Icon name="arrow-circle-right" />
                   </Button>
 
                 </Segment>
-                <Content padder>
-                  {this.state.seg === 1 && cards[0].info}
-                  {this.state.seg === 2 && cards[1].info}
-                  {this.state.seg === 3 && cards[2].info}
-                  {this.state.seg === 4 && cards[3].info}
+                <Content padder>                  
+                  {this.state.cards.length > 0 && this.state.cards[this.state.seg - 1] && this.state.cards[this.state.seg - 1].info}                
                 </Content>
 
                 </View>

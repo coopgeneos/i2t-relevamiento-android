@@ -13,19 +13,15 @@ import HeaderNavBar from '../components/HeaderNavBar';
 export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
-    //En esta vista es necesario que las props recibidas sean parte del state
-    const { navigation } = this.props;
-    const contact = navigation.getParam('agency', 'SIN CONTACTO');
-    console.log(contact);
-    const address = navigation.getParam('address', 'SIN DOMICILIO');
-    const city = navigation.getParam('city', 'SIN CONTACTO');
 
-    console.log(contact);
-    console.log(address);
- 
+    const { navigation } = this.props;
+    const contact = navigation.getParam('contact', 'SIN CONTACTO');
+    //const address = navigation.getParam('address', 'SIN DOMICILIO');
+    //const city = navigation.getParam('city', 'SIN CONTACTO');
+
     this.state = {
       contact: contact,
-      address: address,
+      /*address: address,
       city: city,
       tableHead: ['Actividad', ''],
       tableData: [
@@ -33,10 +29,36 @@ export default class ContactActScreen extends React.Component {
         ['Encuesta de calidad',  'A'],
         ['Relevamiento fotográfico',  'A'],
         ['Encuesta de calidad',  'A']
-      ]
-
+      ]*/
     };
+  }
 
+  componentDidMount() {
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        ` select * 
+          from ActivityType atp 
+          where atp.id not in (
+            select a.activityType_id 
+            from activity a 
+            where a.contact_id = ?);`,
+        [this.state.contact.id],
+        (_, { rows }) => {
+          var tableHead = ['Actividad', ''];
+          var tableData = [];
+          rows._array.forEach(item => {
+            tableData.push([item.description, 'A'])
+          })
+          this.setState ({
+            tableHead: tableHead,
+            tableData: tableData
+          });
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
   }
 
   _alertIndex(index) {
@@ -50,34 +72,35 @@ export default class ContactActScreen extends React.Component {
 
     const element = (data, index) => (
         <View style={styles.btn_cont}>
-            <Button style={styles.btn} onPress={() => this.props.navigation.navigate('Survey',{contact: this.state.contact, address: this.state.address, detail: 'DETALLE'})}>
-            <Text>Iniciar</Text>
-            </Button>
+          <Button style={styles.btn} onPress={() => this.props.navigation.navigate('Survey',{contact: this.state.contact.description, address: this.state.contact.address, detail: 'DETALLE'})}>
+          <Text>Iniciar</Text>
+          </Button>
         </View>
     );
-
-
-
 
     if(!this.state.tableData){
       table = <Spinner/>
     } else {
-      table = <View style={styles.container}>
-                <Table borderStyle={{borderColor: 'transparent'}}>
-                  <Row data={state.tableHead} style={styles.head} textStyle={styles.text_head}/>
-                  {
-                    state.tableData.map((rowData, index) => (
-                      <TableWrapper key={index} style={styles.row}>
-                        {
-                          rowData.map((cellData, cellIndex) => (
-                            <Cell key={cellIndex} data={cellIndex === 1 ? element(cellData, index) : cellData} textStyle={styles.text}/>
-                          ))
-                        }
-                      </TableWrapper>
-                    ))
-                  }
-                </Table>
-              </View>
+      if(this.state.tableData.length > 0){
+        table = <View style={styles.container}>
+                  <Table borderStyle={{borderColor: 'transparent'}}>
+                    <Row data={state.tableHead} style={styles.head} textStyle={styles.text_head}/>
+                    {
+                      state.tableData.map((rowData, index) => (
+                        <TableWrapper key={index} style={styles.row}>
+                          {
+                            rowData.map((cellData, cellIndex) => (
+                              <Cell key={cellIndex} data={cellIndex === 1 ? element(cellData, index) : cellData} textStyle={styles.text}/>
+                            ))
+                          }
+                        </TableWrapper>
+                      ))
+                    }
+                  </Table>
+                </View>
+      } else {
+        table = <Text>No hay actividades para agregar</Text>
+      }     
     }
 
     return (
@@ -91,13 +114,13 @@ export default class ContactActScreen extends React.Component {
             </CardItem>
 
             <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact}</Text>
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact.name}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.address}</Text>
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.contact.address}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
+            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.contact.city}</Text>
             </CardItem>
 
             <CardItem footer>                        
@@ -105,9 +128,7 @@ export default class ContactActScreen extends React.Component {
             </CardItem>
           </Card>
 
-
           {table}
-
 
         </Content>
         <FooterNavBar navigation={this.props.navigation} />

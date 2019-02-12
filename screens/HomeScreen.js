@@ -3,14 +3,12 @@ import { Container, Header, Content, Icon, Text, Button, Item,
         Form, Input, Label, Left, Spinner, Body, Right, Title, Card, CardItem, Thumbnail, } from 'native-base';
 import {formatDate} from '../utilities/utils';
 import { Grid, Row, Col } from "react-native-easy-grid";
-// import styles from "./Styles";
 
-const DB = Expo.SQLite.openDatabase('relevamiento.db');
+//const DB = Expo.SQLite.openDatabase('relevamiento.db');
 
 export default class HomeScreen extends React.Component { 
   constructor() {
     super();
-    //DB = SQLite.openDatabase('relevamiento.db');   
     this.state = {
       user: '',
       lastSync : '',
@@ -20,9 +18,7 @@ export default class HomeScreen extends React.Component {
 
   // Metodo donde llamar a los WS iniciales
   componentDidMount() {
-    //Esto deberia ser global, pero por alguna razon no esta funcionando
-    //var DB = Expo.SQLite.openDatabase('relevamiento.db');
-    DB.transaction(tx => {
+    global.DB.transaction(tx => {
       tx.executeSql(
         ` select u.*, count(s.id) as pendingSyncs 
           from user u
@@ -32,11 +28,9 @@ export default class HomeScreen extends React.Component {
         (_, { rows }) => {
           //Me quedo con el primer usuario que encuentro para probar
           var loggedUser = rows._array[0];
+          global.user = loggedUser;
           this.setState ({
-            user: loggedUser.email,
-            lastSync: loggedUser.lastSync,
-            pendingSyncs: loggedUser.pendingSyncs,
-            completeName: loggedUser.name,
+            user: loggedUser
           });
         },
         (_, err) => {
@@ -49,22 +43,38 @@ export default class HomeScreen extends React.Component {
   render() {
     let formItem;
     if(this.state.user == ''){
-      formItem = <Spinner color='blue'/>
+      formItem = <Spinner />
     } else {
-      formItem = <Form>
-                  <Item inlineLabel>
-                    <Left style={{flexShrink: 2}}><Label>Usuario</Label></Left>
-                    <Left style={{flexGrow: 2}}><Input value={this.state.user} editable={false}/></Left>
-                  </Item>
-                  <Item inlineLabel>
-                    <Left><Label>Ultima sincronización</Label></Left>
-                    <Left><Input value={formatDate(this.state.lastSync)} editable={false}/></Left>
-                  </Item>
-                  <Item inlineLabel last>
-                    <Left><Label>Pendientes sincronización</Label></Left>
-                    <Left><Input value={this.state.pendingSyncs} editable={false}/></Left>
-                  </Item>
-                </Form>
+      formItem =  <Card style={{flex: 0}}>
+                    <CardItem>
+                      <Left>
+                        <Icon active name="user" />
+                        <Body>
+                          <Text>{this.state.user.email}</Text>
+                          <Text note>Info del Usuario</Text>
+                        </Body>
+                      </Left>
+                    </CardItem>
+                    <CardItem>
+                      <Left>
+                        <Icon active name="bookmark" />
+                        <Body>
+                          <Text>
+                          Pendientes de Sincronización 
+                          </Text>
+                          <Text note>[{this.state.user.pendingSyncs}] Contactos</Text>
+                        </Body>
+                      </Left>
+                    </CardItem>
+                    <CardItem>
+                      <Left>
+                        <Button transparent textStyle={{color: '#87838B'}}>
+                          <Icon name="retweet" />
+                          <Text style={{fontSize: 12}}>Ultima Sincronización {formatDate(this.state.user.lastSync)}</Text>
+                        </Button>
+                      </Left>
+                    </CardItem>
+                  </Card>
     }
 
     return (
@@ -88,7 +98,7 @@ export default class HomeScreen extends React.Component {
             </Button>
             </Col>
             <Col>
-            <Button transparent onPress={() => this.props.navigation.navigate('Contacts')} block style={{flex: 1}}>
+            <Button transparent onPress={() => this.props.navigation.navigate('Contacts', {user: this.state.user})} block style={{flex: 1}}>
               <Icon name='address-book' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
@@ -108,36 +118,8 @@ export default class HomeScreen extends React.Component {
           </Row>
         </Grid>
 
-          <Card style={{flex: 0}}>
-            <CardItem>
-              <Left>
-                <Icon active name="user" />
-                <Body>
-                  <Text>{this.state.user}</Text>
-                  <Text note>Info del Usuario</Text>
-                </Body>
-              </Left>
-            </CardItem>
-            <CardItem>
-              <Left>
-                <Icon active name="bookmark" />
-                <Body>
-                  <Text>
-                  Pendientes de Sincronización 
-                  </Text>
-                  <Text note>[{this.state.pendingSyncs}] Contactos</Text>
-                </Body>
-              </Left>
-            </CardItem>
-            <CardItem>
-              <Left>
-                <Button transparent textStyle={{color: '#87838B'}}>
-                  <Icon name="retweet" />
-                  <Text style={{fontSize: 12}}>Ultima Sincronización {formatDate(this.state.lastSync)}</Text>
-                </Button>
-              </Left>
-            </CardItem>
-          </Card>
+          {formItem}
+
         </Content>
       </Container>
     );

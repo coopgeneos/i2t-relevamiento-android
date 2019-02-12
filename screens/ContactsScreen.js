@@ -11,47 +11,32 @@ import HeaderNavBar from '../components/HeaderNavBar';
 
 const img_sample = require("../assets/icon.png");
 
-// Ver como meter datas adentro de la llamada a los WS
-
-const datas = [
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Tandil', zipCode: '6546', title: 'Evento 1'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Ayacucho', zipCode: '6546', title: 'Evento 2'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: '9 de Julio', zipCode: '7866', title: 'Evento 3'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Azul', zipCode: '4567', title: 'Evento 4'},
-  {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Olavarria', zipCode: '4546', title: 'Evento 5'},
-];
-
-
 export default class ContactsScreen extends React.Component {
   constructor(props) {
     super(props);
-
-    
-    //const nears = navigation.getParam('nears', false);
-
-    //this.state.contacts = ['Juan Perez / 24945687559 / Buzon 2345','Jose Fantasia / 4654876546 / Segundo sombra 25666'];
     this.state = {
-      name: 'Adrian',
+      contacts: [],
+      name: global.user.name,
       nears: false,
     };
   }
 
   componentDidMount() {
-    //simulo al WS
-    setTimeout(() => {
-      let response = {
-        contacts: [
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Tandil', zipCode: '6546', phone: '+5496549876521', email: 'other@unmail.com'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Ayacucho', zipCode: '6546', phone: '+5496549876521', email: 'other@unmail.com'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: '9 de Julio', zipCode: '7866', phone: '+5496549876521', email: 'other@unmail.com'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Azul', zipCode: '4567', phone: '+5496549876521', email: 'other@unmail.com'},
-          {agency: 'Agencia 99999/99', address: 'San Juan 465', city: 'Olavarria', zipCode: '4546', phone: '+5496549876521', email: 'other@unmail.com'},
-        ]
-      }
-      this.setState ({
-        contacts: response.contacts
-      });
-    }, 1000);    
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        ` select c.id, c.description as name, c.city, c.zipCode, c.address, c.latitude, c.longitude    
+          from Contact c;`,
+        [],
+        (_, { rows }) => {
+          this.setState ({
+            contacts: rows._array
+          });
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
   }
 
   toggleNears(){
@@ -65,8 +50,14 @@ export default class ContactsScreen extends React.Component {
   }
 
   render() {
-    const { navigation } = this.props;
-    const name = navigation.getParam('name', 'SIN NOMBRE');
+    var areThereContacts = this.state.contacts == null ? false : true;
+
+    var markers = [];
+    if (areThereContacts) {
+      this.state.contacts.forEach(item => {
+        markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
+      })
+    }
 
     let list;
     if(this.state.contacts){
@@ -75,7 +66,7 @@ export default class ContactsScreen extends React.Component {
         itemList.push(
           <ListItem key={'item_'+i}  
             onPress={this.onPressRow.bind(this, this.state.contacts[i])} >
-            <Text>{this.state.contacts[i].agency}</Text>
+            <Text>{this.state.contacts[i].name}</Text>
             <Text>{this.state.contacts[i].address}</Text>
             <Text>{this.state.contacts[i].city}</Text>
           </ListItem>
@@ -88,12 +79,12 @@ export default class ContactsScreen extends React.Component {
       );
       list.push(itemList);
     } else {
-      list = <Spinner color='blue'/>
+      list = <Spinner />
     }    
 
     return (
       <Container>
-          <HeaderNavBar navigation={this.props.navigation} title="Actividades" />
+          <HeaderNavBar navigation={this.props.navigation} title="Actividades" markers={markers} />
           <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
@@ -109,7 +100,7 @@ export default class ContactsScreen extends React.Component {
           </Form>
 
             <List
-              dataArray={datas}
+              dataArray={this.state.contacts}
               renderRow={data =>
               <ListItem thumbnail>
                 <Left>
@@ -117,7 +108,7 @@ export default class ContactsScreen extends React.Component {
                 </Left>
                 <Body>
                   <Text>
-                    {data.agency}
+                    {data.name}
                   </Text>
                   <Text numberOfLines={2} note>
                     {data.address} - {data.city} - {data.zipCode}
@@ -127,7 +118,7 @@ export default class ContactsScreen extends React.Component {
                   </Text>
                 </Body>
                 <Right>
-                  <Button transparent style={styles.btn} onPress={() => this.props.navigation.navigate('ContactAct',{contact: 'JUAN', address: 'ALBERDI', detail: 'MAS O MENOS'})}>
+                  <Button transparent style={styles.btn} onPress={() => this.props.navigation.navigate('ContactAct', {contact: data})}>
                     <Text>+ Actividad</Text>
                   </Button>
                 </Right>

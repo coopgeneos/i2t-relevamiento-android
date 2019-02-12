@@ -14,39 +14,43 @@ export default class ActivitiesScreen extends React.Component {
   constructor(props) {
     super(props);
      
-    const dataSource = new ListView.DataSource({
+    /*const dataSource = new ListView.DataSource({
       rowHasChanged: (row1, row2) => row1 !== row2,
-    });
+    });*/
 
     this.state = {
-      dataSource: dataSource,
+      dataSource: [],
       tableHead: ['Actividad', 'Fecha', ''],
     };
   }
 
   componentDidMount() {
-    //simulo al WS
-    setTimeout(() => {
-      let response = {
-        tableData: [
-          ['Relevamiento fotográfico', '28/02/2019', 'A'],
-          ['Encuesta de calidad', '28/03/2019', 'A'],
-          ['Encuesta de satisfacción', '28/04/2019', 'A'],
-          ['Relevamiento fotográfico', '28/02/2019', 'A'],
-          ['Encuesta de calidad', '28/03/2019', 'A'],
-          ['Encuesta de satisfacción', '28/04/2019', 'A'],
-          ['Relevamiento fotográfico', '28/02/2019', 'A'],
-          ['Encuesta de calidad', '28/03/2019', 'A'],
-          ['Encuesta de satisfacción', '28/04/2019', 'A'],
-          ['Relevamiento fotográfico', '28/02/2019', 'A'],
-          ['Encuesta de calidad', '28/03/2019', 'A'],
-          ['Encuesta de satisfacción', '28/04/2019', 'A']
-        ]
-      };
-      this.setState ({
-        tableData: response.tableData
-      });
-    }, 1000);
+    var event = this.props.navigation.getParam('event_id', null);
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        ` select a.id as activity_id, actt.id as actType_id, actt.description, s.planned_date
+          from Activity a 
+          inner join ActivityType actt on (actt.id = a.activityType_id) 
+          inner join Schedule s on (s.id = a.schedule_id) 
+          where a.schedule_id = ?`,
+        [event],
+        (_, { rows }) => {
+          var resp = rows._array;
+          var data = []
+          resp.forEach(item => {
+            var aux = [item.description, item.planned_date, 'A'];
+            data.push(aux)
+          })
+          this.setState ({
+            dataSource: resp,
+            tableData: data
+          });
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
   }
   
   render() {
@@ -92,7 +96,9 @@ export default class ActivitiesScreen extends React.Component {
                                     agency: contact,
                                     address: address,
                                     city: city,
-                                    detail: cellData
+                                    detail: cellData,
+                                    acttype_id: this.state.dataSource[index].actType_id,
+                                    activity_id: this.state.dataSource[index].activity_id
                                   })
                               }
                             />

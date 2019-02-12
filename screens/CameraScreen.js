@@ -143,8 +143,9 @@ export default class CameraScreen extends React.Component {
   }
 
   saveAndReturn(callFrom) {
-    this.setState({dialogVisible : false})
-    switch(callFrom){
+    this.setState({dialogVisible : false});
+    this.props.navigation.navigate('Survey', {camImgUri: this.state.lastTookImg, itemActType_id: callFrom})
+    /*switch(callFrom){
       case 'exterior':
         this.props.navigation.navigate('Survey', {extImg: this.state.lastTookImg, intImg: null})
         break;
@@ -153,7 +154,7 @@ export default class CameraScreen extends React.Component {
         break;
       default:
         break;
-    }
+    }*/
   }
 
   onBarCodeScanned = code => {

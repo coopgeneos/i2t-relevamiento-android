@@ -23,7 +23,7 @@ export default class ScheduleScreen extends React.Component {
 
   componentDidMount() {
     //var DB = Expo.SQLite.openDatabase('relevamiento.db');
-    DB.transaction(tx => {
+    global.DB.transaction(tx => {
       tx.executeSql(
         ` select s.id, c.description as agency, c.city, c.zipCode, c.address, c.latitude, c.longitude    
           from Schedule s
@@ -123,7 +123,7 @@ export default class ScheduleScreen extends React.Component {
                         </Text>
                       </Body>
                       <Right>
-                        <Button transparent onPress={()=>{this.props.navigation.navigate('Activities',{agency: data.agency, city: data.city, address: data.address})}} style={{fontSize: 32}}>
+                        <Button transparent onPress={()=>{this.props.navigation.navigate('Activities',{event_id: data.id, agency: data.agency, city: data.city, address: data.address})}} style={{fontSize: 32}}>
                           <Icon name='search'/>
                         </Button>
                       </Right>

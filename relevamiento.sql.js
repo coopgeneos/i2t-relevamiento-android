@@ -51,6 +51,7 @@ stms.push(`
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		activityType_id INTEGER NOT NULL,
 		type TEXT NOT NULL,
+		description TEXT NOT NULL,
 		FOREIGN KEY(activityType_id) REFERENCES ActivityType(id)
 	);`);
 stms.push(`
@@ -86,21 +87,35 @@ stms.push(`
 		key TEXT NOT NULL,
 		value TEXT
 	);`);
+stms.push(`
+	CREATE TABLE if not exists Answer (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		activity_id INTEGER NOT NULL,
+		itemActType_id INTEGER NOT NULL,
+		text_val TEXT,
+		img_val BLOB,
+		FOREIGN KEY(activity_id) REFERENCES Activity(id),
+		FOREIGN KEY(itemActType_id) REFERENCES ItemActType(id)
+	);`);
 
 stms.push(`INSERT INTO User(email, name, username, password, lastSync) values ('luis@unmail.com', 'Luis Juan', 'ljuan', 'robi123', '2019/01/16');`);
 stms.push(`INSERT INTO Contact(user_id, description, address, city, zipCode, phone, email, hours, latitude, longitude) 
 	values (1, 'Jose Suarez (Dueño)', 'Buzon 456', 'Tandil', '7000', '2494875465', 'jsuarez@unmail.com', '8 a 16 hs', -37.3214476 , -59.1179599);`);
 stms.push(`INSERT INTO Schedule(user_id, contact_id, type, priority, planned_date, observations, state, exec_date, latitude, longitude)
 	values (1, 1,'Comun', 2, '2019/03/06', '', 'Sin visitar', '2019/03/10', -37.353535, -59.125458);`);
-stms.push(`INSERT INTO ActivityType (description) values ('Relevamiento fotográfico exterior');`);
-stms.push(`INSERT INTO ActivityType (description) values ('Uso del display');`);
-stms.push(`INSERT INTO ItemActType (activityType_id, type) values (1, 'imagen');`);
-stms.push(`INSERT INTO ItemActType (activityType_id, type) values (1, 'lista');`);
-stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (2, 'No usa');`);
-stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (2, 'Usa el de CAS');`);
-stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (2, 'Usa uno propio');`);
-stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, answer_text)
-	values (1, 2, 1, 'Usa el de CAS');`);
+stms.push(`INSERT INTO ActivityType (description) values ('Relevamiento fotográfico');`);
+stms.push(`INSERT INTO ActivityType (description) values ('Encuesta de calidad');`);
+stms.push(`INSERT INTO ItemActType (activityType_id, description, type) values (1, 'Imagen del exterior', 'imagen');`);
+stms.push(`INSERT INTO ItemActType (activityType_id, description, type) values (1, 'Imagen del interior', 'imagen');`);
+stms.push(`INSERT INTO ItemActType (activityType_id, description, type) values (2, 'Uso del display', 'lista');`);
+stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'No usa');`);
+stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa el de CAS');`);
+stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa uno propio');`);
+stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id) values (1, 1, 1);`);
+stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id) values (1, 2, 1);`);
+stms.push(`INSERT INTO Answer (activity_id, itemActType_id, text_val) values (1, 3, 'Usa el de CAS');`);
+
+stms.push(`commit;`);
 
 export default {
 	SCHEMA: stms
