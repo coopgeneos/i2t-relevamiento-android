@@ -9,6 +9,7 @@ import { Grid, Row, Col } from "react-native-easy-grid";
 export default class HomeScreen extends React.Component { 
   constructor() {
     super();
+    global.context = {}
     this.state = {
       user: '',
       lastSync : '',
@@ -28,7 +29,7 @@ export default class HomeScreen extends React.Component {
         (_, { rows }) => {
           //Me quedo con el primer usuario que encuentro para probar
           var loggedUser = rows._array[0];
-          global.user = loggedUser;
+          global.context['user'] = loggedUser;
           this.setState ({
             user: loggedUser
           });

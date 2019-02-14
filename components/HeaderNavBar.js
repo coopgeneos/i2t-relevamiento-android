@@ -20,6 +20,9 @@ export default class HeaderNavBar extends React.Component {
             <Title>{this.props.title}</Title>
           </Body>
           <Right>
+            <Button transparent onPress={() => this.props.navigation.navigate(this.props.navBack.to, this.props.navBack.params)}  style={{fontSize: 30}}>
+              <Icon name='angle-double-left'/>
+            </Button>
             <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 30}}>
               <Icon name='home'/>
             </Button>

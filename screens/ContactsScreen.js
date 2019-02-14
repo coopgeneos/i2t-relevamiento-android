@@ -16,7 +16,7 @@ export default class ContactsScreen extends React.Component {
     super(props);
     this.state = {
       contacts: [],
-      name: global.user.name,
+      name: global.context.user.name,
       nears: false,
     };
   }
@@ -24,8 +24,8 @@ export default class ContactsScreen extends React.Component {
   componentDidMount() {
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select c.id, c.description as name, c.city, c.zipCode, c.address, c.latitude, c.longitude    
-          from Contact c;`,
+        ` select * 
+          from Contact;`,
         [],
         (_, { rows }) => {
           this.setState ({
@@ -46,6 +46,11 @@ export default class ContactsScreen extends React.Component {
   }
 
   onPressRow(contact){ 
+    this.props.navigation.navigate('ContactAct')
+  }
+
+  goToContactActivities(params){
+    global.context['contact'] = params.contact;
     this.props.navigation.navigate('ContactAct')
   }
 
@@ -84,7 +89,7 @@ export default class ContactsScreen extends React.Component {
 
     return (
       <Container>
-          <HeaderNavBar navigation={this.props.navigation} title="Actividades" markers={markers} />
+          <HeaderNavBar navigation={this.props.navigation} title="Actividades" markers={markers} navBack={{to: 'Home', params:{}}} />
           <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
@@ -118,7 +123,7 @@ export default class ContactsScreen extends React.Component {
                   </Text>
                 </Body>
                 <Right>
-                  <Button transparent style={styles.btn} onPress={() => this.props.navigation.navigate('ContactAct', {contact: data})}>
+                  <Button transparent style={styles.btn} onPress={() => {this.goToContactActivities({contact: data})}}>
                     <Text>+ Actividad</Text>
                   </Button>
                 </Right>

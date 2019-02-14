@@ -7,93 +7,125 @@ import { StyleSheet, View } from "react-native"
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
-export default class ScheduleScreen extends React.Component {
-  constructor() {
-    super();
+export default class ActivityScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    
+    this.activity = this.props.navigation.getParam('activity', 'SIN ACTIVIDAD');
+    
     this.state = {
-      cancelAr: false
-      
+      canceled: this.activity.state == 'canceled' ? true : false,
+      cancellation: this.activity.cancellation,
+      notes: this.activity.notes   
     };
+  }
+
+  componentDidMount() {
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        ` select * 
+          from activity  
+          where id = ?`,
+        [this.activity.id],
+        (_, { rows }) => {
+          this.activity = rows._array[0];
+          this.setState({
+            canceled: this.activity.state == 'canceled' ? true : false, 
+            cancellation: this.activity.cancellation, 
+            notes: this.activity.notes
+          });
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
   }
   
   saveActivity(){
-    //TODO: Implementar save
-    //Redirijo
+    var state = this.state.canceled ? 'canceled' : 'new';
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        ` update activity set state = ?, cancellation = ?, notes = ? where id = ?`,
+        [ 
+          state, 
+          this.state.canceled ? this.state.cancellation : '', 
+          this.state.notes, 
+          this.activity.id
+        ],
+        (_, { rows }) => {},
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });
+    this.activity.canceled = this.state.canceled;
     this.props.navigation.navigate('Activities');
   }
 
-  cancelAr() {
-
-    this.setState({cancelAr: !this.state.cancelAr});
-
+  cancelAct() {
+    this.setState({canceled: !this.state.canceled});
   }
 
   render() {
-    const { navigation } = this.props;
-    const contact = navigation.getParam('contact', 'SIN CONTACTO');
-    const address = navigation.getParam('address', 'SIN DOMICILIO');
-    const detail = navigation.getParam('detail', 'SIN DETALLE');
-
     let cancelArea;
 
-    if(this.state.cancelAr){
+    if(this.state.canceled){
       cancelArea =  <Item>
-                      <Textarea rowSpan={3} bordered placeholder="Ingrese motivos de la cancelación ..." />
+                      <Textarea rowSpan={3} bordered 
+                        placeholder="Ingrese motivos de la cancelación ..." 
+                        value={this.state.cancellation}
+                        onChangeText={(text) => this.setState({cancellation: text})}
+                      />
                     </Item>
     } else {
-      cancelArea =  <Item>
-                    </Item>
-
+      cancelArea =  <Item></Item>
     }
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation}  title="Registro de Actividad" />
+        <HeaderNavBar navigation={this.props.navigation} title="Registro de Actividad" navBack={{to: 'Activities', params:{}}}/>
         <Content>
           
           <Card>
             <CardItem header>                        
             <Text>Datos de Contacto</Text>
             </CardItem>
-
             <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{contact}</Text>
+              <Label style={{ width: 80 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{address}</Text>
+              <Label style={{ width: 80 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.city}</Text>
+              <Label style={{ width: 80 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
             </CardItem>
-
             <CardItem footer>                        
             <Text></Text>
             </CardItem>
           </Card>
 
-
           <Form>
-
             <Item>
               <Text style={{fontSize: 18}}>Registro de Actividad</Text>
             </Item>
             <Item>
-              <Textarea rowSpan={3} bordered placeholder="Ingrese sus notas aquí ..." />
+              <Textarea rowSpan={3} bordered placeholder="Ingrese sus notas aquí ..." 
+                value={this.state.notes}
+                onChangeText={(text) => this.setState({notes: text})}
+              />
             </Item>
             <Item>
               <Label>Cancelada</Label>
-              <CheckBox checked={this.state.cancelAr} onPress={()=>{this.cancelAr()}}/>  
+              <CheckBox checked={this.state.canceled} onPress={()=>{this.cancelAct()}}/>  
             </Item>
-
 
             {cancelArea}
             
             <Item style={styles.btn_cont}>
               <Button onPress={() => this.props.navigation.navigate('Activities')}><Text>Cancelar</Text></Button>
               <Button onPress={() => this.saveActivity()}><Text>Guardar</Text></Button>
-            </Item>
-
-          
+            </Item>         
           </Form>
         
         </Content>

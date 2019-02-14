@@ -105,3 +105,21 @@ export function cleanDirectory(folder_path) {
   })
 }
 
+export function executeSQL(sql, params){
+  //var DB = Expo.SQLite.openDatabase('relevamiento.db');
+  return new Promise(async function(resolve, reject) {
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        sql,
+        params,
+        (_, { rows }) => {
+          resolve(rows._array)
+        },
+        (_, err) => {
+          reject(err)
+        }
+      )
+    });
+  })
+}
+

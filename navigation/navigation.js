@@ -1,5 +1,5 @@
 import React from 'react';
-import { createAppContainer, createStackNavigator, StackActions, NavigationActions } from 'react-navigation'; // Version can be specified in package.json
+import { createAppContainer, createStackNavigator, StackActions, NavigationActions, createSwitchNavigator } from 'react-navigation'; // Version can be specified in package.json
 
 import HomeScreen from '../screens/HomeScreen'
 import ContactsScreen from '../screens/ContactsScreen'
@@ -31,8 +31,23 @@ const AppNavigator = createStackNavigator(
     initialRouteName: 'Home',
   });
 
-/*const SwitchNavigator = createSwitchNavigator({
-  Main: MainTabNavigator,
-})*/
+const SwitchNavigator = createSwitchNavigator(
+  {
+    Home: { screen: HomeScreen },
+    Contacts: { screen: ContactsScreen },
+    Schedule: { screen: ScheduleScreen },
+    Activities: {screen: ActivitiesScreen },
+    Survey: {screen: SurveyScreen },
+    Activity: {screen: ActivityScreen },
+    Map: {screen: MapScreen },
+    ContactAct: { screen: ContactActScreen },
+    Camera: { screen: CameraScreen },
+    Configuration: { screen: ConfigurationScreen },
+    Sincronize: { screen: SincronizeScreen },
+  }, 
+  {
+    initialRouteName: 'Home',
+  });
 
-export default createAppContainer(AppNavigator);
+
+export default createAppContainer(SwitchNavigator);

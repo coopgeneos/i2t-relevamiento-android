@@ -12,7 +12,7 @@ stms.push(`
 	CREATE TABLE if not exists Contact (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER,
-		description TEXT,
+		name TEXT,
 		address TEXT,
 		city TEXT,
 		zipCode TEXT,
@@ -67,8 +67,10 @@ stms.push(`
 		schedule_id INTEGER NOT NULL,
 		activityType_id INTEGER NOT NULL,
 		contact_id INTEGER NOT NULL,
-		answer_image BLOB,
-		answer_text TEXT,
+		state TEXT NOT NULL,
+		cancellation TEXT,
+		notes TEXT,
+		percent REAL NOT NULL,
 		FOREIGN KEY(schedule_id) REFERENCES Schedule(id),
 		FOREIGN KEY(activityType_id) REFERENCES ActivityType(id),
 		FOREIGN KEY(contact_id) REFERENCES Contact(id)
@@ -99,7 +101,7 @@ stms.push(`
 	);`);
 
 stms.push(`INSERT INTO User(email, name, username, password, lastSync) values ('luis@unmail.com', 'Luis Juan', 'ljuan', 'robi123', '2019/01/16');`);
-stms.push(`INSERT INTO Contact(user_id, description, address, city, zipCode, phone, email, hours, latitude, longitude) 
+stms.push(`INSERT INTO Contact(user_id, name, address, city, zipCode, phone, email, hours, latitude, longitude) 
 	values (1, 'Jose Suarez (Dueño)', 'Buzon 456', 'Tandil', '7000', '2494875465', 'jsuarez@unmail.com', '8 a 16 hs', -37.3214476 , -59.1179599);`);
 stms.push(`INSERT INTO Schedule(user_id, contact_id, type, priority, planned_date, observations, state, exec_date, latitude, longitude)
 	values (1, 1,'Comun', 2, '2019/03/06', '', 'Sin visitar', '2019/03/10', -37.353535, -59.125458);`);
@@ -111,8 +113,8 @@ stms.push(`INSERT INTO ItemActType (activityType_id, description, type) values (
 stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'No usa');`);
 stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa el de CAS');`);
 stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa uno propio');`);
-stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id) values (1, 1, 1);`);
-stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id) values (1, 2, 1);`);
+stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, state, percent) values (1, 1, 1, 'new', 0.0);`);
+stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, state, percent) values (1, 2, 1, 'new', 0.0);`);
 stms.push(`INSERT INTO Answer (activity_id, itemActType_id, text_val) values (1, 3, 'Usa el de CAS');`);
 
 stms.push(`commit;`);

@@ -14,23 +14,7 @@ export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
 
-    const { navigation } = this.props;
-    const contact = navigation.getParam('contact', 'SIN CONTACTO');
-    //const address = navigation.getParam('address', 'SIN DOMICILIO');
-    //const city = navigation.getParam('city', 'SIN CONTACTO');
-
-    this.state = {
-      contact: contact,
-      /*address: address,
-      city: city,
-      tableHead: ['Actividad', ''],
-      tableData: [
-        ['Relevamiento fotográfico',  'A'],
-        ['Encuesta de calidad',  'A'],
-        ['Relevamiento fotográfico',  'A'],
-        ['Encuesta de calidad',  'A']
-      ]*/
-    };
+    this.state = {};
   }
 
   componentDidMount() {
@@ -42,7 +26,7 @@ export default class ContactActScreen extends React.Component {
             select a.activityType_id 
             from activity a 
             where a.contact_id = ?);`,
-        [this.state.contact.id],
+        [global.context.contact.id],
         (_, { rows }) => {
           var tableHead = ['Actividad', ''];
           var tableData = [];
@@ -72,7 +56,7 @@ export default class ContactActScreen extends React.Component {
 
     const element = (data, index) => (
         <View style={styles.btn_cont}>
-          <Button style={styles.btn} onPress={() => this.props.navigation.navigate('Survey',{contact: this.state.contact.description, address: this.state.contact.address, detail: 'DETALLE'})}>
+          <Button style={styles.btn} onPress={() => this.props.navigation.navigate('Survey',{detail: data.description})}>
           <Text>Iniciar</Text>
           </Button>
         </View>
@@ -105,7 +89,7 @@ export default class ContactActScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation}  title="Actividades Disponibles" />
+        <HeaderNavBar navigation={this.props.navigation} title="Actividades Disponibles" navBack={{to: 'Contacts', params:{}}} />
         <Content>
           
           <Card>
@@ -114,13 +98,13 @@ export default class ContactActScreen extends React.Component {
             </CardItem>
 
             <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{this.state.contact.name}</Text>
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{this.state.contact.address}</Text>
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{this.state.contact.city}</Text>
+            <Label style={{ width: 80 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
             </CardItem>
 
             <CardItem footer>                        

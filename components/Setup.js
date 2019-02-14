@@ -1,7 +1,6 @@
 import * as Expo from "expo";
 import React, { Component } from "react";
 import { StyleProvider } from "native-base";
-import { listFiles } from '../utilities/utils'
 import sql_file from '../relevamiento.sql'
 
 import Navigation from "../navigation/navigation";
@@ -14,13 +13,11 @@ export default class Setup extends Component {
     this.state = {
       isReady: false
     };
+    this.createDatabase();
   }
 
   async componentWillMount() {
     this.loadFonts();
-    await this.createDatabase();
-    //await listFiles(Expo.FileSystem.documentDirectory);
-    //this.testDatabase()
   }
 
   async loadFonts() {
@@ -42,7 +39,7 @@ export default class Setup extends Component {
           if(!db_file.exists){
             console.info('Se va a crear la base (/SQLite/relevamiento.db)');
             global.DB = Expo.SQLite.openDatabase('relevamiento.db');
-            DB.transaction(tx => {
+            global.DB.transaction(tx => {
                 var list = sql_file.SCHEMA;
                 for(i=0; i<list.length; i++){
                   tx.executeSql(list[i],
@@ -59,7 +56,7 @@ export default class Setup extends Component {
                 reject(`ERROR en una de las transacción ${err}`)
               },
               () => {
-                console.info('Base de datos creada correctamente')
+                console.info('\x1b[47m\x1b[30mBase de datos creada correctamente\x1b[0m\x1b[40m')
                 resolve('Creada')
               }
             )                         
@@ -74,23 +71,6 @@ export default class Setup extends Component {
           reject(err)
         })
     })
-  }
-
-  testDatabase(){
-    //var DB = Expo.SQLite.openDatabase('relevamiento.db');
-    DB.transaction(tx => {
-      tx.executeSql(
-        `select * from User;`,
-        [],
-        (_, { rows }) => {
-          console.log(JSON.stringify(rows))
-        },
-        (_, err) => {
-          console.error(5);
-          console.error(err)
-        }
-      )
-    });
   }
 
   render() {

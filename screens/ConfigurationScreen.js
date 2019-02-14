@@ -24,7 +24,7 @@ export default class ConfigurationScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar  navigation={this.props.navigation} title="Configuraciones" />
+        <HeaderNavBar navigation={this.props.navigation} title="Configuraciones" navBack={{to: 'Home', params:{}}} />
         <Content></Content>
         <FooterNavBar navigation={this.props.navigation} />
       </Container>

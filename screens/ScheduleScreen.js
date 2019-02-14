@@ -22,10 +22,9 @@ export default class ScheduleScreen extends React.Component {
   }
 
   componentDidMount() {
-    //var DB = Expo.SQLite.openDatabase('relevamiento.db');
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select s.id, c.description as agency, c.city, c.zipCode, c.address, c.latitude, c.longitude    
+        ` select s.id, c.*     
           from Schedule s
           inner join Contact c on (c.id = s.contact_id)
           where s.state != 'Complete';`,
@@ -48,15 +47,14 @@ export default class ScheduleScreen extends React.Component {
     ))
   }
 
-  onPressRow(event){
-    this.props.navigation.navigate('Activities', {
-      agency: event.agency, 
-      address: event.address+' - '+event.city+' ('+event.zipCode+')'
-    })
-  }
-
   setDate(newDate) {
     this.setState({ chosenDate: newDate });
+  }
+
+  goToActivities(params){
+    global.context['event_id'] = params.event_id;
+    global.context['contact'] = params.contact; 
+    this.props.navigation.navigate('Activities');
   }
 
   render() {
@@ -65,13 +63,13 @@ export default class ScheduleScreen extends React.Component {
     var markers = [];
     if (areThereEvents) {
       this.state.events.forEach(item => {
-        markers.push({title: item.agency, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
+        markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
       })
     }
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation} title="Agenda" markers={markers} />
+        <HeaderNavBar navigation={this.props.navigation} title="Agenda" markers={markers} navBack={{to: 'Home', params:{}}}/>
         <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
@@ -113,7 +111,7 @@ export default class ScheduleScreen extends React.Component {
                       </Left>
                       <Body>
                         <Text>
-                          {data.agency}
+                          {data.name}
                         </Text>
                         <Text numberOfLines={2} note>
                           {data.address} - {data.city} - {data.zipCode}
@@ -123,7 +121,7 @@ export default class ScheduleScreen extends React.Component {
                         </Text>
                       </Body>
                       <Right>
-                        <Button transparent onPress={()=>{this.props.navigation.navigate('Activities',{event_id: data.id, agency: data.agency, city: data.city, address: data.address})}} style={{fontSize: 32}}>
+                        <Button transparent onPress={()=>{this.goToActivities({contact: data, event_id: data.id})}} style={{fontSize: 32}}>
                           <Icon name='search'/>
                         </Button>
                       </Right>

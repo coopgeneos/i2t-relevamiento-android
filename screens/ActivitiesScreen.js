@@ -13,11 +13,6 @@ import HeaderNavBar from '../components/HeaderNavBar';
 export default class ActivitiesScreen extends React.Component {
   constructor(props) {
     super(props);
-     
-    /*const dataSource = new ListView.DataSource({
-      rowHasChanged: (row1, row2) => row1 !== row2,
-    });*/
-
     this.state = {
       dataSource: [],
       tableHead: ['Actividad', 'Fecha', ''],
@@ -25,15 +20,14 @@ export default class ActivitiesScreen extends React.Component {
   }
 
   componentDidMount() {
-    var event = this.props.navigation.getParam('event_id', null);
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select a.id as activity_id, actt.id as actType_id, actt.description, s.planned_date
+        ` select a.*, actt.description, s.planned_date
           from Activity a 
           inner join ActivityType actt on (actt.id = a.activityType_id) 
           inner join Schedule s on (s.id = a.schedule_id) 
           where a.schedule_id = ?`,
-        [event],
+        [global.context.event_id],
         (_, { rows }) => {
           var resp = rows._array;
           var data = []
@@ -52,29 +46,42 @@ export default class ActivitiesScreen extends React.Component {
       )
     });
   }
+
+  getIconBattery(index){
+    var percent = this.state.dataSource[index].percent;
+    if(percent == 0.0) return 'battery-0';
+    if(percent <= 0.25) return 'battery-1';
+    if(percent <= 0.5) return 'battery-2';
+    if(percent <= 0.75) return 'battery-3';
+    if(percent <= 1) return 'battery-4';
+  }
   
   render() {
     let table;
     const state = this.state;
 
-    //En esta vista es necesario que las props recibidas sean parte del state
-    const { navigation } = this.props;
-    const contact = navigation.getParam('agency', 'SIN CONTACTO');
-    const address = navigation.getParam('address', 'SIN DOMICILIO');
-    const city = navigation.getParam('city', 'SIN CONTACTO');
-
-    const element = (data, index) => (
-      <TouchableOpacity onPress={() => this._alertIndex(index)}>
-        <View style={styles.btn_cont}>
-            <Button transparent onPress={() => this.props.navigation.navigate('Activity',{contact: 'JUAN', address: 'ALBERDI', detail: 'MAS O MENOS'})}>
-            <Icon name='edit'/>
-            </Button>
-            <Button transparent>
-            <Icon name='battery-2'/>
-            </Button>
-        </View>
-      </TouchableOpacity>
-    );
+    const element = (data, index) => {
+      if(this.state.dataSource[index].state != 'canceled') {
+        return (
+          <TouchableOpacity onPress={() => this._alertIndex(index)}>
+            <View style={styles.btn_cont}>
+              <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index]})}>
+                <Icon name='edit'/>
+              </Button>
+              <Button transparent>
+                <Icon name={this.getIconBattery(index)}/>
+              </Button>
+            </View>
+          </TouchableOpacity>
+        )
+      } else {
+        return (
+          <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index]})}>
+            <Icon name='times-circle'/>
+          </Button>
+        )
+      }     
+    };
 
     if(!this.state.tableData){
       table = <Spinner color='blue'/>
@@ -92,14 +99,7 @@ export default class ActivitiesScreen extends React.Component {
                               textStyle={cellIndex === 2 ? styles.text_head : styles.text}
                               onPress={() => 
                                 this.props.navigation.navigate('Survey', 
-                                  {
-                                    agency: contact,
-                                    address: address,
-                                    city: city,
-                                    detail: cellData,
-                                    acttype_id: this.state.dataSource[index].actType_id,
-                                    activity_id: this.state.dataSource[index].activity_id
-                                  })
+                                  {activity: this.state.dataSource[index]})
                               }
                             />
                           ))
@@ -113,7 +113,7 @@ export default class ActivitiesScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation}  title="Actividades" />
+        <HeaderNavBar navigation={this.props.navigation}  title="Actividades" navBack={{to: 'Schedule', params:{}}}/>
         <Content>
           
           <Card>
@@ -122,13 +122,13 @@ export default class ActivitiesScreen extends React.Component {
             </CardItem>
 
             <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{contact}</Text>
+            <Label style={{ width: 80 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{address}</Text>
+            <Label style={{ width: 80 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
             </CardItem>
             <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{city}</Text>
+            <Label style={{ width: 80 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
             </CardItem>
 
             <CardItem footer>                        
