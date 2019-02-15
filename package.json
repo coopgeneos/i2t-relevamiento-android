@@ -19,7 +19,8 @@
     "react-native-popup-dialog": "^0.17.0",
     "react-native-table-component": "^1.2.0",
     "react-navigation": "^3.0.9",
-    "slippy-grid": "^2.3.0"
+    "slippy-grid": "^2.3.0",
+    "spherical-geometry-js": "^1.2.0"
   },
   "devDependencies": {
     "babel-preset-expo": "^5.0.0"

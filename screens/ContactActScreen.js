@@ -89,7 +89,7 @@ export default class ContactActScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation} title="Actividades Disponibles" navBack={{to: 'Contacts', params:{}}} />
+        <HeaderNavBar navigation={this.props.navigation} title="Actividades Disponibles" />
         <Content>
           
           <Card>

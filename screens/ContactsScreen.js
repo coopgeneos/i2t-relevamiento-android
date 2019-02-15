@@ -3,7 +3,7 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, 
   Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
   Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
-
+import { getLocationAsync, isClose, getConfiguration } from '../utilities/utils';
 import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 
 import FooterNavBar from '../components/FooterNavBar';
@@ -18,18 +18,38 @@ export default class ContactsScreen extends React.Component {
       contacts: [],
       name: global.context.user.name,
       nears: false,
+      markers: null
     };
   }
 
   componentDidMount() {
+    this.getContacts(null)
+  }
+
+  getContacts(nears) {
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select * 
           from Contact;`,
         [],
-        (_, { rows }) => {
+        async (_, { rows }) => {
+          var data = rows._array;
+          if(nears === true){
+            var myLocation = await getLocationAsync();
+            var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
+            var prox_range = await getConfiguration('PROXIMITY_RANGE');
+            var data = rows._array.filter(item => {
+              var ctLoc = {lat: item.latitude, lng: item.longitude};
+              return isClose(myLoc, ctLoc, prox_range)
+            })
+          }
+          var markers = [];       
+          data.forEach(item => {
+            markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
+          })         
           this.setState ({
-            contacts: rows._array
+            contacts: data,
+            markers: markers
           });
         },
         (_, err) => {
@@ -40,9 +60,8 @@ export default class ContactsScreen extends React.Component {
   }
 
   toggleNears(){
-    this.setState(prevState => (
-      {nears: !prevState.nears}
-    ))
+    this.state.nears = !this.state.nears;
+    this.getContacts(this.state.nears);
   }
 
   onPressRow(contact){ 
@@ -55,15 +74,6 @@ export default class ContactsScreen extends React.Component {
   }
 
   render() {
-    var areThereContacts = this.state.contacts == null ? false : true;
-
-    var markers = [];
-    if (areThereContacts) {
-      this.state.contacts.forEach(item => {
-        markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
-      })
-    }
-
     let list;
     if(this.state.contacts){
       let itemList = [];
@@ -89,7 +99,7 @@ export default class ContactsScreen extends React.Component {
 
     return (
       <Container>
-          <HeaderNavBar navigation={this.props.navigation} title="Actividades" markers={markers} navBack={{to: 'Home', params:{}}} />
+          <HeaderNavBar navigation={this.props.navigation} title="Actividades" map={true} markers={this.state.markers} />
           <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             

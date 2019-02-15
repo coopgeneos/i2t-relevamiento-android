@@ -279,12 +279,17 @@ export default class SurveyScreen extends React.Component {
     this.loadCards(this.state.cardsData, false)
   }
 
+  goBack(){
+    this.props.navigation.state.params.onGoBack();
+    this.props.navigation.goBack()
+  }
+
   render() {
     var isThereData = this.state.cardsData ? true : false;
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation}  title="Relevamiento" navBack={{to: 'Activities', params:{}}}/>
+        <HeaderNavBar navigation={this.props.navigation}  title="Relevamiento" />
         <Content>
           
           <Card>

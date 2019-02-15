@@ -116,6 +116,7 @@ stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa uno p
 stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, state, percent) values (1, 1, 1, 'new', 0.0);`);
 stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, state, percent) values (1, 2, 1, 'new', 0.0);`);
 stms.push(`INSERT INTO Answer (activity_id, itemActType_id, text_val) values (1, 3, 'Usa el de CAS');`);
+stms.push(`INSERT INTO Configuration (key, value) values ('PROXIMITY_RANGE', '1000');`);
 
 stms.push(`commit;`);
 

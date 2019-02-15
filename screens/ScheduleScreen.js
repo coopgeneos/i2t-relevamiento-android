@@ -2,9 +2,9 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, 
         Button, Icon, CheckBox, List, ListItem, Thumbnail, Form, Item, Label,
         Input, Left, Right, Spinner, Title, Body, DatePicker} from 'native-base';
-import {formatDate} from '../utilities/utils';
-import styles from "./Styles";
-
+import { Location, Permissions } from 'expo';
+import { computeDistanceBetween } from 'spherical-geometry-js';
+import { getLocationAsync, isClose, getConfiguration, formatDate } from '../utilities/utils';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
@@ -16,22 +16,46 @@ export default class ScheduleScreen extends React.Component {
     this.state = {
       nears: false,
       events: null,
-      chosenDate: new Date() 
+      chosenDate: null,
+      markers: []
     };
     this.setDate = this.setDate.bind(this);
   }
 
   componentDidMount() {
+    this.getEvents(null, null);
+  }
+
+  getEvents(nears, dateFilter) {
+    let sql = ` select s.id, c.*     
+                from Schedule s
+                inner join Contact c on (c.id = s.contact_id)
+                where s.state != 'Complete'`;
+    if(dateFilter) {
+      sql += ` and planned_date = '${formatDate(dateFilter)}'`
+    }
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select s.id, c.*     
-          from Schedule s
-          inner join Contact c on (c.id = s.contact_id)
-          where s.state != 'Complete';`,
+        sql,
         [],
-        (_, { rows }) => {
+        async (_, { rows }) => {
+          var data = rows._array;
+          if(nears === true){
+            var myLocation = await getLocationAsync();
+            var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
+            var prox_range = await getConfiguration('PROXIMITY_RANGE');
+            var data = rows._array.filter(item => {
+              var evLoc = {lat: item.latitude, lng: item.longitude};
+              return isClose(myLoc, evLoc, prox_range)
+            })
+          }
+          var markers = [];       
+          data.forEach(item => {
+            markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
+          })         
           this.setState ({
-            events: rows._array
+            events: data,
+            markers: markers
           });
         },
         (_, err) => {
@@ -42,13 +66,13 @@ export default class ScheduleScreen extends React.Component {
   }
 
   toggleNears(){
-    this.setState(prevState => (
-      {nears: !prevState.nears}
-    ))
+    this.state.nears = !this.state.nears;
+    this.getEvents(this.state.nears, this.state.chosenDate);
   }
 
   setDate(newDate) {
-    this.setState({ chosenDate: newDate });
+    this.getEvents(this.state.nears, newDate);
+    this.state.chosenDate = newDate;
   }
 
   goToActivities(params){
@@ -56,27 +80,20 @@ export default class ScheduleScreen extends React.Component {
     global.context['contact'] = params.contact; 
     this.props.navigation.navigate('Activities');
   }
-
+  
   render() {
     var areThereEvents = this.state.events == null ? false : true;
 
-    var markers = [];
-    if (areThereEvents) {
-      this.state.events.forEach(item => {
-        markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
-      })
-    }
-
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation} title="Agenda" markers={markers} navBack={{to: 'Home', params:{}}}/>
+        <HeaderNavBar navigation={this.props.navigation} title="Agenda" map={true} markers={this.state.markers} />
         <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
                 <Label>Fecha</Label> 
                 <DatePicker
-                  defaultDate={new Date()}
+                  defaultDate={null}
                   minimumDate={new Date(2018, 1, 1)}
                   maximumDate={new Date(2050, 12, 31)}
                   locale={"es"}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { createAppContainer, createStackNavigator, StackActions, NavigationActions, createSwitchNavigator } from 'react-navigation'; // Version can be specified in package.json
+import { createAppContainer, createStackNavigator, createSwitchNavigator } from 'react-navigation'; // Version can be specified in package.json
 
 import HomeScreen from '../screens/HomeScreen'
 import ContactsScreen from '../screens/ContactsScreen'
@@ -29,9 +29,10 @@ const AppNavigator = createStackNavigator(
   }, 
   {
     initialRouteName: 'Home',
+    headerMode: 'none'
   });
 
-const SwitchNavigator = createSwitchNavigator(
+/*const SwitchNavigator = createSwitchNavigator(
   {
     Home: { screen: HomeScreen },
     Contacts: { screen: ContactsScreen },
@@ -47,7 +48,7 @@ const SwitchNavigator = createSwitchNavigator(
   }, 
   {
     initialRouteName: 'Home',
-  });
+  });*/
 
 
-export default createAppContainer(SwitchNavigator);
+export default createAppContainer(AppNavigator);

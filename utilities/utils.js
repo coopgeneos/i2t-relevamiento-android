@@ -1,5 +1,6 @@
 import AppConstans from '../constants/constants';
-import { FileSystem } from 'expo';
+import { FileSystem, Location, Permissions } from 'expo';
+import { computeDistanceBetween } from 'spherical-geometry-js';
 
 export function formatDate(date) {
     if(typeof(date.getFullYear) === 'function'){
@@ -120,6 +121,66 @@ export function executeSQL(sql, params){
         }
       )
     });
+  })
+}
+
+export async function getLocationAsync(){
+  return new Promise(async function(resolve, reject) {
+    try {
+      let { status } = await Permissions.askAsync(Permissions.LOCATION);
+      if (status !== 'granted') {
+        this.setState({
+          errorMessage: 'Permission to access location was denied',
+        });
+      }
+      //let location = await Location.getCurrentPositionAsync({});
+      let location = {
+        "timestamp":1550166625527,
+        "mocked":false,
+        "coords":{
+          "heading":0,
+          "longitude":-59.131096,
+          "speed":0,
+          "altitude":210.8000030517578,
+          "latitude":-37.3266809,
+          "accuracy":15.392999649047852
+        }
+      }
+      resolve(location);
+    } catch (err) {
+      console.log(err)
+      reject(err)
+    }
+  })
+}
+
+export function isClose(a, b, distance){
+  let distanceBetween = computeDistanceBetween(a,b)
+  return (distanceBetween < distance)
+}
+
+export async function getConfiguration(key){
+  return new Promise(async function(resolve, reject) {
+    if(!global.context.conf){
+      global.context.conf = {};
+    }
+    if(global.context.conf[key]) {
+      resolve(global.context.conf[key])
+    } else {
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` select value from Configuration where key = ?`,
+          [key],
+          (_, { rows }) => {
+            global.context.conf[key] = rows._array[0];
+            resolve(rows._array[0])
+          },
+          (_, err) => {
+            reject(err)
+          }
+        )
+      });
+    }
   })
 }
 

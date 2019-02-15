@@ -7,8 +7,22 @@ export default class HeaderNavBar extends React.Component {
   constructor(props) {
     super(props);
   }
+
+  goBack(){
+    if(this.props.navigation.state.params && this.props.navigation.state.params.goBack){
+      this.props.navigation.state.params.onGoBack();
+    }
+    this.props.navigation.goBack()
+  }
   
   render() {
+    var map = this.props.map;
+    if(map){
+      map = <Button transparent onPress={() => this.props.navigation.navigate('Map', {markers: this.props.markers})}   style={{fontSize: 30}}>
+              <Icon name='map-marker'/>
+            </Button>
+    }
+
     return (
         <Header>
           <Left>
@@ -20,15 +34,13 @@ export default class HeaderNavBar extends React.Component {
             <Title>{this.props.title}</Title>
           </Body>
           <Right>
-            <Button transparent onPress={() => this.props.navigation.navigate(this.props.navBack.to, this.props.navBack.params)}  style={{fontSize: 30}}>
+            <Button transparent onPress={() => this.goBack()} style={{fontSize: 30}}>
               <Icon name='angle-double-left'/>
             </Button>
             <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 30}}>
               <Icon name='home'/>
             </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Map', {markers: this.props.markers})}   style={{fontSize: 30}}>
-              <Icon name='map-marker'/>
-            </Button>
+            {map}
           </Right>
         </Header>    );
   }  

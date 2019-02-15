@@ -1,10 +1,7 @@
 import React from 'react';
-
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
-
 import { StyleSheet, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
-
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 
 import FooterNavBar from '../components/FooterNavBar';
@@ -20,6 +17,10 @@ export default class ActivitiesScreen extends React.Component {
   }
 
   componentDidMount() {
+    this.getActivities()
+  }
+
+  getActivities() {
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select a.*, actt.description, s.planned_date
@@ -55,6 +56,16 @@ export default class ActivitiesScreen extends React.Component {
     if(percent <= 0.75) return 'battery-3';
     if(percent <= 1) return 'battery-4';
   }
+
+  refresh() {
+    this.getActivities();
+  }
+
+  goToSurvey(activity){
+    if(activity.state != 'canceled')
+      this.props.navigation.navigate('Survey', 
+        {activity: activity, onGoBack: () => this.refresh()})
+  }
   
   render() {
     let table;
@@ -65,7 +76,7 @@ export default class ActivitiesScreen extends React.Component {
         return (
           <TouchableOpacity onPress={() => this._alertIndex(index)}>
             <View style={styles.btn_cont}>
-              <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index]})}>
+              <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
                 <Icon name='edit'/>
               </Button>
               <Button transparent>
@@ -76,7 +87,7 @@ export default class ActivitiesScreen extends React.Component {
         )
       } else {
         return (
-          <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index]})}>
+          <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
             <Icon name='times-circle'/>
           </Button>
         )
@@ -97,10 +108,7 @@ export default class ActivitiesScreen extends React.Component {
                             <Cell key={cellIndex} 
                               data={cellIndex === 2 ? element(cellData, index) : cellData} 
                               textStyle={cellIndex === 2 ? styles.text_head : styles.text}
-                              onPress={() => 
-                                this.props.navigation.navigate('Survey', 
-                                  {activity: this.state.dataSource[index]})
-                              }
+                              onPress={() => this.goToSurvey(this.state.dataSource[index])}
                             />
                           ))
                         }
@@ -113,7 +121,7 @@ export default class ActivitiesScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation}  title="Actividades" navBack={{to: 'Schedule', params:{}}}/>
+        <HeaderNavBar navigation={this.props.navigation}  title="Actividades" />
         <Content>
           
           <Card>

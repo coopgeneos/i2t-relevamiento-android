@@ -24,7 +24,7 @@ export default class SincronizeScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation}  title="Sincronización" navBack={{to: 'Home', params:{}}} />
+        <HeaderNavBar navigation={this.props.navigation}  title="Sincronización" />
         <Content></Content>
         <FooterNavBar navigation={this.props.navigation} />
       </Container>

@@ -7,6 +7,9 @@ import { StyleSheet, View } from "react-native"
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
+import { NavigationActions } from 'react-navigation'; // Version can be specified in package.json
+
+
 export default class ActivityScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -16,7 +19,8 @@ export default class ActivityScreen extends React.Component {
     this.state = {
       canceled: this.activity.state == 'canceled' ? true : false,
       cancellation: this.activity.cancellation,
-      notes: this.activity.notes   
+      notes: this.activity.notes,
+      disabled: true  
     };
   }
 
@@ -32,7 +36,8 @@ export default class ActivityScreen extends React.Component {
           this.setState({
             canceled: this.activity.state == 'canceled' ? true : false, 
             cancellation: this.activity.cancellation, 
-            notes: this.activity.notes
+            notes: this.activity.notes,
+            disabled: this.activity.state == 'canceled' ? true : false
           });
         },
         (_, err) => {
@@ -60,7 +65,12 @@ export default class ActivityScreen extends React.Component {
       )
     });
     this.activity.canceled = this.state.canceled;
-    this.props.navigation.navigate('Activities');
+    /* 
+      Para volver en la pila de navegación hay que invocar a onGoBack antes de volver con goBack 
+      Notar que en ActivititesScreen al llamar a esta pagina pase el paramtro onGoBack
+    */
+    this.props.navigation.state.params.onGoBack();
+    this.props.navigation.goBack()
   }
 
   cancelAct() {
@@ -84,7 +94,7 @@ export default class ActivityScreen extends React.Component {
 
     return (
       <Container>
-        <HeaderNavBar navigation={this.props.navigation} title="Registro de Actividad" navBack={{to: 'Activities', params:{}}}/>
+        <HeaderNavBar navigation={this.props.navigation} title="Registro de Actividad" />
         <Content>
           
           <Card>
@@ -117,14 +127,14 @@ export default class ActivityScreen extends React.Component {
             </Item>
             <Item>
               <Label>Cancelada</Label>
-              <CheckBox checked={this.state.canceled} onPress={()=>{this.cancelAct()}}/>  
+              <CheckBox checked={this.state.canceled} onPress={()=>{this.cancelAct()}} disabled={this.state.disabled}/>  
             </Item>
 
             {cancelArea}
             
             <Item style={styles.btn_cont}>
               <Button onPress={() => this.props.navigation.navigate('Activities')}><Text>Cancelar</Text></Button>
-              <Button onPress={() => this.saveActivity()}><Text>Guardar</Text></Button>
+              <Button onPress={() => this.saveActivity()} disabled={this.state.disabled}><Text>Guardar</Text></Button>
             </Item>         
           </Form>
         

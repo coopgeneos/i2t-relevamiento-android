@@ -20,7 +20,8 @@ export default class MapScreen extends React.Component {
         longitude: -59.8613362,
         latitudeDelta: 1,
         longitudeDelta: 1,
-      }
+      },
+      markers: this.props.navigation.getParam('markers', null)
     }
   }
   
@@ -54,9 +55,8 @@ export default class MapScreen extends React.Component {
       : this.state.urlTemplate
 
     var markers_onMap = []
-    var markers = this.props.navigation.getParam('markers', []);
-    if(markers != null) {
-      markers.forEach(elem => {
+    if(this.state.markers) {
+      this.state.markers.forEach(elem => {
         markers_onMap.push(
           <MapView.Marker key={elem.title}
             coordinate= {elem.coords}
