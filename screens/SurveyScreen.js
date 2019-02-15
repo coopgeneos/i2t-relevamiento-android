@@ -102,11 +102,11 @@ export default class SurveyScreen extends React.Component {
         if(item.img_val){
           var name = new Date();
           name = name.getTime().toString()
-          FileSystem.writeAsStringAsync(`${FileSystem.documentDirectory}photos/${name}.jpg`, item.img_val, {encoding: FileSystem.EncodingTypes.Base64})
+          FileSystem.writeAsStringAsync(`${AppConstants.TMP_FOLDER}/${name}.jpg`, item.img_val, {encoding: FileSystem.EncodingTypes.Base64})
             .catch(err => {
               console.log(`ERROR creando archivo temporal: ${err}`)
             })
-          item.img_val = `${FileSystem.documentDirectory}photos/${name}.jpg`;
+          item.img_val = `${AppConstants.TMP_FOLDER}/${name}.jpg`;
         }
 
         var answer = {

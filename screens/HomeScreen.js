@@ -29,6 +29,7 @@ export default class HomeScreen extends React.Component {
         (_, { rows }) => {
           //Me quedo con el primer usuario que encuentro para probar
           var loggedUser = rows._array[0];
+          loggedUser.lastSync = new Date(loggedUser.lastSync);
           global.context['user'] = loggedUser;
           this.setState ({
             user: loggedUser
