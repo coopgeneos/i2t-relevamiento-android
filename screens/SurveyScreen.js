@@ -4,7 +4,7 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
           Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, IconNB,
           DeckSwiper, Thumbnail, List, ListItem, Radio, Segment} from 'native-base';
 
-import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView, BackHandler} from 'react-native';
 import { ImagePicker, Permissions, FileSystem } from 'expo';
 
 import FooterNavBar from '../components/FooterNavBar';
@@ -14,6 +14,20 @@ import AppConstants from '../constants/constants'
 import { Divider } from 'react-native-elements';
 
 export default class SurveyScreen extends React.Component {
+  /* 
+  Estas 2 variables se usan para sobreescribir el funcionamiento del 
+  boton back de android
+  Ademas se agregaron las siguientes funcionalidades:
+    * componentWillUnmount
+    * onBackButtonPressAndroid
+  y se modificaron:
+    * Constructor
+    * ComponentDidMount
+  Mas info: https://reactnavigation.org/docs/en/custom-android-back-button-handling.html
+  */
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
 
@@ -26,7 +40,12 @@ export default class SurveyScreen extends React.Component {
       answers: null,
       permissionsCamera: false,
       permissionsCameraRoll: false
-    }
+    };
+
+    this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
+      BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+
   };
 
   componentDidMount() {
@@ -50,7 +69,21 @@ export default class SurveyScreen extends React.Component {
         }
       )
     });
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
+
+  onBackButtonPressAndroid = () => {
+    this.goBack()
+    return true;
+  };
 
   async loadCards(data, firstTime) {
     var cards = [];

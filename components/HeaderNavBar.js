@@ -9,7 +9,7 @@ export default class HeaderNavBar extends React.Component {
   }
 
   goBack(){
-    if(this.props.navigation.state.params && this.props.navigation.state.params.goBack){
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
       this.props.navigation.state.params.onGoBack();
     }
     this.props.navigation.goBack()

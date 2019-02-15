@@ -32,7 +32,7 @@ export default class Setup extends Component {
   async createDatabase(){    
     return new Promise(async function(resolve, reject) {
       /**** Activar la siguiente linea si se quiere recrear la base desde cero ****/
-      //await Expo.FileSystem.deleteAsync(`${Expo.FileSystem.documentDirectory}/SQLite`, {idempotent: true});
+      await Expo.FileSystem.deleteAsync(`${Expo.FileSystem.documentDirectory}/SQLite`, {idempotent: true});
       
       Expo.FileSystem.getInfoAsync(`${Expo.FileSystem.documentDirectory}/SQLite/relevamiento.db`)
         .then(async db_file => {
