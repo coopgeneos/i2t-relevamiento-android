@@ -29,11 +29,11 @@ export default class ConfigurationScreen extends React.Component {
 
         <Form>
           <Item stackedLabel>
-            <Label>Distancia a Cercanos</Label>
+            <Label>Nombre y Apellido</Label>
             <Input placeholder="..." />
           </Item>
           <Item stackedLabel>
-            <Label>Días de histórico de Agenda</Label>
+            <Label>Email</Label>
             <Input placeholder="..." />
           </Item>
           <Item stackedLabel>
@@ -47,6 +47,18 @@ export default class ConfigurationScreen extends React.Component {
           <Item stackedLabel>
             <Label>Password Backend</Label>
             <Input secureTextEntry />
+          </Item>
+          <Item stackedLabel>
+            <Label>Distancia a Cercanos</Label>
+            <Input placeholder="..." />
+          </Item>
+          <Item stackedLabel>
+            <Label># Envíos a mostrar</Label>
+            <Input placeholder="..." />
+          </Item>
+          <Item stackedLabel>
+            <Label>Días de proyección de Agenda</Label>
+            <Input placeholder="..." />
           </Item>
         </Form>
         <Button block style={{ margin: 15, marginTop: 50, marginBottom: 80 }}>
