@@ -34,17 +34,17 @@ export default class Setup extends Component {
     return new Promise(async function(resolve, reject) {
       /**** Activar la siguiente linea si se quiere recrear la base desde cero ****/
       //await Expo.FileSystem.deleteAsync(`${Expo.FileSystem.documentDirectory}/SQLite`, {idempotent: true});
-      
+
       /* Limpio la carpeta de archivos temporales */
       Expo.FileSystem.deleteAsync(AppConstans.TMP_FOLDER)
         .then(() => {
           Expo.FileSystem.makeDirectoryAsync(AppConstans.TMP_FOLDER, {intermediates: true})
         })
         .catch(err => {
-          if(err.includes('could not be found'))
+          if(String(err).includes('could not be found'))
             Expo.FileSystem.makeDirectoryAsync(AppConstans.TMP_FOLDER, {intermediates: true})
           else
-            console.log(`ERROR creando la carpeta de temporales: ${err}`);         
+            console.log(`ERROR creando la carpeta de temporales: ${err}`);
         })     
 
       Expo.FileSystem.getInfoAsync(`${Expo.FileSystem.documentDirectory}/SQLite/relevamiento.db`)

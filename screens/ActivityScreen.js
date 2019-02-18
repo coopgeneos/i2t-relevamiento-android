@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, CheckBox, Textarea } from 'native-base';
 
-import { StyleSheet, View } from "react-native"
+import { StyleSheet, View, ToastAndroid } from "react-native"
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -20,7 +20,7 @@ export default class ActivityScreen extends React.Component {
       canceled: this.activity.state == 'canceled' ? true : false,
       cancellation: this.activity.cancellation,
       notes: this.activity.notes,
-      disabled: true  
+      disabled: true,
     };
   }
 
@@ -46,6 +46,7 @@ export default class ActivityScreen extends React.Component {
       )
     });
   }
+
   
   saveActivity(){
     var state = this.state.canceled ? 'canceled' : 'new';
@@ -64,6 +65,13 @@ export default class ActivityScreen extends React.Component {
         }
       )
     });
+    ToastAndroid.showWithGravityAndOffset(
+      'Los datos se actualizaron correctamente.',
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      25,
+      50,
+    );
     this.activity.canceled = this.state.canceled;
     /* 
       Para volver en la pila de navegación hay que invocar a onGoBack antes de volver con goBack 
