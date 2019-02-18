@@ -25,7 +25,36 @@ export default class ConfigurationScreen extends React.Component {
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation} title="Configuraciones" />
-        <Content></Content>
+        <Content>
+
+        <Form>
+          <Item stackedLabel>
+            <Label>Distancia a Cercanos</Label>
+            <Input placeholder="..." />
+          </Item>
+          <Item stackedLabel>
+            <Label>Días de histórico de Agenda</Label>
+            <Input placeholder="..." />
+          </Item>
+          <Item stackedLabel>
+            <Label>URL Backend</Label>
+            <Input placeholder="..." />
+          </Item>
+          <Item stackedLabel>
+            <Label>Usuario Backend</Label>
+            <Input placeholder="..." />
+          </Item>
+          <Item stackedLabel>
+            <Label>Password Backend</Label>
+            <Input secureTextEntry />
+          </Item>
+        </Form>
+        <Button block style={{ margin: 15, marginTop: 50, marginBottom: 80 }}>
+          <Text>Guardar</Text>
+        </Button>
+
+
+        </Content>
         <FooterNavBar navigation={this.props.navigation} />
       </Container>
     );
