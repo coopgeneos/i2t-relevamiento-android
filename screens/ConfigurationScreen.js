@@ -1,11 +1,10 @@
 import React from 'react';
 //import { Button } from 'react-native';
-import { Container, Header, Content, Footer, FooterTab, Text, 
+import { Container, Header, Content, Footer, FooterTab, Text,
   Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
   Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
 
-import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
-
+import { StyleSheet, TextInput, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
@@ -30,35 +29,69 @@ export default class ConfigurationScreen extends React.Component {
         <Form>
           <Item stackedLabel>
             <Label>Nombre y Apellido</Label>
-            <Input placeholder="..." />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'default'}
+              placeholder="Ingrese nombre y apellido"
+            />
           </Item>
           <Item stackedLabel>
             <Label>Email</Label>
-            <Input placeholder="..." />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'email-address'}
+              placeholder="Ingrese el mail"
+            />
           </Item>
           <Item stackedLabel>
             <Label>URL Backend</Label>
-            <Input placeholder="..." />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'url'}
+              placeholder="Ingrese direccion del servidor"
+            />
           </Item>
           <Item stackedLabel>
             <Label>Usuario Backend</Label>
-            <Input placeholder="..." />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'default'}
+              placeholder="Ingrese nombre de usuario para loguear"
+              textContentType={'username'}
+            />
           </Item>
           <Item stackedLabel>
             <Label>Password Backend</Label>
-            <Input secureTextEntry />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'default'}
+              placeholder="Ingrese contraseña para loguear"
+              secureTextEntry={true}
+            />
           </Item>
           <Item stackedLabel>
             <Label>Distancia a Cercanos</Label>
-            <Input placeholder="..." />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'numeric'}
+              placeholder="Ingrese la distancia de cercanos"
+            />
           </Item>
           <Item stackedLabel>
             <Label># Envíos a mostrar</Label>
-            <Input placeholder="..." />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'numeric'}
+              placeholder="Ingrese la cantidad de envios"
+            />
           </Item>
           <Item stackedLabel>
             <Label>Días de proyección de Agenda</Label>
-            <Input placeholder="..." />
+            <TextInput
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'numeric'}
+              placeholder="Ingrese la cantidad de dias"
+            />
           </Item>
         </Form>
         <Button block style={{ margin: 15, marginTop: 50, marginBottom: 80 }}>
@@ -82,5 +115,5 @@ const styles = StyleSheet.create({
   btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12, color: 'white'},
   btn_cont: { flexDirection: 'row'},
   btn_card: { flexDirection: 'row', justifyContent: 'space-around' },
-  btnText: { textAlign: 'center', color: '#fff' }
+  btnText: { textAlign: 'center', color: '#fff' },
 });
