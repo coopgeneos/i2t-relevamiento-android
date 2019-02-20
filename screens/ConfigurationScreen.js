@@ -101,7 +101,7 @@ export default class ConfigurationScreen extends ValidationComponent {
       error_msg += "Error en Usuario Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
     }
     if(!this.validate({ pass_backend: {minlength:6, maxlength:8, required: true} })){ 
-      error_msg += "Error en Password Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
+      error_msg += "Error en Password Backend debe contener entre 6 y 8 caracteres y es de carga obligatoria.\n";
     }
     if(!this.validate({ url_backend: {required: true} })){ 
       error_msg += "Error en URL, el campo es de carga obligatoria.\n";
@@ -124,13 +124,12 @@ export default class ConfigurationScreen extends ValidationComponent {
       
       ToastAndroid.showWithGravity(
         'Validar datos \n' + String(error_msg),
-        ToastAndroid.SHORT,
+        ToastAndroid.LONG,
         ToastAndroid.BOTTOM,
       );
 
       return;
     }
-      
 
     const { user_name } = this.state;
     const { user_email } = this.state;
@@ -140,82 +139,51 @@ export default class ConfigurationScreen extends ValidationComponent {
     const { proximity_range } = this.state;
     const { shipments_show } = this.state;
     const { projection_agenda } = this.state;
+    const campos = ['user_name','user_email','url_backend','user_backend',
+      'pass_backend','proximity_range','shipments_show','projection_agenda']
     var errordb = false;
-
+    var item_ = '';
     global.DB.transaction(tx => {
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [user_name, 'USER_NAME'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
+      campos.forEach(item_campo => {
+        switch (item_campo) {
+          case 'user_name':
+            item_ = user_name;
+            break;
+          case 'user_email':
+            item_ = user_email;
+            break;
+          case 'url_backend':
+            item_ = url_backend;
+            break;
+          case 'user_backend':
+            item_ = user_backend;
+            break;
+          case 'pass_backend':
+            item_ = pass_backend;
+            break;
+          case 'proximity_range':
+            item_ = proximity_range;
+            break;
+          case 'shipments_show':
+            item_ = shipments_show;
+            break;
+          case 'projection_agenda':
+            item_ = projection_agenda;
+            break;
+          default:
+            console.error( 'el fieldname no existe!' );
         }
-      );
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [user_email, 'USER_EMAIL'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
-        }
-      );
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [url_backend, 'URL_BACKEND'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
-        }
-      );
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [user_backend, 'USER_BACKEND'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
-        }
-      );
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [pass_backend, 'PASS_BACKEND'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
-        }
-      );
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [proximity_range, 'PROXIMITY_RANGE'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
-        }
-      );
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [shipments_show, 'SHIPMENTS_SHOW'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
-        }
-      );
-      tx.executeSql(
-        'UPDATE Configuration set value=? where key=?',
-        [projection_agenda, 'PROJECTION_AGENDA'],
-        (tx, results) => {},
-        (tx, err) => {
-          console.error(`ERROR actualizando la DB: ${err}`)
-          errordb = true;
-        }
-      );
 
+        tx.executeSql(
+          'UPDATE Configuration set value=? where key=?',
+          [item_, String(item_campo).toLocaleUpperCase()],
+          (tx, results) => {},
+          (tx, err) => {
+            console.error(`ERROR actualizando la DB: ${err}`)
+            errordb = true;
+          }
+        );
+      });
     });
 
     if (!errordb){
