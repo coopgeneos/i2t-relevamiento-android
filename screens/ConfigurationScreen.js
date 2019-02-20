@@ -4,9 +4,11 @@ import {StyleSheet, TextInput, ToastAndroid} from 'react-native';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
+import ValidationComponent from 'react-native-form-validator';
 
 
-export default class ConfigurationScreen extends React.Component {
+
+export default class ConfigurationScreen extends ValidationComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -18,6 +20,7 @@ export default class ConfigurationScreen extends React.Component {
       proximity_range: '',
       shipments_show: '',
       projection_agenda: '',
+      showToast: false,
     };
   }
 
@@ -87,6 +90,48 @@ export default class ConfigurationScreen extends React.Component {
 
 
   setParameters = () => {
+    console.log("setParameters");
+
+    let error_msg = "";
+
+    if(!this.validate({user_name: {minlength:3, maxlength:50, required: true}})){ 
+      error_msg += "Error en Nombre y Apellido debe contener entre 3 y 50 caracteres y es de carga obligatoria.\n";
+    }
+    if(!this.validate({ user_backend: {minlength:3, maxlength:8, required: true} })){ 
+      error_msg += "Error en Usuario Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
+    }
+    if(!this.validate({ pass_backend: {minlength:6, maxlength:8, required: true} })){ 
+      error_msg += "Error en Password Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
+    }
+    if(!this.validate({ url_backend: {required: true} })){ 
+      error_msg += "Error en URL, el campo es de carga obligatoria.\n";
+    }
+    if(!this.validate({ user_email: {email: true, required: true} })){ 
+      error_msg += "Error en el formato del email. El campo es de carga obligatoria.\n";
+    }
+    if(!this.validate({ proximity_range: {numbers: true} })){ 
+      error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+    }
+    if(!this.validate({range_days: {numbers: true}})){ 
+      error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+    }    
+    if(!this.validate({shipments_show: {numbers: true}})){ 
+      error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+    }
+
+
+    if(error_msg.length > 0) {
+      
+      ToastAndroid.showWithGravity(
+        'Validar datos \n' + String(error_msg),
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+      );
+
+      return;
+    }
+      
+
     const { user_name } = this.state;
     const { user_email } = this.state;
     const { url_backend } = this.state;
@@ -96,6 +141,7 @@ export default class ConfigurationScreen extends React.Component {
     const { shipments_show } = this.state;
     const { projection_agenda } = this.state;
     var errordb = false;
+
     global.DB.transaction(tx => {
       tx.executeSql(
         'UPDATE Configuration set value=? where key=?',
