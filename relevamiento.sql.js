@@ -116,7 +116,15 @@ stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa uno p
 stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, state, percent) values (1, 1, 1, 'new', 0.0);`);
 stms.push(`INSERT INTO Activity (schedule_id, activityType_id, contact_id, state, percent) values (1, 2, 1, 'new', 0.0);`);
 stms.push(`INSERT INTO Answer (activity_id, itemActType_id, text_val) values (1, 3, 'Usa el de CAS');`);
+
+stms.push(`INSERT INTO Configuration (key, value) values ('USER_NAME', 'Jose Suarez');`);
+stms.push(`INSERT INTO Configuration (key, value) values ('USER_EMAIL', 'jsuarez@unmail.com');`);
+stms.push(`INSERT INTO Configuration (key, value) values ('URL_BACKEND', 'http://www.server.com:8000');`);
+stms.push(`INSERT INTO Configuration (key, value) values ('USER_BACKEND', 'jsuarez');`);
+stms.push(`INSERT INTO Configuration (key, value) values ('PASS_BACKEND', '12345678');`);
 stms.push(`INSERT INTO Configuration (key, value) values ('PROXIMITY_RANGE', '1000');`);
+stms.push(`INSERT INTO Configuration (key, value) values ('SHIPMENTS_SHOW', '30');`);
+stms.push(`INSERT INTO Configuration (key, value) values ('PROJECTION_AGENDA', '15');`);
 
 stms.push(`commit;`);
 

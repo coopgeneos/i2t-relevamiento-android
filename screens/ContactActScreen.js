@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#778591' },
   text: { margin: 6, fontSize: 12},
-  text_head: { margin: 6, fontSize: 16, color: '#FFF',  fontSize: 18},
+  text_head: { margin: 6, color: '#FFF',  fontSize: 18},
   row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 40 },
   btn: { height: 22, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
   btn_cont: { flexDirection: 'row'},
