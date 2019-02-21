@@ -87,15 +87,20 @@ export default class ActivitiesScreen extends React.Component {
         )
       } else {
         return (
-          <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
-            <Icon name='times-circle'/>
-          </Button>
+          <View style={styles.btn_cont}>
+            <Button transparent>
+              <Icon name='times-circle'/>
+            </Button>
+            <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
+            <Icon name='search'/>
+            </Button>
+          </View>
         )
       }     
     };
 
     if(!this.state.tableData){
-      table = <Spinner color='blue'/>
+      table = <Spinner/>
     } else {
       table = <View style={styles.container}>
                 <Table borderStyle={{borderColor: 'transparent'}}>

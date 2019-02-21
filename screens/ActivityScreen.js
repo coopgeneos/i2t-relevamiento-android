@@ -2,15 +2,17 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, CheckBox, Textarea } from 'native-base';
 
-import { StyleSheet, View, ToastAndroid } from "react-native"
+import { StyleSheet, View, ToastAndroid, Modal } from "react-native"
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
+import ValidationComponent from 'react-native-form-validator';
+
 import { NavigationActions } from 'react-navigation'; // Version can be specified in package.json
 
 
-export default class ActivityScreen extends React.Component {
+export default class ActivityScreen extends ValidationComponent {
   constructor(props) {
     super(props);
     
@@ -21,6 +23,8 @@ export default class ActivityScreen extends React.Component {
       cancellation: this.activity.cancellation,
       notes: this.activity.notes,
       disabled: true,
+      error_msg: '',
+      modalVisible: false,
     };
   }
 
@@ -50,29 +54,67 @@ export default class ActivityScreen extends React.Component {
   
   saveActivity(){
     var state = this.state.canceled ? 'canceled' : 'new';
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        ` update activity set state = ?, cancellation = ?, notes = ? where id = ?`,
-        [ 
-          state, 
-          this.state.canceled ? this.state.cancellation : '', 
-          this.state.notes, 
-          this.activity.id
-        ],
-        (_, { rows }) => {},
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      )
-    });
-    ToastAndroid.showWithGravityAndOffset(
-      'Los datos se actualizaron correctamente.',
-      ToastAndroid.SHORT,
-      ToastAndroid.BOTTOM,
-      25,
-      50,
-    );
-    this.activity.canceled = this.state.canceled;
+
+    if(this.state.canceled) {
+      console.log("canceled");
+
+      if(this.state.cancellation === "" || !this.state.cancellation) {
+        this.state.error_msg += "Completar motivo de cancelación.\n";
+        this.setModalVisible(true);
+        return;
+      } else {
+        global.DB.transaction(tx => {
+          tx.executeSql(
+            ` update activity set state = ?, cancellation = ?, notes = ? where id = ?`,
+            [ 
+              state, 
+              this.state.canceled ? this.state.cancellation : '', 
+              this.state.notes, 
+              this.activity.id
+            ],
+            (_, { rows }) => {},
+            (_, err) => {
+              console.error(`ERROR consultando DB: ${err}`)
+            }
+          )
+        });
+        ToastAndroid.showWithGravityAndOffset(
+          'Los datos se actualizaron correctamente.',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );
+        this.activity.canceled = this.state.canceled;
+      }
+
+    } else {
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` update activity set state = ?, cancellation = ?, notes = ? where id = ?`,
+          [ 
+            state, 
+            this.state.canceled ? this.state.cancellation : '', 
+            this.state.notes, 
+            this.activity.id
+          ],
+          (_, { rows }) => {},
+          (_, err) => {
+            console.error(`ERROR consultando DB: ${err}`)
+          }
+        )
+      });
+      ToastAndroid.showWithGravityAndOffset(
+        'Los datos se actualizaron correctamente.',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+      this.activity.canceled = this.state.canceled;
+    }
+
+    
     /* 
       Para volver en la pila de navegación hay que invocar a onGoBack antes de volver con goBack 
       Notar que en ActivititesScreen al llamar a esta pagina pase el paramtro onGoBack
@@ -84,6 +126,10 @@ export default class ActivityScreen extends React.Component {
   cancelAct() {
     this.setState({canceled: !this.state.canceled});
   }
+
+  setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  };
 
   render() {
     let cancelArea;
@@ -104,6 +150,21 @@ export default class ActivityScreen extends React.Component {
       <Container>
         <HeaderNavBar navigation={this.props.navigation} title="Registro de Actividad" />
         <Content>
+          <Modal
+            animationType="slide"
+            class={styles.modalError}
+            transparent={true}
+            visible={this.state.modalVisible}
+            onRequestClose={() => {
+            }}>
+            <View style={styles.modalContent}>
+                <Text style={styles.textModalContent}> { this.state.error_msg } </Text>
+                <Button block style={{ marginTop: 10, marginBottom: 10 }}
+                  onPress={()=>{this.setModalVisible(false)}}>
+                  <Text>Cerrar</Text>
+                </Button>
+            </View>
+          </Modal>
           
           <Card>
             <CardItem header>                        
@@ -161,5 +222,33 @@ const styles = StyleSheet.create({
   text: { margin: 6 },
   row: { flexDirection: 'row', backgroundColor: '#FFF1C1' },
   btnText: { textAlign: 'center', color: '#fff' },
-  btn_cont: { flexDirection: 'row', justifyContent:'space-around'}
+  btn_cont: { flexDirection: 'row', justifyContent:'space-around'},
+  modalContent: {
+    backgroundColor: '#5D5670',
+    color: '#FFF',
+    fontSize: 14,
+    padding: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  textModalContent: {
+    color: '#FFF',
+    fontSize: 18,
+  },
+  bottomModal: {
+    justifyContent: "flex-end",
+    margin: 0,
+  },
+  scrollableModal: {
+    height: 300,
+  },
+  modalError: {
+    width: 300,
+    height: 300,
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    marginLeft: -150,
+    marginTop: -150,
+  }
 });

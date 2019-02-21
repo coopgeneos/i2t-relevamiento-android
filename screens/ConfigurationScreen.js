@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Content, Text, Button, Form, Item, Label } from 'native-base';
-import {StyleSheet, TextInput, ToastAndroid} from 'react-native';
+import {StyleSheet, TextInput, ToastAndroid, Modal, View} from 'react-native';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
@@ -21,6 +21,8 @@ export default class ConfigurationScreen extends ValidationComponent {
       shipments_show: '',
       projection_agenda: '',
       showToast: false,
+      modalVisible: false,
+      error_msg: '',
     };
   }
 
@@ -92,42 +94,42 @@ export default class ConfigurationScreen extends ValidationComponent {
   setParameters = () => {
     console.log("setParameters");
 
-    let error_msg = "";
+    this.state.error_msg = '';
 
     if(!this.validate({user_name: {minlength:3, maxlength:50, required: true}})){ 
-      error_msg += "Error en Nombre y Apellido debe contener entre 3 y 50 caracteres y es de carga obligatoria.\n";
+      this.state.error_msg += "Error en Nombre y Apellido debe contener entre 3 y 50 caracteres y es de carga obligatoria.\n";
     }
     if(!this.validate({ user_backend: {minlength:3, maxlength:8, required: true} })){ 
-      error_msg += "Error en Usuario Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
+      this.state.error_msg += "Error en Usuario Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
     }
     if(!this.validate({ pass_backend: {minlength:6, maxlength:8, required: true} })){ 
-      error_msg += "Error en Password Backend debe contener entre 6 y 8 caracteres y es de carga obligatoria.\n";
+      this.state.error_msg += "Error en Password Backend debe contener entre 6 y 8 caracteres y es de carga obligatoria.\n";
     }
     if(!this.validate({ url_backend: {required: true} })){ 
-      error_msg += "Error en URL, el campo es de carga obligatoria.\n";
+      this.state.error_msg += "Error en URL, el campo es de carga obligatoria.\n";
     }
     if(!this.validate({ user_email: {email: true, required: true} })){ 
-      error_msg += "Error en el formato del email. El campo es de carga obligatoria.\n";
+      this.state.error_msg += "Error en el formato del email. El campo es de carga obligatoria.\n";
     }
     if(!this.validate({ proximity_range: {numbers: true} })){ 
-      error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+      this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
     }
     if(!this.validate({range_days: {numbers: true}})){ 
-      error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+      this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
     }    
     if(!this.validate({shipments_show: {numbers: true}})){ 
-      error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+      this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
     }
 
 
-    if(error_msg.length > 0) {
+    if(this.state.error_msg.length > 0) {
       
-      ToastAndroid.showWithGravity(
-        'Validar datos \n' + String(error_msg),
-        ToastAndroid.LONG,
-        ToastAndroid.BOTTOM,
-      );
-
+      this.setModalVisible(true);
+      // ToastAndroid.showWithGravity(
+      //   'Validar datos \n' + String(error_msg),
+      //   ToastAndroid.LONG,
+      //   ToastAndroid.BOTTOM,
+      // );
       return;
     }
 
@@ -199,6 +201,10 @@ export default class ConfigurationScreen extends ValidationComponent {
 
   };
 
+  setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  };
+
 
 
   render() {
@@ -208,6 +214,21 @@ export default class ConfigurationScreen extends ValidationComponent {
       <Container>
         <HeaderNavBar navigation={this.props.navigation} title="Configuraciones" />
         <Content>
+        <Modal
+          animationType="slide"
+          class={styles.modalError}
+          transparent={true}
+          visible={this.state.modalVisible}
+          onRequestClose={() => {
+          }}>
+          <View style={styles.modalContent}>
+              <Text style={styles.textModalContent}> { this.state.error_msg } </Text>
+              <Button block style={{ marginTop: 10, marginBottom: 10 }}
+                onPress={()=>{this.setModalVisible(false)}}>
+                <Text>Cerrar</Text>
+              </Button>
+          </View>
+        </Modal>
 
         <Form>
           <Item stackedLabel>
@@ -316,4 +337,32 @@ const styles = StyleSheet.create({
   btn_cont: { flexDirection: 'row'},
   btn_card: { flexDirection: 'row', justifyContent: 'space-around' },
   btnText: { textAlign: 'center', color: '#fff' },
+  modalContent: {
+    backgroundColor: '#5D5670',
+    color: 'white',
+    fontSize: 14,
+    padding: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  textModalContent: {
+    color: '#FFF',
+    fontSize: 18,
+  },
+  bottomModal: {
+    justifyContent: "flex-end",
+    margin: 0,
+  },
+  scrollableModal: {
+    height: 300,
+  },
+  modalError: {
+    width: 300,
+    height: 300,
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    marginLeft: -150,
+    marginTop: -150,
+  }
 });
