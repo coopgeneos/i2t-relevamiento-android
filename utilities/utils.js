@@ -133,19 +133,20 @@ export async function getLocationAsync(){
           errorMessage: 'Permission to access location was denied',
         });
       }
-      //let location = await Location.getCurrentPositionAsync({});
-      let location = {
-        "timestamp":1550166625527,
-        "mocked":false,
-        "coords":{
-          "heading":0,
-          "longitude":-59.131096,
-          "speed":0,
-          "altitude":210.8000030517578,
-          "latitude":-37.3266809,
-          "accuracy":15.392999649047852
-        }
-      }
+      let location = await Location.getCurrentPositionAsync({});
+      console.log(location);
+      // let location = {
+      //   "timestamp":1550166625527,
+      //   "mocked":false,
+      //   "coords":{
+      //     "heading":0,
+      //     "longitude":-59.131096,
+      //     "speed":0,
+      //     "altitude":210.8000030517578,
+      //     "latitude":-37.3266809,
+      //     "accuracy":15.392999649047852
+      //   }
+      // }
       resolve(location);
     } catch (err) {
       console.log(err)
@@ -156,6 +157,7 @@ export async function getLocationAsync(){
 
 export function isClose(a, b, distance){
   let distanceBetween = computeDistanceBetween(a,b)
+  console.log(distanceBetween + " contra el parámetro " + distance);
   return (distanceBetween < distance)
 }
 
@@ -164,23 +166,26 @@ export async function getConfiguration(key){
     if(!global.context.conf){
       global.context.conf = {};
     }
-    if(global.context.conf[key]) {
-      resolve(global.context.conf[key])
-    } else {
+
+    // Evaluar la forma de resolver, ajustado para las pruebas de release el 25/02
+
+    // if(global.context.conf[key]) {
+    //   resolve(global.context.conf[key])
+    // } else {
       global.DB.transaction(tx => {
         tx.executeSql(
           ` select value from Configuration where key = ?`,
           [key],
           (_, { rows }) => {
-            global.context.conf[key] = rows._array[0];
-            resolve(rows._array[0])
+            global.context.conf[key] = rows._array[0].value;
+            resolve(rows._array[0].value);
           },
           (_, err) => {
             reject(err)
           }
         )
       });
-    }
+    // }
   })
 }
 
