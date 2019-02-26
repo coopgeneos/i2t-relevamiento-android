@@ -25,17 +25,17 @@ export default class ActivitiesScreen extends React.Component {
       tx.executeSql(
         ` select a.*, actt.description, s.planned_date
           from Activity a 
-          inner join ActivityType actt on (actt.id = a.activityType_id) 
+          inner join ItemActType actt on (actt.id = a.itemActType_id) 
           inner join Schedule s on (s.id = a.schedule_id) 
           where a.schedule_id = ?`,
         [global.context.event_id],
         (_, { rows }) => {
           var resp = rows._array;
-          var data = []
+          var data = [];
           resp.forEach(item => {
             var aux = [item.description, item.planned_date, 'A'];
             data.push(aux)
-          })
+          });
           this.setState ({
             dataSource: resp,
             tableData: data
@@ -50,7 +50,7 @@ export default class ActivitiesScreen extends React.Component {
 
   getIconBattery(index){
     var percent = this.state.dataSource[index].percent;
-    if(percent == 0.0) return 'battery-0';
+    if(percent === 0.0) return 'battery-0';
     if(percent <= 0.25) return 'battery-1';
     if(percent <= 0.5) return 'battery-2';
     if(percent <= 0.75) return 'battery-3';
@@ -62,7 +62,7 @@ export default class ActivitiesScreen extends React.Component {
   }
 
   goToSurvey(activity){
-    if(activity.state != 'canceled')
+    if(activity.state !== 'canceled')
       this.props.navigation.navigate('Survey', 
         {activity: activity, onGoBack: () => this.refresh()})
   }
@@ -72,9 +72,9 @@ export default class ActivitiesScreen extends React.Component {
     const state = this.state;
 
     const element = (data, index) => {
-      if(this.state.dataSource[index].state != 'canceled') {
+      if(this.state.dataSource[index].state !== 'canceled') {
         return (
-          <TouchableOpacity onPress={() => this._alertIndex(index)}>
+          <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
             <View style={styles.btn_cont}>
               <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
                 <Icon name='edit'/>

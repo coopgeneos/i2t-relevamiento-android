@@ -1,12 +1,10 @@
 import React from 'react';
-import { Container, Header, Content, Footer, FooterTab, Text, 
-        Button, Icon, CheckBox, List, ListItem, Thumbnail, Form, Item, Label,
-        Input, Left, Right, Spinner, Title, Body, DatePicker} from 'native-base';
-import { Location, Permissions } from 'expo';
-import { computeDistanceBetween } from 'spherical-geometry-js';
+import { Container, Content, Text, Button, Icon, CheckBox, List, ListItem, Thumbnail,
+  Form, Item, Label, Left, Right, Spinner, Body, DatePicker} from 'native-base';
 import { getLocationAsync, isClose, getConfiguration, formatDate } from '../utilities/utils';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
+import {StyleSheet} from "react-native";
 
 const img_sample = require("../assets/icon.png");
 
@@ -17,7 +15,7 @@ export default class ScheduleScreen extends React.Component {
       nears: false,
       events: null,
       chosenDate: null,
-      markers: []
+      markers: [],
     };
     this.setDate = this.setDate.bind(this);
   }
@@ -27,7 +25,7 @@ export default class ScheduleScreen extends React.Component {
   }
 
   getEvents(nears, dateFilter) {
-    let sql = ` select s.id, c.*     
+    let sql = ` select s.id as schedule_id, c.*     
                 from Schedule s
                 inner join Contact c on (c.id = s.contact_id)
                 where s.state != 'Complete'`;
@@ -44,7 +42,7 @@ export default class ScheduleScreen extends React.Component {
             var myLocation = await getLocationAsync();
             var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
             var prox_range = await getConfiguration('PROXIMITY_RANGE');
-            var data = rows._array.filter(item => {
+            data = rows._array.filter(item => {
               var evLoc = {lat: item.latitude, lng: item.longitude};
               return isClose(myLoc, evLoc, prox_range)
             })
@@ -52,7 +50,7 @@ export default class ScheduleScreen extends React.Component {
           var markers = [];       
           data.forEach(item => {
             markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
-          })         
+          });
           this.setState ({
             events: data,
             markers: markers
@@ -75,6 +73,11 @@ export default class ScheduleScreen extends React.Component {
     this.state.chosenDate = newDate;
   }
 
+  clearDate(){
+    this.getEvents(this.state.nears, null);
+    this.state.chosenDate = null;
+  }
+
   goToActivities(params){
     global.context['event_id'] = params.event_id;
     global.context['contact'] = params.contact; 
@@ -82,7 +85,7 @@ export default class ScheduleScreen extends React.Component {
   }
   
   render() {
-    var areThereEvents = this.state.events == null ? false : true;
+    var areThereEvents = this.state.events != null;
 
     return (
       <Container>
@@ -90,8 +93,8 @@ export default class ScheduleScreen extends React.Component {
         <Content>
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
-              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
-                <Label>Fecha</Label> 
+              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '60%'}}>
+                <Label>Fecha</Label>
                 <DatePicker
                   defaultDate={null}
                   minimumDate={new Date(2018, 1, 1)}
@@ -101,14 +104,22 @@ export default class ScheduleScreen extends React.Component {
                   modalTransparent={false}
                   animationType={"fade"}
                   androidMode={"default"}
-                  placeHolderText="Ingresar Fecha"
+                  placeHolderText="Fecha ..."
                   textStyle={{ color: '#F08377' }}
                   placeHolderTextStyle={{ color: '#CCC' }}
                   onDateChange={this.setDate}
                   disabled={false}
-                />            
+                />
+                <Button
+                  style={{ height: 20, backgroundColor: '#F08377', fontSize: 4, color: 'white', marginTop: 12}}
+                  onPress={() => { this.clearDate() }}
+                ><Text>Reset</Text>
+                </Button>
+
               </Item>
-              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '30%'}}>               
+
+
+              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '40%'}}>
                 <Label>Cercanos</Label>
                 <CheckBox checked={this.state.nears} onPress={() => {this.toggleNears()}} />               
               </Item>
@@ -138,7 +149,7 @@ export default class ScheduleScreen extends React.Component {
                         </Text>
                       </Body>
                       <Right>
-                        <Button transparent onPress={()=>{this.goToActivities({contact: data, event_id: data.id})}} style={{fontSize: 32}}>
+                        <Button transparent onPress={()=>{this.goToActivities({contact: data, event_id: data.schedule_id})}} style={{fontSize: 32}}>
                           <Icon name='search'/>
                         </Button>
                       </Right>
@@ -152,3 +163,4 @@ export default class ScheduleScreen extends React.Component {
     );
   }  
 }
+

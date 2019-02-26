@@ -30,7 +30,8 @@ export default class ContactsScreen extends React.Component {
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select * 
-          from Contact;`,
+          from Contact
+          order by name;`,
         [],
         async (_, { rows }) => {
           var data = rows._array;

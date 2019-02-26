@@ -20,18 +20,17 @@ export default class ContactActScreen extends React.Component {
   componentDidMount() {
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select * 
-          from ActivityType atp 
-          where atp.id not in (
-            select a.activityType_id 
-            from activity a 
-            where a.contact_id = ?);`,
+        ` select a.id as activity_id, a.contact_id, ate.description
+          from Activity a
+          left join ItemActType iat on (iat.id = a.itemActType_id)
+          left join ActivityType ate on (ate.id = iat.activityType_id)
+          where a.contact_id = ?;`,
         [global.context.contact.id],
         (_, { rows }) => {
           var tableHead = ['Actividad', ''];
           var tableData = [];
           rows._array.forEach(item => {
-            tableData.push([item.description, 'A'])
+            tableData.push([item.description, item.activity_id])
           })
           this.setState ({
             tableHead: tableHead,
@@ -49,6 +48,15 @@ export default class ContactActScreen extends React.Component {
     Alert.alert(`This is row ${index + 1}`);
   }
 
+
+  go_Survey(index){
+    var activity = {
+      'id': this.state.tableData[index][1],
+      'description': this.state.tableData[index][0],
+    };
+    this.props.navigation.navigate('Survey',{activity: activity } )
+  }
+
   render() {
     let table;
 
@@ -56,8 +64,8 @@ export default class ContactActScreen extends React.Component {
 
     const element = (data, index) => (
         <View style={styles.btn_cont}>
-          <Button style={styles.btn} onPress={() => this.props.navigation.navigate('Survey',{detail: data.description})}>
-          <Text>Iniciar</Text>
+          <Button style={styles.btn} onPress={() => this.go_Survey(index)}>
+            <Text>Iniciar</Text>
           </Button>
         </View>
     );

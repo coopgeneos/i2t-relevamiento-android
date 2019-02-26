@@ -49,14 +49,15 @@ export default class SurveyScreen extends React.Component {
   };
 
   componentDidMount() {
-    var acttype_id = this.props.navigation.getParam('acttype_id', null);
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, a.id as answer_id, a.activity_id, a.text_val, a.img_val 
-          from ItemActType iat 
-          left join Answer a on (iat.id = a.itemActType_id) 
-          where iat.activityType_id = ?`,
-        [this.state.activity.activityType_id],
+        ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, 
+          a.id as answer_id, act.id as activity_id, a.text_val, a.img_val 
+          from Activity act
+          left join ItemActType iat on (iat.id = act.itemActType_id)
+          left join Answer a on (act.id = a.activity_id) 
+          where act.id = ? `,
+        [this.state.activity.id],
         (_, { rows }) => {
           this.loadCards(rows._array, true)
           this.setState ({
@@ -87,7 +88,6 @@ export default class SurveyScreen extends React.Component {
 
   async loadCards(data, firstTime) {
     var cards = [];
-    
     var answers = this.state.answers;
     /*Si es la primera vez que entro (cuando creo la vista), 
       entonces creo en memoria el arreglo de respuestas*/
@@ -111,7 +111,7 @@ export default class SurveyScreen extends React.Component {
 
         var answer = {
           id: item.answer_id, //Si answer_id viene en null, es porque nunca se respondió.
-          activity_id: this.state.activity.id,
+          activity_id: item.activity_id,
           itemActType_id: item.itemActType_id,
           text_val: item.text_val,
           img_val: item.img_val,
@@ -119,13 +119,13 @@ export default class SurveyScreen extends React.Component {
         }
         answers.push(answer);
       }
-      if(item.type == 'lista') {
+      if(item.type === 'lista') {
         card = await this.buildListCard(item.description, answers[i])
           .catch(err => {
             reject(err)
           })
       }
-      if(item.type == 'imagen') {
+      if(item.type === 'imagen') {
         card = this.buildImageCard(item.description, answers[i])
           
       }
@@ -141,10 +141,9 @@ export default class SurveyScreen extends React.Component {
       cards: cards,
       answers: answers
     });
-    return;
   }
 
-  _alertIndex(index) {
+  static _alertIndex(index) {
     Alert.alert(`This is row ${index + 1}`);
   }
 
@@ -212,7 +211,7 @@ export default class SurveyScreen extends React.Component {
       } else {
         sql = `insert into Answer (activity_id, itemActType_id, text_val, img_val) values (${answer.activity_id}, ${answer.itemActType_id}, '${answer.text_val}', '${base64}')`;
       }
-      
+
       global.DB.transaction(tx => {
         tx.executeSql(
           sql,
@@ -221,7 +220,7 @@ export default class SurveyScreen extends React.Component {
           (_, err) => {
             console.error(`ERROR consultando DB: ${err}`)
           }
-        )
+        );
         tx.executeSql(
           ` update activity set percent = (
               select 
@@ -230,7 +229,7 @@ export default class SurveyScreen extends React.Component {
                 end percent 
               from ItemActType iat 
               left join answer a on (a.itemActType_id = iat.id) 
-              where iat.activityType_id = activity.activityType_id 
+              where a.activity_id = activity.id
             )
             where id = ?;`,
           [answer.activity_id],
@@ -238,7 +237,7 @@ export default class SurveyScreen extends React.Component {
           (_, err) => {
             console.error(`ERROR consultando DB: ${err}`)
           }
-        )
+        );
       });
     }
     this.setState(prevState => ({seg: prevState.seg + 1}))
@@ -275,7 +274,7 @@ export default class SurveyScreen extends React.Component {
             where itemActType_id = ?`,
           [answer.itemActType_id],
           (_, { rows }) => {
-            var r = rows._array
+            var r = rows._array;
             r.forEach(reg => {
               listItems.push(
                 <ListItem key={reg.value}>
@@ -313,12 +312,11 @@ export default class SurveyScreen extends React.Component {
   }
 
   goBack(){
-    this.props.navigation.state.params.onGoBack();
     this.props.navigation.goBack()
   }
 
   render() {
-    var isThereData = this.state.cardsData ? true : false;
+    var isThereData = !!this.state.cardsData;
 
     return (
       <Container>
