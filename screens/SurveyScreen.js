@@ -4,7 +4,7 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
           Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, IconNB,
           DeckSwiper, Thumbnail, List, ListItem, Radio, Segment} from 'native-base';
 
-import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView, BackHandler} from 'react-native';
+import { StyleSheet, Image, View, TouchableOpacity, TouchableHighlight, Alert, ListView, ScrollView, BackHandler} from 'react-native';
 import { ImagePicker, Permissions, FileSystem } from 'expo';
 
 import FooterNavBar from '../components/FooterNavBar';
@@ -95,9 +95,11 @@ export default class SurveyScreen extends React.Component {
       answers = [];
     }
     
+    var card = null;
+
     for(i=0; i<data.length; i++) {
       var item = data[i];
-      var card = null;
+      
       if(firstTime){
         if(item.img_val){
           var name = new Date();
@@ -131,6 +133,11 @@ export default class SurveyScreen extends React.Component {
       }
       cards.push(card);
     }
+
+    card = this.buildResumeCard("Resumen de Items de Relevamiento", this.getAnswersOk, this.getAnswersPending);
+    cards.push(card);
+    
+
     /*Promise.all(promises)
       .then(values => {
         values.forEach(item => {
@@ -243,6 +250,25 @@ export default class SurveyScreen extends React.Component {
     this.setState(prevState => ({seg: prevState.seg + 1}))
   }
 
+  buildResumeCard(title, answersOk, answersPending) {
+    return {
+      text: title,
+      info: <CardItem>
+              <Body>
+                <Form>
+                <Label> Resumen de Relevamiento </Label>
+                <Label> Tareas Completas: 4 </Label>                     
+                <Label> Tareas Pendientes: 2 </Label>
+                <TouchableHighlight style={{ marginTop: 30, height: 28, 
+                  backgroundColor: '#F08377' }} >
+                  <Text style={styles.btnText}>CERRAR</Text>
+                </TouchableHighlight>
+                </Form>
+              </Body>
+            </CardItem>
+    }
+  }
+
   buildImageCard(title, answer) {
     return {
       text: title,
@@ -313,6 +339,18 @@ export default class SurveyScreen extends React.Component {
 
   goBack(){
     this.props.navigation.goBack()
+  }
+
+  getAnswersOk() {
+    return 4;
+  }
+
+  getAnswersPending() {
+    return 2;
+  }
+
+  closeSurvey() {
+
   }
 
   render() {
@@ -403,8 +441,18 @@ const styles = StyleSheet.create({
   text: { margin: 6 },
   row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#94A6B5', height: 40 },
   cellAction: { margin: 6, width: 100 },
-  btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
+  btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2},
   btn_cont: { flexDirection: 'row'},
   btn_card: { flexDirection: 'row', justifyContent: 'space-around' },
-  btnText: { textAlign: 'center', color: '#fff' }
+  btnText: { textAlign: 'center', color: '#fff', fontSize: 14, alignSelf: "center",
+  borderRadius: 0,
+  paddingTop: 3,
+  paddingBottom: 3,
+  paddingLeft: 5,
+  paddingRight: 5,
+  height: 30,
+  width: 100,
+  backgroundColor: "transparent",
+  borderWidth: 0,
+  borderLeftWidth: 0,}
 });
