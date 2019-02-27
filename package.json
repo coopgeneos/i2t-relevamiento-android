@@ -12,6 +12,7 @@
     "native-base": "^2.10.0",
     "react": "16.5.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
+    "react-native-awesome-alerts": "^1.2.0",
     "react-native-data-table": "^0.2.1",
     "react-native-elements": "^1.0.0",
     "react-native-form-validator": "^0.2.0",

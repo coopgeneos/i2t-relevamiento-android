@@ -1,17 +1,16 @@
 import React from 'react';
 
-import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
-          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, IconNB,
-          DeckSwiper, Thumbnail, List, ListItem, Radio, Segment} from 'native-base';
+import { Container, Content, Text, Button, Spinner,
+          Icon, Label, Left, Body, Right, Card, CardItem, IconNB,
+          ListItem, Radio, Segment} from 'native-base';
 
-import { StyleSheet, Image, View, TouchableOpacity, TouchableHighlight, Alert, ListView, ScrollView, BackHandler} from 'react-native';
+import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid} from 'react-native';
 import { ImagePicker, Permissions, FileSystem } from 'expo';
-
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
-
 import AppConstants from '../constants/constants'
-import { Divider } from 'react-native-elements';
+import AwesomeAlert from 'react-native-awesome-alerts';
+import {getConfiguration} from "../utilities/utils";
 
 export default class SurveyScreen extends React.Component {
   /* 
@@ -39,7 +38,11 @@ export default class SurveyScreen extends React.Component {
       cards: [],
       answers: null,
       permissionsCamera: false,
-      permissionsCameraRoll: false
+      permissionsCameraRoll: false,
+      showAlert: false,
+      mensaje: null,
+      cant: 0,
+      showButtonConfirm: false,
     };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -54,9 +57,10 @@ export default class SurveyScreen extends React.Component {
         ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, 
           a.id as answer_id, act.id as activity_id, a.text_val, a.img_val 
           from Activity act
-          left join ItemActType iat on (iat.id = act.itemActType_id)
-          left join Answer a on (act.id = a.activity_id) 
-          where act.id = ? `,
+          left join ItemActType iat on (iat.activityType_id = act.activityType_id)
+          left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
+          where act.id = ?
+          group by act.id, iat.id `,
         [this.state.activity.id],
         (_, { rows }) => {
           this.loadCards(rows._array, true)
@@ -134,21 +138,135 @@ export default class SurveyScreen extends React.Component {
       cards.push(card);
     }
 
-    card = this.buildResumeCard("Resumen de Items de Relevamiento", this.getAnswersOk, this.getAnswersPending);
-    cards.push(card);
-    
 
-    /*Promise.all(promises)
-      .then(values => {
-        values.forEach(item => {
-          cards.push(item)
-        })
-      })*/ 
     this.setState({
       cards: cards,
       answers: answers
     });
   }
+
+
+  showAlert = () => {
+    this.setState({
+      showAlert: true
+    });
+  };
+
+  hideAlert = () => {
+    this.setState({
+      showAlert: false
+    });
+  };
+
+
+  ConfirmAlert = () => {
+    this.setState({
+      showAlert: false
+    });
+
+    var sql = `update Activity set state = 'close'
+               where id = ?;`;
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        sql,
+        [this.state.activity.id],
+        (_, {rows}) => {
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      );
+    });
+
+    ToastAndroid.showWithGravityAndOffset(
+      'Los datos se actualizaron correctamente.',
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      25,
+      50,
+    );
+
+  };
+
+
+
+  async loadResumen(data) {
+    var completas = await this.getCompletas(data);
+    var pendientes = await this.getPendientes(data);
+    var mensaje = `Tareas Completas: ${completas}\nTareas Pendientes: ${pendientes}`;
+
+    this.setState({
+      mensaje: mensaje
+    });
+
+    if (pendientes === 0){
+      this.setState({
+        showButtonConfirm: true
+      });
+    }else{
+      this.setState({
+        showButtonConfirm: false
+      });
+    }
+
+    this.showAlert();
+  }
+
+
+  async getCompletas(data){
+    var activity_id = data[0].activity_id;
+    return new Promise(async function(resolve, reject) {
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` select coalesce(count(*),0) as cantidad
+            from Activity act
+            left join ItemActType iat on (iat.activityType_id = act.activityType_id)
+            left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
+            where act.id = ? and a.id is not null
+            group by act.id`,
+          [activity_id],
+          (_, { rows }) => {
+            var cantidad = 0;
+            if (rows.length > 0){
+              cantidad = rows._array[0].cantidad;
+            }
+            resolve(cantidad);
+          },
+          (_, err) => {
+            reject(err)
+          }
+        )
+      });
+    })
+  }
+
+  async getPendientes(data){
+    var activity_id = data[0].activity_id;
+    return new Promise(async function(resolve, reject) {
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` select coalesce(count(*),0) as cantidad
+            from Activity act
+            left join ItemActType iat on (iat.activityType_id = act.activityType_id)
+            left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
+            where act.id = ? and a.id is null
+            group by act.id`,
+          [activity_id],
+          (_, { rows }) => {
+            var cantidad = 0;
+            if (rows.length > 0){
+              cantidad = rows._array[0].cantidad;
+            }
+            resolve(cantidad);
+          },
+          (_, err) => {
+            reject(err)
+          }
+        )
+      });
+    })
+  }
+
 
   static _alertIndex(index) {
     Alert.alert(`This is row ${index + 1}`);
@@ -236,7 +354,7 @@ export default class SurveyScreen extends React.Component {
                 end percent 
               from ItemActType iat 
               left join answer a on (a.itemActType_id = iat.id) 
-              where a.activity_id = activity.id
+              where iat.activityType_id = activity.activityType_id 
             )
             where id = ?;`,
           [answer.activity_id],
@@ -248,26 +366,13 @@ export default class SurveyScreen extends React.Component {
       });
     }
     this.setState(prevState => ({seg: prevState.seg + 1}))
+
+    if ((this.state.seg+1) === this.state.seg_max){
+      this.loadResumen(this.state.cardsData);
+    }
+
   }
 
-  buildResumeCard(title, answersOk, answersPending) {
-    return {
-      text: title,
-      info: <CardItem>
-              <Body>
-                <Form>
-                <Label> Resumen de Relevamiento </Label>
-                <Label> Tareas Completas: 4 </Label>                     
-                <Label> Tareas Pendientes: 2 </Label>
-                <TouchableHighlight style={{ marginTop: 30, height: 28, 
-                  backgroundColor: '#F08377' }} >
-                  <Text style={styles.btnText}>CERRAR</Text>
-                </TouchableHighlight>
-                </Form>
-              </Body>
-            </CardItem>
-    }
-  }
 
   buildImageCard(title, answer) {
     return {
@@ -315,7 +420,7 @@ export default class SurveyScreen extends React.Component {
                   </Right>
                 </ListItem>
               )
-            })
+            });
             resolve({
               text: title,
               info: <View>
@@ -341,19 +446,10 @@ export default class SurveyScreen extends React.Component {
     this.props.navigation.goBack()
   }
 
-  getAnswersOk() {
-    return 4;
-  }
 
-  getAnswersPending() {
-    return 2;
-  }
-
-  closeSurvey() {
-
-  }
 
   render() {
+    const {showAlert} = this.state;
     var isThereData = !!this.state.cardsData;
 
     return (
@@ -425,8 +521,28 @@ export default class SurveyScreen extends React.Component {
                 </View>
               )
           }
-          
+
         </Content>
+
+        <AwesomeAlert
+          show={showAlert}
+          showProgress={false}
+          title="Resumen de Relevamiento"
+          message={this.state.mensaje}
+          closeOnTouchOutside={true}
+          closeOnHardwareBackPress={false}
+          showCancelButton={true}
+          showConfirmButton={this.state.showButtonConfirm}
+          cancelText="Cancelar"
+          confirmText="Confirmar"
+          confirmButtonColor="#DD6B55"
+          onCancelPressed={() => {
+            this.hideAlert();
+          }}
+          onConfirmPressed={() => {
+            this.ConfirmAlert();
+          }}
+        />
         
         <FooterNavBar navigation={this.props.navigation} />
 

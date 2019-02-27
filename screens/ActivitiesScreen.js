@@ -25,7 +25,7 @@ export default class ActivitiesScreen extends React.Component {
       tx.executeSql(
         ` select a.*, actt.description, s.planned_date
           from Activity a 
-          inner join ItemActType actt on (actt.id = a.itemActType_id) 
+          inner join ActivityType actt on (actt.id = a.activityType_id) 
           inner join Schedule s on (s.id = a.schedule_id) 
           where a.schedule_id = ?`,
         [global.context.event_id],
@@ -63,7 +63,7 @@ export default class ActivitiesScreen extends React.Component {
 
   goToSurvey(activity){
     if(activity.state !== 'canceled')
-      this.props.navigation.navigate('Survey', 
+      this.props.navigation.navigate('Survey',
         {activity: activity, onGoBack: () => this.refresh()})
   }
   

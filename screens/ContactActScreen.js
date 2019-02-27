@@ -22,8 +22,7 @@ export default class ContactActScreen extends React.Component {
       tx.executeSql(
         ` select a.id as activity_id, a.contact_id, ate.description
           from Activity a
-          left join ItemActType iat on (iat.id = a.itemActType_id)
-          left join ActivityType ate on (ate.id = iat.activityType_id)
+          left join ActivityType ate on (ate.id = a.activityType_id)
           where a.contact_id = ?;`,
         [global.context.contact.id],
         (_, { rows }) => {
