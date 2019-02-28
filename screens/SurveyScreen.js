@@ -55,7 +55,7 @@ export default class SurveyScreen extends React.Component {
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, 
-          a.id as answer_id, act.id as activity_id, a.text_val, a.img_val 
+          a.id as answer_id, act.id as activity_id, a.text_val, a.img_val, act.state
           from Activity act
           left join ItemActType iat on (iat.activityType_id = act.activityType_id)
           left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
@@ -386,11 +386,11 @@ export default class SurveyScreen extends React.Component {
               </Left>
               <Body></Body>
               <Right>
-                <Button transparent onPress={() => this.pickImage(true)}  style={{fontSize: 32}}>
-                  <Icon name='camera'/>
+                <Button transparent onPress={() => this.pickImage(true)}  >
+                  <Icon name='camera' style={{fontSize: 26, color:'#F08377'}}/>
                 </Button>
-                <Button transparent onPress={() => {this.pickImage(false)}}  style={{fontSize: 32}}>
-                  <Icon name='folder'/>
+                <Button transparent onPress={() => {this.pickImage(false)}} >
+                  <Icon name='folder' style={{fontSize: 26, color:'#F08377'}}/>
                 </Button>
               </Right>
             </CardItem>
@@ -461,22 +461,24 @@ export default class SurveyScreen extends React.Component {
           
           <Card>
             <CardItem header>                        
-              <Text>Datos de Contacto</Text>
+              <Text>Resumen de Relevamiento</Text>
             </CardItem>
 
             <CardItem>                        
-              <Label style={{ width: 80 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
+              <Label style={{ width: 120 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
             </CardItem>
             <CardItem>                        
-              <Label style={{ width: 80 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
+              <Label style={{ width: 120 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
             </CardItem>
             <CardItem>                        
-              <Label style={{ width: 80 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
+              <Label style={{ width: 120 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
             </CardItem>
             <CardItem>                        
-              <Label style={{ width: 80 }}>Detalle</Label><Text>{this.state.activity.description}</Text>
+              <Label style={{ width: 120 }}>Detalle</Label><Text>{this.state.activity.description}</Text>
             </CardItem>
-
+            <CardItem>                        
+              <Label style={{ width: 120 }}>Estado</Label><Text>{this.state.activity.state == 'close' ? 'Cerrada' : 'Nueva' }</Text>
+            </CardItem>
             <CardItem footer>                        
               <Text></Text>
             </CardItem>

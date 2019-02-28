@@ -41,7 +41,7 @@ export default {
   // Button
   btnFontFamily: platform === "ios" ? "System" : "Roboto_medium",
   btnDisabledBg: "#b5b5b5",
-  buttonPadding: 6,
+  buttonPadding: 10,
   get btnPrimaryBg() {
     return this.brandPrimary;
   },
@@ -95,7 +95,7 @@ export default {
   cardDefaultBg: "#fff",
   cardBorderColor: "#778591",
   cardBorderRadius: 1,
-  cardItemPadding: platform === "ios" ? 10 : 12,
+  cardItemPadding: platform === "ios" ? 5 : 5,
 
   // CheckBox
   CheckboxRadius: platform === "ios" ? 13 : 2,

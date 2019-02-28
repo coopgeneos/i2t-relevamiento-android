@@ -20,7 +20,7 @@ export default (variables /*: * */ = variable) => {
       paddingBottom: 3,
       paddingLeft: 5,
       paddingRight: 5,
-      height: 30,
+      height: 40,
       // width: '50%',
       backgroundColor: "transparent",
       borderWidth: 0,
@@ -47,10 +47,10 @@ export default (variables /*: * */ = variable) => {
       },
       "NativeBase.Text": {
         color: variables.segmentTextColor,
-        fontSize: 14
+        fontSize: 16
       },
       "NativeBase.Icon": {
-        fontSize: 22,
+        fontSize: 26,
         paddingTop: 0,
         color: variables.segmentTextColor
       }

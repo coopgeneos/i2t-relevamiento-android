@@ -72,7 +72,7 @@ export default class ActivitiesScreen extends React.Component {
     const state = this.state;
 
     const element = (data, index) => {
-      if(this.state.dataSource[index].state !== 'canceled') {
+      if(this.state.dataSource[index].state === 'new') {
         return (
           <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
             <View style={styles.btn_cont}>
@@ -85,11 +85,24 @@ export default class ActivitiesScreen extends React.Component {
             </View>
           </TouchableOpacity>
         )
+      } if(this.state.dataSource[index].state === 'close') {
+        return (
+          <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
+            <View style={styles.btn_cont}>
+              <Button transparent>
+                <Icon name='check'/>
+              </Button>
+              <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
+              <Icon name='search'/>
+              </Button>
+            </View>
+          </TouchableOpacity>
+        )
       } else {
         return (
           <View style={styles.btn_cont}>
             <Button transparent>
-              <Icon name='times-circle'/>
+              <Icon name='close'/>
             </Button>
             <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
             <Icon name='search'/>
@@ -163,7 +176,7 @@ export default class ActivitiesScreen extends React.Component {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#778591' },
-  text: { margin: 6, fontSize: 12},
+  text: { margin: 6, fontSize: 14},
   text_head: { margin: 6, color: '#FFF',  fontSize: 18},
   row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 40 },
   btn: { width: 58, height: 25, backgroundColor: '#F08377',  borderRadius: 2 },

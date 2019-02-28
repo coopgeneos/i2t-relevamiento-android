@@ -196,7 +196,7 @@ export default (variables /*: * */ = variable) => {
     padding: variables.cardItemPadding + 5,
     paddingVertical: variables.cardItemPadding,
     backgroundColor: variables.cardDefaultBg,
-    fontSize: 16,
+    fontSize: 20,
   };
 
   return cardItemTheme;

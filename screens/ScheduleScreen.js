@@ -111,7 +111,7 @@ export default class ScheduleScreen extends React.Component {
                   disabled={false}
                 />
                 <Button
-                  style={{ height: 20, backgroundColor: '#F08377', fontSize: 4, color: 'white', marginTop: 12}}
+                  style={{ height: 25, backgroundColor: '#F08377', color: 'white', marginTop: 6}}
                   onPress={() => { this.clearDate() }}
                 ><Text>Reset</Text>
                 </Button>
