@@ -365,11 +365,13 @@ export default class SurveyScreen extends React.Component {
         );
       });
     }
-    this.setState(prevState => ({seg: prevState.seg + 1}))
+    
 
-    if ((this.state.seg+1) === this.state.seg_max){
+    if ((this.state.seg) === this.state.seg_max-1){
       this.loadResumen(this.state.cardsData);
     }
+
+    this.setState(prevState => ({seg: prevState.seg + 1}))
 
   }
 
@@ -436,7 +438,7 @@ export default class SurveyScreen extends React.Component {
       });
     })
   }
-
+  
   chooseOption(value, index) {
     this.state.answers[this.state.seg - 1].text_val = value;
     this.loadCards(this.state.cardsData, false)
