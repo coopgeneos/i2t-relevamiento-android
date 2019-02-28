@@ -43,6 +43,7 @@ export default class SurveyScreen extends React.Component {
       mensaje: null,
       cant: 0,
       showButtonConfirm: false,
+      buttonSaveEnable: false,
     };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -93,6 +94,14 @@ export default class SurveyScreen extends React.Component {
   async loadCards(data, firstTime) {
     var cards = [];
     var answers = this.state.answers;
+    
+    //si la activity esta cerrada, desactivo el button de grabar
+    if (data[0].state === 'close'){
+      this.setState ({
+        buttonSaveEnable: true
+      });
+    }   
+        
     /*Si es la primera vez que entro (cuando creo la vista), 
       entonces creo en memoria el arreglo de respuestas*/
     if(firstTime) {
@@ -107,7 +116,7 @@ export default class SurveyScreen extends React.Component {
       if(firstTime){
         if(item.img_val){
           var name = new Date();
-          name = name.getTime().toString()
+          name = name.getTime().toString();
           FileSystem.writeAsStringAsync(`${AppConstants.TMP_FOLDER}/${name}.jpg`, item.img_val, {encoding: FileSystem.EncodingTypes.Base64})
             .catch(err => {
               console.log(`ERROR creando archivo temporal: ${err}`)
@@ -143,6 +152,7 @@ export default class SurveyScreen extends React.Component {
       cards: cards,
       answers: answers
     });
+
   }
 
 
@@ -185,6 +195,8 @@ export default class SurveyScreen extends React.Component {
       25,
       50,
     );
+    
+    this.props.navigation.navigate('Schedule',{onGoBack: () => this.refresh()});
 
   };
 
@@ -386,10 +398,18 @@ export default class SurveyScreen extends React.Component {
               </Left>
               <Body></Body>
               <Right>
-                <Button transparent onPress={() => this.pickImage(true)}  >
+                <Button 
+                  transparent 
+                  onPress={() => this.pickImage(true)}
+                  disabled={this.state.buttonSaveEnable}
+                >
                   <Icon name='camera' style={{fontSize: 26, color:'#F08377'}}/>
                 </Button>
-                <Button transparent onPress={() => {this.pickImage(false)}} >
+                <Button 
+                  transparent 
+                  onPress={() => {this.pickImage(false)}}
+                  disabled={this.state.buttonSaveEnable}
+                >
                   <Icon name='folder' style={{fontSize: 26, color:'#F08377'}}/>
                 </Button>
               </Right>
@@ -418,6 +438,7 @@ export default class SurveyScreen extends React.Component {
                     <Radio
                       selected={answer.text_val == reg.value ? true : false }
                       onPress={() => {this.chooseOption(reg.value)}}
+                      disabled={this.state.buttonSaveEnable}
                     />
                   </Right>
                 </ListItem>
@@ -510,7 +531,7 @@ export default class SurveyScreen extends React.Component {
                   <Button
                     first
                     active={this.state.seg === this.state.seg_max ? false : true}
-                    disabled={this.state.seg === this.state.seg_max ? true : false}
+                    disabled={this.state.seg === this.state.seg_max ? true : false || this.state.buttonSaveEnable}
                     onPress={() => this.saveAnswer()}
                   >
                     <Icon name="save" />
