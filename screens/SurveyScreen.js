@@ -2,9 +2,9 @@ import React from 'react';
 
 import { Container, Content, Text, Button, Spinner,
           Icon, Label, Left, Body, Right, Card, CardItem, IconNB,
-          ListItem, Radio, Segment} from 'native-base';
+          ListItem, Radio, Segment, TextInput, Textarea, Form, Item, Input} from 'native-base';
 
-import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid} from 'react-native';
+import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid } from 'react-native';
 import { ImagePicker, Permissions, FileSystem } from 'expo';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -139,9 +139,14 @@ export default class SurveyScreen extends React.Component {
           .catch(err => {
             reject(err)
           })
-      }
-      if(item.type === 'imagen') {
+      } else if(item.type === 'imagen') {
         card = this.buildImageCard(item.description, answers[i])
+        
+      } else if(item.type === 'numerico') {
+        card = this.buildNumberCard(item.description, answers[i])
+          
+      } else {
+        card = this.buildTextCard(item.description, answers[i])
           
       }
       cards.push(card);
@@ -391,7 +396,9 @@ export default class SurveyScreen extends React.Component {
   buildImageCard(title, answer) {
     return {
       text: title,
-      info: <CardItem>
+      info: <View>
+            <Text style={{ height: 30, width: '80%', fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 }} > {title} </Text>
+            <CardItem>
               <Left>
                 <Image style={{width: 150, height: 150}} 
                   source={{ uri: answer.img_val ? answer.img_val : AppConstants.PHOTO_DEFAULT }} />
@@ -414,6 +421,37 @@ export default class SurveyScreen extends React.Component {
                 </Button>
               </Right>
             </CardItem>
+            </View>
+
+    }
+  }
+
+  buildNumberCard(title, answer) {
+    return {
+      text: title,
+      info: <View>
+            <Text> {title} </Text>
+            <Form>
+                  <Item>
+                    <Input placeholder="Ingrese valor" bordered keyboardType={'numeric'} style={{ width: 100 }} />
+                    <Icon active name="calculator" />
+                  </Item>
+            </Form>
+            </View>
+    }
+  }
+
+  buildTextCard(title, answer) {
+    return {
+      text: title,
+      info: <View>
+            <Text> {title} </Text>
+            <Form>
+              <Item>
+                <Textarea rowSpan={5} bordered placeholder="Ingrese detalle" />
+              </Item>
+            </Form>
+            </View>
     }
   }
 
@@ -447,6 +485,7 @@ export default class SurveyScreen extends React.Component {
             resolve({
               text: title,
               info: <View>
+                      <Text> {title} </Text>
                       {listItems}
                     </View>         
             })

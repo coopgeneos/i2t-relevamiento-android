@@ -157,6 +157,9 @@ stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'No usa');
 stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa el de CAS');`);
 stms.push(`INSERT INTO ListItemAct (itemActType_id, value) values (3, 'Usa uno propio');`);
 
+stms.push(`INSERT INTO ItemActType (activityType_id, description, type, required) values (1, 'Detalles', 'texto', 0);`);
+stms.push(`INSERT INTO ItemActType (activityType_id, description, type, required) values (1, 'Ingrese Metros Cuadrados', 'numerico', 0);`);
+
 
 stms.push(`INSERT INTO Activity (schedule_id, contact_id, activityType_id, state, percent) 
 values (1, 1, 1, 'new', 0.0);`);
