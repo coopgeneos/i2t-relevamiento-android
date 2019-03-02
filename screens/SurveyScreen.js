@@ -44,6 +44,8 @@ export default class SurveyScreen extends React.Component {
       cant: 0,
       showButtonConfirm: false,
       buttonSaveEnable: false,
+      notes: null,
+      number: null,
     };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -61,7 +63,7 @@ export default class SurveyScreen extends React.Component {
           left join ItemActType iat on (iat.activityType_id = act.activityType_id)
           left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
           where act.id = ?
-          group by act.id, iat.id `,
+          --group by act.id, iat.id `,
         [this.state.activity.id],
         (_, { rows }) => {
           this.loadCards(rows._array, true)
@@ -112,11 +114,13 @@ export default class SurveyScreen extends React.Component {
 
     for(i=0; i<data.length; i++) {
       var item = data[i];
-      
+      var activity_id = item.activity_id.toString();
+      var itemActType_id = item.itemActType_id.toString();
+            
       if(firstTime){
         if(item.img_val){
-          var name = new Date();
-          name = name.getTime().toString();
+          var name = '';
+          name = 'temp_' + activity_id + '_' + itemActType_id;
           FileSystem.writeAsStringAsync(`${AppConstants.TMP_FOLDER}/${name}.jpg`, item.img_val, {encoding: FileSystem.EncodingTypes.Base64})
             .catch(err => {
               console.log(`ERROR creando archivo temporal: ${err}`)
@@ -130,9 +134,11 @@ export default class SurveyScreen extends React.Component {
           itemActType_id: item.itemActType_id,
           text_val: item.text_val,
           img_val: item.img_val,
-          img_val_change: false
+          img_val_change: false,
+          type: item.type,
         }
         answers.push(answer);
+
       }
       if(item.type === 'lista') {
         card = await this.buildListCard(item.description, answers[i])
@@ -143,9 +149,11 @@ export default class SurveyScreen extends React.Component {
         card = this.buildImageCard(item.description, answers[i])
         
       } else if(item.type === 'numerico') {
+        this.setState({ number: item.text_val });
         card = this.buildNumberCard(item.description, answers[i])
           
       } else {
+        this.setState({ notes: item.text_val });
         card = this.buildTextCard(item.description, answers[i])
           
       }
@@ -317,11 +325,15 @@ export default class SurveyScreen extends React.Component {
         result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
+        base64: true,
+        quality: 0.2,
         });
       } else {
         result = await ImagePicker.launchImageLibraryAsync({
           allowsEditing: true,
           aspect: [4, 3],
+          base64: true,
+          quality: 0.2,
         });
       }
       if (!result.cancelled) {
@@ -332,8 +344,18 @@ export default class SurveyScreen extends React.Component {
     }
   };
 
-  async saveAnswer() {
+  async saveAnswer() {    
     var answer = this.state.answers[this.state.seg - 1];
+
+    if (answer.type === 'texto'){
+      answer.text_val = this.state.notes;
+    }
+
+    if (answer.type === 'numerico'){
+      answer.text_val = this.state.number;
+    }
+
+   
     if(answer.img_val || answer.text_val) {//Solo se crea una respuesta si la imagen o el texto vienen con algo
       var base64 = null;
       if(answer.img_val && answer.img_val_change){ //Solo se guarda si
@@ -342,7 +364,7 @@ export default class SurveyScreen extends React.Component {
             console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
           })
       }
-
+      
       var sql = '';
       if(answer.id){
         var upd_img = '';
@@ -432,15 +454,32 @@ export default class SurveyScreen extends React.Component {
       info: <View>
             <Text> {title} </Text>
             <Form>
-                  <Item>
-                    <Input placeholder="Ingrese valor" bordered keyboardType={'numeric'} style={{ width: 100 }} />
-                    <Icon active name="calculator" />
-                  </Item>
+                <Item>
+                  <Input 
+                    placeholder="Ingrese valor" 
+                    bordered keyboardType={'numeric'} 
+                    style={{ width: 100 }} 
+                    defaultValue={this.state.number}
+                    onChangeText={this.handleNumberChange.bind(this)}
+                    disabled={this.state.buttonSaveEnable}
+                  />
+                  <Icon active name="calculator" />
+                </Item>
             </Form>
             </View>
     }
   }
 
+  
+  handleChange(event) {
+    this.setState({ notes: event});
+  }  
+
+  handleNumberChange(event){
+    this.setState({ number: event});
+  }
+
+    
   buildTextCard(title, answer) {
     return {
       text: title,
@@ -448,7 +487,11 @@ export default class SurveyScreen extends React.Component {
             <Text> {title} </Text>
             <Form>
               <Item>
-                <Textarea rowSpan={5} bordered placeholder="Ingrese detalle" />
+                <Textarea rowSpan={5} bordered placeholder="Ingrese detalle"  
+                  defaultValue={this.state.notes}
+                  onChangeText={this.handleChange.bind(this)}
+                  disabled={this.state.buttonSaveEnable}
+                />
               </Item>
             </Form>
             </View>
