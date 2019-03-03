@@ -28,7 +28,7 @@ export default class ScheduleScreen extends React.Component {
     let sql = ` select s.id as schedule_id, c.*     
                 from Schedule s
                 inner join Contact c on (c.id = s.contact_id)
-                where s.state != 'Complete'`;
+                where s.state != 'complete'`;
     if(dateFilter) {
       sql += ` and planned_date = '${formatDate(dateFilter)}'`
     }
@@ -63,6 +63,10 @@ export default class ScheduleScreen extends React.Component {
     });
   }
 
+  refresh() {
+    this.getEvents(null,null);
+  }
+
   toggleNears(){
     this.state.nears = !this.state.nears;
     this.getEvents(this.state.nears, this.state.chosenDate);
@@ -81,7 +85,7 @@ export default class ScheduleScreen extends React.Component {
   goToActivities(params){
     global.context['event_id'] = params.event_id;
     global.context['contact'] = params.contact; 
-    this.props.navigation.navigate('Activities');
+    this.props.navigation.navigate('Activities', {onGoBack: () => this.refresh()})
   }
   
   render() {

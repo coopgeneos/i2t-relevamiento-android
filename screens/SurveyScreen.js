@@ -218,8 +218,8 @@ export default class SurveyScreen extends React.Component {
       50,
     );
     
-    this.props.navigation.navigate('Schedule',{onGoBack: () => this.refresh()});
-
+    
+    this.goBack();
   };
 
 
@@ -599,6 +599,7 @@ export default class SurveyScreen extends React.Component {
   }
 
   goBack(){
+    this.props.navigation.state.params.onGoBack();
     this.props.navigation.goBack()
   }
 

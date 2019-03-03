@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
-import { StyleSheet, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Alert, BackHandler, ToastAndroid} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 
 import FooterNavBar from '../components/FooterNavBar';
@@ -13,7 +13,12 @@ export default class ActivitiesScreen extends React.Component {
     this.state = {
       dataSource: [],
       tableHead: ['Actividad', 'Fecha', ''],
+      visible_button: true,
     };
+
+    this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
+      BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
 
   componentDidMount() {
@@ -32,13 +37,18 @@ export default class ActivitiesScreen extends React.Component {
         (_, { rows }) => {
           var resp = rows._array;
           var data = [];
+          var visible_button = true;
           resp.forEach(item => {
             var aux = [item.description, item.planned_date, 'A'];
             data.push(aux)
+            if (item.state == 'new'){
+              visible_button = false;
+            }
           });
           this.setState ({
             dataSource: resp,
-            tableData: data
+            tableData: data,
+            visible_button: visible_button
           });
         },
         (_, err) => {
@@ -47,6 +57,39 @@ export default class ActivitiesScreen extends React.Component {
       )
     });
   }
+
+  onBackButtonPressAndroid = () => {
+    this.goBack()
+    return true;
+  };
+
+  setStateComplet(){
+    this.saveComplet();
+    this.goBack();
+  }
+
+  async saveComplet() {     
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        ` update schedule set state = 'complete' where id = ?`,
+        [global.context.event_id],
+        (_, { rows }) => {},
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      );
+    });
+
+    ToastAndroid.showWithGravityAndOffset(
+      'Los datos se actualizaron correctamente.',
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      25,
+      50,
+    );
+    
+  }
+
 
   getIconBattery(index){
     var percent = this.state.dataSource[index].percent;
@@ -66,6 +109,13 @@ export default class ActivitiesScreen extends React.Component {
       this.props.navigation.navigate('Survey',
         {activity: activity, onGoBack: () => this.refresh()})
   }
+
+
+  goBack(){
+    this.props.navigation.state.params.onGoBack();
+    this.props.navigation.goBack()
+  }
+
   
   render() {
     let table;
@@ -134,9 +184,20 @@ export default class ActivitiesScreen extends React.Component {
                     ))
                   }
                 </Table>
+
+                <View style={styles.modalContent}  >                  
+                  <Button block style={{ marginTop: 10, marginBottom: 10 }}
+                    onPress={()=>{this.setStateComplet()}}
+                    disabled={!this.state.visible_button}
+                    >
+                    <Text>Cerrar</Text>
+                  </Button>
+                </View>
+
               </View>
     }
 
+    
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Actividades" />
@@ -160,6 +221,7 @@ export default class ActivitiesScreen extends React.Component {
             <CardItem footer>                        
             <Text></Text>
             </CardItem>
+
           </Card>
 
           {table}

@@ -18,18 +18,24 @@ export default class ContactActScreen extends React.Component {
   }
 
   componentDidMount() {
+    this.getActivities();   
+  }
+
+
+  getActivities(){
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select a.id as activity_id, a.contact_id, ate.description
+        ` select a.id as activity_id, a.contact_id, ate.description, 
+          case a.state when 'close' then 'CERRADA' when 'new' then 'ABIERTA' else '' end as estado
           from Activity a
           left join ActivityType ate on (ate.id = a.activityType_id)
           where a.contact_id = ?;`,
         [global.context.contact.id],
         (_, { rows }) => {
-          var tableHead = ['Actividad', ''];
+          var tableHead = ['Actividad', 'Estado', ''];
           var tableData = [];
           rows._array.forEach(item => {
-            tableData.push([item.description, item.activity_id])
+            tableData.push([item.description, item.estado, item.activity_id ])
           })
           this.setState ({
             tableHead: tableHead,
@@ -43,17 +49,24 @@ export default class ContactActScreen extends React.Component {
     });
   }
 
+
   _alertIndex(index) {
     Alert.alert(`This is row ${index + 1}`);
   }
 
+  refresh(){
+    this.getActivities();
+  }
 
   go_Survey(index){
     var activity = {
-      'id': this.state.tableData[index][1],
+      'id': this.state.tableData[index][2],
       'description': this.state.tableData[index][0],
     };
-    this.props.navigation.navigate('Survey',{activity: activity } )
+  
+    this.props.navigation.navigate('Survey',
+        {activity: activity, onGoBack: () => this.refresh()})
+    
   }
 
   render() {
@@ -69,6 +82,9 @@ export default class ContactActScreen extends React.Component {
         </View>
     );
 
+    
+
+
     if(!this.state.tableData){
       table = <Spinner/>
     } else {
@@ -81,7 +97,7 @@ export default class ContactActScreen extends React.Component {
                         <TableWrapper key={index} style={styles.row}>
                           {
                             rowData.map((cellData, cellIndex) => (
-                              <Cell key={cellIndex} data={cellIndex === 1 ? element(cellData, index) : cellData} textStyle={styles.text}/>
+                              <Cell key={cellIndex} data={cellIndex === 2 ? element(cellData, index) : cellData} textStyle={styles.text}/>
                             ))
                           }
                         </TableWrapper>

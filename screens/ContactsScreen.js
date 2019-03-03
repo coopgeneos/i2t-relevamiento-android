@@ -1,5 +1,4 @@
 import React from 'react';
-//import { Button } from 'react-native';
 import { Container, Header, Content, Footer, FooterTab, Text, 
   Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
   Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
