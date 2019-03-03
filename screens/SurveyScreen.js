@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { Container, Content, Text, Button, Spinner,
+import { Container, Content, Text, Button, Spinner, CheckBox,
           Icon, Label, Left, Body, Right, Card, CardItem, IconNB,
-          ListItem, Radio, Segment, TextInput, Textarea, Form, Item, Input} from 'native-base';
+          ListItem, Radio, Segment, Textarea, Form, Item, Input} from 'native-base';
 
 import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid } from 'react-native';
 import { ImagePicker, Permissions, FileSystem } from 'expo';
@@ -44,8 +44,6 @@ export default class SurveyScreen extends React.Component {
       cant: 0,
       showButtonConfirm: false,
       buttonSaveEnable: false,
-      notes: null,
-      number: null,
     };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -58,7 +56,7 @@ export default class SurveyScreen extends React.Component {
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, 
-          a.id as answer_id, act.id as activity_id, a.text_val, a.img_val, act.state
+          a.id as answer_id, act.id as activity_id, a.text_val, a.img_val, act.state, iat.required
           from Activity act
           left join ItemActType iat on (iat.activityType_id = act.activityType_id)
           left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
@@ -116,7 +114,9 @@ export default class SurveyScreen extends React.Component {
       var item = data[i];
       var activity_id = item.activity_id.toString();
       var itemActType_id = item.itemActType_id.toString();
+      var requerido = null;
             
+                  
       if(firstTime){
         if(item.img_val){
           var name = '';
@@ -128,6 +128,12 @@ export default class SurveyScreen extends React.Component {
           item.img_val = `${AppConstants.TMP_FOLDER}/${name}.jpg`;
         }
 
+        if (item.required === '1'){
+          requerido = true
+        }else{
+          requerido = false
+        }
+        
         var answer = {
           id: item.answer_id, //Si answer_id viene en null, es porque nunca se respondió.
           activity_id: item.activity_id,
@@ -136,6 +142,9 @@ export default class SurveyScreen extends React.Component {
           img_val: item.img_val,
           img_val_change: false,
           type: item.type,
+          requerido: requerido,
+          notes: item.text_val,
+          number: item.text_val,
         }
         answers.push(answer);
 
@@ -274,7 +283,7 @@ export default class SurveyScreen extends React.Component {
             from Activity act
             left join ItemActType iat on (iat.activityType_id = act.activityType_id)
             left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
-            where act.id = ? and a.id is null
+            where act.id = ? and a.id is null and iat.required = 1
             group by act.id`,
           [activity_id],
           (_, { rows }) => {
@@ -348,11 +357,11 @@ export default class SurveyScreen extends React.Component {
     var answer = this.state.answers[this.state.seg - 1];
 
     if (answer.type === 'texto'){
-      answer.text_val = this.state.notes;
+      answer.text_val = answer.notes;
     }
 
     if (answer.type === 'numerico'){
-      answer.text_val = this.state.number;
+      answer.text_val = answer.number;
     }
 
    
@@ -419,6 +428,16 @@ export default class SurveyScreen extends React.Component {
     return {
       text: title,
       info: <View>
+            
+            <View style={{ flexDirection: 'row' }}>
+              <CheckBox
+                checked={answer.requerido}
+                disabled={true}
+              />
+              <Text style={{marginLeft: 10}}> Requerido</Text>
+            </View>
+            <Text></Text>             
+            
             <Text style={{ height: 30, width: '80%', fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 }} > {title} </Text>
             <CardItem>
               <Left>
@@ -452,6 +471,15 @@ export default class SurveyScreen extends React.Component {
     return {
       text: title,
       info: <View>
+            <View style={{ flexDirection: 'row' }}>
+              <CheckBox
+                checked={answer.requerido}
+                disabled={true}
+              />
+              <Text style={{marginLeft: 10}}> Requerido</Text>
+            </View>
+            <Text></Text>
+
             <Text> {title} </Text>
             <Form>
                 <Item>
@@ -459,7 +487,7 @@ export default class SurveyScreen extends React.Component {
                     placeholder="Ingrese valor" 
                     bordered keyboardType={'numeric'} 
                     style={{ width: 100 }} 
-                    defaultValue={this.state.number}
+                    defaultValue={answer.number}
                     onChangeText={this.handleNumberChange.bind(this)}
                     disabled={this.state.buttonSaveEnable}
                   />
@@ -472,11 +500,17 @@ export default class SurveyScreen extends React.Component {
 
   
   handleChange(event) {
-    this.setState({ notes: event});
+    var answers = this.state.answers;
+    answers[this.state.seg - 1].notes = event;
+    this.setState({ answers: answers});
+    this.loadCards(this.state.cardsData, false);
   }  
 
   handleNumberChange(event){
-    this.setState({ number: event});
+    var answers = this.state.answers;
+    answers[this.state.seg - 1].number = event;
+    this.setState({ answers: answers});
+    this.loadCards(this.state.cardsData, false);
   }
 
     
@@ -484,12 +518,21 @@ export default class SurveyScreen extends React.Component {
     return {
       text: title,
       info: <View>
+            <View style={{ flexDirection: 'row' }}>
+              <CheckBox
+                checked={answer.requerido}
+                disabled={true}
+              />
+              <Text style={{marginLeft: 10}}> Requerido</Text>
+            </View>
+            <Text></Text>
+
             <Text> {title} </Text>
             <Form>
               <Item>
                 <Textarea rowSpan={5} bordered placeholder="Ingrese detalle"  
-                  defaultValue={this.state.notes}
-                  onChangeText={this.handleChange.bind(this)}
+                  defaultValue={answer.notes}
+                  onChangeText={this.handleChange.bind(this) }
                   disabled={this.state.buttonSaveEnable}
                 />
               </Item>
@@ -528,6 +571,14 @@ export default class SurveyScreen extends React.Component {
             resolve({
               text: title,
               info: <View>
+                      <View style={{ flexDirection: 'row' }}>
+                        <CheckBox
+                          checked={answer.requerido}
+                          disabled={true}
+                        />
+                        <Text style={{marginLeft: 10}}> Requerido</Text>
+                      </View>
+                      <Text></Text>
                       <Text> {title} </Text>
                       {listItems}
                     </View>         
@@ -591,36 +642,36 @@ export default class SurveyScreen extends React.Component {
             !isThereData ? 
               (<Spinner />)
               : (
-                <View style={styles.container}>
-
-                <Segment>
-                  <Button
-                    last
-                    active={this.state.seg === 1 ? false : true}
-                    onPress={() => this.setState(prevState => ({seg: prevState.seg - 1}))}
-                    disabled={this.state.seg === 1 ? true : false}
-                  >
-                    <Icon name="arrow-circle-left" />
-                  </Button>
-                  <Button
-                    first
-                    active={this.state.seg === this.state.seg_max ? false : true}
-                    disabled={this.state.seg === this.state.seg_max ? true : false}
-                    onPress={() => this.setState(prevState => ({seg: prevState.seg + 1}))}
-                  >
-                    <Text>OMITIR</Text>
-                  </Button>
-                  <Button
-                    first
-                    active={this.state.seg === this.state.seg_max ? false : true}
-                    disabled={this.state.seg === this.state.seg_max ? true : false || this.state.buttonSaveEnable}
-                    onPress={() => this.saveAnswer()}
-                  >
-                    <Icon name="save" />
-                    <Icon name="arrow-circle-right" />
-                  </Button>
-
-                </Segment>
+                <View style={styles.container}>   
+                  <Segment>
+                    <Button
+                      last
+                      active={this.state.seg === 1 ? false : true}
+                      onPress={() => this.setState(prevState => ({seg: prevState.seg - 1}))}
+                      disabled={this.state.seg === 1 ? true : false}
+                    >
+                      <Icon name="arrow-circle-left" />
+                    </Button>
+                    <Button
+                      first
+                      active={this.state.seg === this.state.seg_max ? false : true}
+                      disabled={this.state.seg === this.state.seg_max ? true : false}
+                      onPress={() => this.setState(prevState => ({seg: prevState.seg + 1}))}
+                    >
+                      <Text>OMITIR</Text>
+                    </Button>
+                    <Button
+                      first
+                      active={this.state.seg === this.state.seg_max ? false : true}
+                      disabled={this.state.seg === this.state.seg_max ? true : false || this.state.buttonSaveEnable}
+                      onPress={() => this.saveAnswer()}
+                    >
+                      <Icon name="save" />
+                      <Icon name="arrow-circle-right" />
+                    </Button>
+                    
+                  </Segment>
+                 
                 <Content padder>                  
                   {this.state.cards.length > 0 && this.state.cards[this.state.seg - 1] && this.state.cards[this.state.seg - 1].info}                
                 </Content>
