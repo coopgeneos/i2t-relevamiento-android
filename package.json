@@ -7,9 +7,22 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "@expo/vector-icons": "^9.0.0",
     "expo": "^32.0.0",
+    "native-base": "^2.10.0",
     "react": "16.5.0",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz"
+    "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
+    "react-native-awesome-alerts": "^1.2.0",
+    "react-native-data-table": "^0.2.1",
+    "react-native-elements": "^1.0.0",
+    "react-native-form-validator": "^0.2.0",
+    "react-native-maps": "^0.23.0",
+    "react-native-open-maps": "^0.3.3",
+    "react-native-popup-dialog": "^0.17.0",
+    "react-native-table-component": "^1.2.0",
+    "react-navigation": "^3.0.9",
+    "slippy-grid": "^2.3.0",
+    "spherical-geometry-js": "^1.2.0"
   },
   "devDependencies": {
     "babel-preset-expo": "^5.0.0"
