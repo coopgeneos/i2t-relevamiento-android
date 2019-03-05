@@ -53,6 +53,15 @@ export default class SurveyScreen extends React.Component {
   };
 
   componentDidMount() {
+    this.loadData();
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  
+  loadData(){
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, 
@@ -75,12 +84,9 @@ export default class SurveyScreen extends React.Component {
         }
       )
     });
-
-    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
-      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
-    );
   }
-
+    
+  
   componentWillUnmount() {
     this._didFocusSubscription && this._didFocusSubscription.remove();
     this._willBlurSubscription && this._willBlurSubscription.remove();
@@ -226,8 +232,10 @@ export default class SurveyScreen extends React.Component {
 
   async loadResumen(data) {
     var completas = await this.getCompletas(data);
-    var pendientes = await this.getPendientes(data);
-    var mensaje = `Tareas Completas: ${completas}\nTareas Pendientes: ${pendientes}`;
+    var pendientes = await this.getPendientes(data, '1');
+    var pendientes_norequired = await this.getPendientes(data, '0');
+
+    var mensaje = `Tareas Completas: ${completas}\nTareas Pendientes: ${pendientes_norequired}`;
 
     this.setState({
       mensaje: mensaje
@@ -244,6 +252,7 @@ export default class SurveyScreen extends React.Component {
     }
 
     this.showAlert();
+    //this.loadData();
   }
 
 
@@ -274,7 +283,7 @@ export default class SurveyScreen extends React.Component {
     })
   }
 
-  async getPendientes(data){
+  async getPendientes(data, required){
     var activity_id = data[0].activity_id;
     return new Promise(async function(resolve, reject) {
       global.DB.transaction(tx => {
@@ -283,9 +292,9 @@ export default class SurveyScreen extends React.Component {
             from Activity act
             left join ItemActType iat on (iat.activityType_id = act.activityType_id)
             left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
-            where act.id = ? and a.id is null and iat.required = 1
+            where act.id = ? and a.id is null and iat.required = ?
             group by act.id`,
-          [activity_id],
+          [activity_id, required],
           (_, { rows }) => {
             var cantidad = 0;
             if (rows.length > 0){
@@ -355,7 +364,7 @@ export default class SurveyScreen extends React.Component {
 
   async saveAnswer() {    
     var answer = this.state.answers[this.state.seg - 1];
-
+    
     if (answer.type === 'texto'){
       answer.text_val = answer.notes;
     }
@@ -420,6 +429,8 @@ export default class SurveyScreen extends React.Component {
     }
 
     this.setState(prevState => ({seg: prevState.seg + 1}))
+
+    this.loadData();
 
   }
 
