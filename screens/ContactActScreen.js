@@ -3,21 +3,33 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
 
-import { StyleSheet, View, Alert} from 'react-native';
+import { StyleSheet, View, Alert, BackHandler} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 import {formatDate} from '../utilities/utils';
 
 export default class ContactActScreen extends React.Component {
+  
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
 
     this.state = { index_id: '' };
+
+    this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
+      BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
 
   componentDidMount() {
-    this.getActivities();   
+    this.getActivities();
+    
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
 
 
@@ -45,6 +57,20 @@ export default class ContactActScreen extends React.Component {
     });
   }
 
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
+
+  onBackButtonPressAndroid = () => {
+    this.goBack()
+    return true;
+  };
+
+  goBack(){
+    this.props.navigation.state.params.onGoBack();
+    this.props.navigation.goBack()
+  }
 
   _alertIndex(index) {
     Alert.alert(`This is row ${index + 1}`);

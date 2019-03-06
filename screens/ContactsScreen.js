@@ -70,7 +70,11 @@ export default class ContactsScreen extends React.Component {
 
   goToContactActivities(params){
     global.context['contact'] = params.contact;
-    this.props.navigation.navigate('ContactAct')
+    this.props.navigation.navigate('ContactAct', {onGoBack: () => this.refresh()})
+  }
+
+  refresh(){
+    this.getContacts(null);
   }
 
   render() {
