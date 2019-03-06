@@ -3,18 +3,17 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
 
-import { StyleSheet, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
-
+import { StyleSheet, View, Alert} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
-
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
+import {formatDate} from '../utilities/utils';
 
 export default class ContactActScreen extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {};
+    this.state = { index_id: '' };
   }
 
   componentDidMount() {
@@ -25,17 +24,14 @@ export default class ContactActScreen extends React.Component {
   getActivities(){
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select a.id as activity_id, a.contact_id, ate.description, 
-          case a.state when 'close' then 'CERRADA' when 'new' then 'ABIERTA' else '' end as estado
-          from Activity a
-          left join ActivityType ate on (ate.id = a.activityType_id)
-          where a.contact_id = ?;`,
-        [global.context.contact.id],
+        ` select ate.id, ate.description
+          from ActivityType ate ;`,
+        [],
         (_, { rows }) => {
-          var tableHead = ['Actividad', 'Estado', ''];
+          var tableHead = ['Actividad', ''];
           var tableData = [];
           rows._array.forEach(item => {
-            tableData.push([item.description, item.estado, item.activity_id ])
+            tableData.push([item.description, item.id ])
           })
           this.setState ({
             tableHead: tableHead,
@@ -58,15 +54,62 @@ export default class ContactActScreen extends React.Component {
     this.getActivities();
   }
 
-  go_Survey(index){
-    var activity = {
-      'id': this.state.tableData[index][2],
-      'description': this.state.tableData[index][0],
-    };
+    
+  createSchedule(user_id, contact_id, activityType_id, latitude, longitude){   
+    let fecha = formatDate(new Date());
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        `INSERT INTO Schedule(user_id, contact_id, type, priority, planned_date, 
+          observations, state, exec_date, latitude, longitude)
+          values (?, ?,'Comun', 1, ?, '', 'Sin visitar', ?, ?, ?);`,
+        [user_id, contact_id, fecha, fecha, latitude, longitude],
+        (_, rows) => {
+          let lastID = rows.insertId;
+          this.createActivity(lastID, contact_id, activityType_id); 
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });     
+  }
+
   
+  createActivity(schedule_id, contact_id, activityType_id){
+    global.DB.transaction(tx => {
+      tx.executeSql(
+        `INSERT INTO Activity (schedule_id, contact_id, activityType_id, state, percent) 
+          values (?, ?, ?, 'new', 0.0);`,
+        [schedule_id, contact_id, activityType_id],
+        (_, rows) => {
+          let lastID = rows.insertId;
+          this.Activity_get_lastID(lastID);
+        },
+        (_, err) => {
+          console.error(`ERROR consultando DB: ${err}`)
+        }
+      )
+    });     
+  }
+
+  Activity_get_lastID(activity_lastId){
+    let activity = {
+      'id': activity_lastId,
+      'description': this.state.tableData[this.state.index_id][0],
+    };
+
     this.props.navigation.navigate('Survey',
         {activity: activity, onGoBack: () => this.refresh()})
-    
+  }
+   
+  
+  go_Survey(data, index){
+    this.setState({index_id: index});
+    let user_id = global.context.contact.user_id;
+    let contact_id = global.context.contact.id;
+    let latitude = global.context.contact.latitude;
+    let longitude = global.context.contact.longitude;
+    this.createSchedule(user_id, contact_id, data, latitude, longitude);
   }
 
   render() {
@@ -76,7 +119,7 @@ export default class ContactActScreen extends React.Component {
 
     const element = (data, index) => (
         <View style={styles.btn_cont}>
-          <Button style={styles.btn} onPress={() => this.go_Survey(index)}>
+          <Button style={styles.btn} onPress={() => this.go_Survey(data, index)}>
             <Text>Iniciar</Text>
           </Button>
         </View>
@@ -97,7 +140,7 @@ export default class ContactActScreen extends React.Component {
                         <TableWrapper key={index} style={styles.row}>
                           {
                             rowData.map((cellData, cellIndex) => (
-                              <Cell key={cellIndex} data={cellIndex === 2 ? element(cellData, index) : cellData} textStyle={styles.text}/>
+                              <Cell key={cellIndex} data={cellIndex === 1 ? element(cellData, index) : cellData} textStyle={styles.text}/>
                             ))
                           }
                         </TableWrapper>
