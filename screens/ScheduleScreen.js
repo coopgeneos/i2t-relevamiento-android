@@ -25,12 +25,12 @@ export default class ScheduleScreen extends React.Component {
   }
 
   getEvents(nears, dateFilter) {
-    let sql = ` select s.id as schedule_id, c.*     
-                from Schedule s
-                inner join Contact c on (c.id = s.contact_id)
-                where s.state != 'complete'`;
+    let sql = ` select a.id as activity_id, a.description as description, c.*     
+                from Activity a 
+                inner join Contact c on (c.id = a.contact_id)
+                where a.state != 'complete'`;
     if(dateFilter) {
-      sql += ` and planned_date = '${formatDate(dateFilter)}'`
+      sql += ` and a.planned_date = '${formatDate(dateFilter)}'`
     }
     global.DB.transaction(tx => {
       tx.executeSql(
@@ -83,7 +83,8 @@ export default class ScheduleScreen extends React.Component {
   }
 
   goToActivities(params){
-    global.context['event_id'] = params.event_id;
+    //global.context['event_id'] = params.event_id;
+    global.context['activity_id'] = params.activity_id;
     global.context['contact'] = params.contact; 
     this.props.navigation.navigate('Activities', {onGoBack: () => this.refresh()})
   }
@@ -122,7 +123,6 @@ export default class ScheduleScreen extends React.Component {
 
               </Item>
 
-
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '40%'}}>
                 <Label>Cercanos</Label>
                 <CheckBox checked={this.state.nears} onPress={() => {this.toggleNears()}} />               
@@ -143,7 +143,7 @@ export default class ScheduleScreen extends React.Component {
                       </Left>
                       <Body>
                         <Text>
-                          {data.name}
+                          {data.description}
                         </Text>
                         <Text numberOfLines={2} note>
                           {data.address} - {data.city} - {data.zipCode}
@@ -153,7 +153,7 @@ export default class ScheduleScreen extends React.Component {
                         </Text>
                       </Body>
                       <Right>
-                        <Button transparent onPress={()=>{this.goToActivities({contact: data, event_id: data.schedule_id})}} style={{fontSize: 32}}>
+                        <Button transparent onPress={()=>{this.goToActivities({contact: data, activity_id: data.activity_id})}} style={{fontSize: 32}}>
                           <Icon name='search'/>
                         </Button>
                       </Right>

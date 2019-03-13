@@ -30,10 +30,10 @@ export default class Setup extends Component {
     this.setState({ isReady: true });
   }
 
-  async createDatabase(){    
+  async createDatabase(){ 
     return new Promise(async function(resolve, reject) {
       /**** Activar la siguiente linea si se quiere recrear la base desde cero ****/
-      //await Expo.FileSystem.deleteAsync(`${Expo.FileSystem.documentDirectory}/SQLite`, {idempotent: true});
+      await Expo.FileSystem.deleteAsync(`${Expo.FileSystem.documentDirectory}/SQLite`, {idempotent: true});
 
       /* Limpio la carpeta de archivos temporales */
       Expo.FileSystem.deleteAsync(AppConstans.TMP_FOLDER)

@@ -27,7 +27,13 @@
     },
     "description": "",
     "android": {
-      "package": "com.geneos.idost.relevamiento"
+      "package": "com.geneos.idost.relevamiento",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION"
+      ]
     }
+    
+
   }
 }
