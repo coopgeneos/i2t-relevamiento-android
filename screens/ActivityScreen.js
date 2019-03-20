@@ -16,17 +16,25 @@ export default class ActivityScreen extends ValidationComponent {
   constructor(props) {
     super(props);
     
-    this.activity = this.props.navigation.getParam('activity', 'SIN ACTIVIDAD');
+    //this.activity = this.props.navigation.getParam('activity_id', 'SIN ACTIVIDAD');
+    this.activity_id = this.props.navigation.getParam('activity_id', 'SIN ACTIVIDAD');
+    this.activity_desc = this.props.navigation.getParam('activity_desc', 'SIN ACTIVIDAD');
+    this.contact_name = this.props.navigation.getParam('contact_name', 'NN');
+    this.contact_dir = this.props.navigation.getParam('contact_dir', 'NN');
+    this.contact_city = this.props.navigation.getParam('contact_city', 'NN');
     
     this.state = {
-      canceled: this.activity.state == 'canceled' ? true : false,
-      cancellation: this.activity.cancellation,
-      notes: this.activity.notes,
+      canceled: false,
+      //cancellation: this.activity.cancellation,
+      cancellation: '',
+      name: '',
+      notes: '',
       disabled: true,
       error_msg: '',
       modalVisible: false,
     };
   }
+
 
   componentDidMount() {
     global.DB.transaction(tx => {
@@ -34,13 +42,14 @@ export default class ActivityScreen extends ValidationComponent {
         ` select * 
           from activity  
           where id = ?`,
-        [this.activity.id],
+        [this.activity_id],
         (_, { rows }) => {
           this.activity = rows._array[0];
           this.setState({
             canceled: this.activity.state == 'canceled' ? true : false, 
             cancellation: this.activity.cancellation, 
             notes: this.activity.notes,
+            name: this.activity.description,
             disabled: this.activity.state == 'canceled' ? true : false
           });
         },
@@ -165,28 +174,28 @@ export default class ActivityScreen extends ValidationComponent {
                 </Button>
             </View>
           </Modal>
-          
-          <Card>
-            <CardItem header>                        
-            <Text>Datos de Contacto</Text>
-            </CardItem>
-            <CardItem>                        
-              <Label style={{ width: 80 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
-            </CardItem>
-            <CardItem>                        
-              <Label style={{ width: 80 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
-            </CardItem>
-            <CardItem>                        
-              <Label style={{ width: 80 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
-            </CardItem>
-            <CardItem footer>                        
-            <Text></Text>
-            </CardItem>
-          </Card>
+
+
+          <Form>
+          <Item stackedLabel>
+            <Label>Contacto</Label>
+            <Input
+              value={this.contact_name_activity}
+              disabled
+              style={{ width: '100%' }}
+            />
+            <Label>Dirección</Label>
+            <Input
+              value={ this.contact_dir + ' - ' + this.contact_city }
+              disabled
+              style={{ width: '100%' }}
+            />
+          </Item>
+          </Form>
 
           <Form>
             <Item>
-              <Text style={{fontSize: 18}}>Registro de Actividad</Text>
+              <Text style={{fontSize: 18}}>Registro {this.activity_desc}</Text>
             </Item>
             <Item>
               <Textarea rowSpan={3} bordered placeholder="Ingrese sus notas aquí ..." 

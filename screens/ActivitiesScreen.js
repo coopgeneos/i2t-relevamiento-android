@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
-         Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
+         Icon, Form, Item, Label, Input, Left, Title, Body, Right } from 'native-base';
 import { StyleSheet, View, TouchableOpacity, Alert, BackHandler, ToastAndroid} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 
@@ -10,6 +10,14 @@ import HeaderNavBar from '../components/HeaderNavBar';
 export default class ActivitiesScreen extends React.Component {
   constructor(props) {
     super(props);
+
+    this.contact_id = this.props.navigation.getParam('contact_id', 'SIN ACTIVIDAD');
+    this.contact_name = this.props.navigation.getParam('contact_name', 'NN');
+    this.contact_dir = this.props.navigation.getParam('contact_dir', 'NN');
+    this.contact_city = this.props.navigation.getParam('contact_city', 'NN');
+
+    console.info(this.contact_id);
+
     this.state = {
       dataSource: [],
       tableHead: ['Actividad', 'Fecha', ''],
@@ -26,14 +34,15 @@ export default class ActivitiesScreen extends React.Component {
   }
 
   getActivities() {
+    // Ver como tomo la referencia a limite de tiempo hacia adelante como parámetro de esta consulta.
+    // Actividades nuevas / en proceso que den en el margen de tiempo del parametro dias hacia adelante
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select a.*, actt.description, s.planned_date
+        ` select a.*, actt.description 
           from Activity a 
           inner join ActivityType actt on (actt.id = a.activityType_id) 
-          inner join Schedule s on (s.id = a.schedule_id) 
-          where a.schedule_id = ?`,
-        [global.context.event_id],
+          where a.contact_id = ? and a.state != 'close' and a.state != 'canceled'`,
+        [this.contact_id],
         (_, { rows }) => {
           var resp = rows._array;
           var data = [];
@@ -203,26 +212,22 @@ export default class ActivitiesScreen extends React.Component {
         <HeaderNavBar navigation={this.props.navigation}  title="Actividades" />
         <Content>
           
-          <Card>
-            <CardItem header>                        
-            <Text>Datos de Contacto</Text>
-            </CardItem>
-
-            <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
-            </CardItem>
-            <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
-            </CardItem>
-            <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
-            </CardItem>
-
-            <CardItem footer>                        
-            <Text></Text>
-            </CardItem>
-
-          </Card>
+          <Form>
+            <Item stackedLabel>
+              <Label>Contacto</Label>
+              <Input
+                value={this.contact_name}
+                disabled
+                style={{ width: '100%' }}
+              />
+              <Label>Dirección</Label>
+              <Input
+                value={ this.contact_dir + ' - ' + this.contact_city }
+                disabled
+                style={{ width: '100%' }}
+              />
+            </Item>
+          </Form>
 
           {table}
 

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
-         Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem} from 'native-base';
+         Icon, Form, Item, Label, Input, Left, Title, Body, Right } from 'native-base';
 
 import { StyleSheet, View, Alert, BackHandler} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
@@ -183,26 +183,23 @@ export default class ContactActScreen extends React.Component {
       <Container>
         <HeaderNavBar navigation={this.props.navigation} title="Actividades Disponibles" />
         <Content>
-          
-          <Card>
-            <CardItem header>                        
-            <Text>Datos de Contacto</Text>
-            </CardItem>
 
-            <CardItem>                        
-            <Label style={{ width: 80 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
-            </CardItem>
-            <CardItem>                        
-            <Label style={{ width: 80 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
-            </CardItem>
-            <CardItem>                        
-            <Label style={{ width: 80 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
-            </CardItem>
-
-            <CardItem footer>                        
-            <Text></Text>
-            </CardItem>
-          </Card>
+          <Form>
+          <Item stackedLabel>
+            <Label>Contacto</Label>
+            <Input
+              value={global.context.contact.name}
+              disabled
+              style={{ width: '100%' }}
+            />
+            <Label>Dirección</Label>
+            <Input
+              value={ global.context.contact.address + ' - ' + global.context.contact.city }
+              disabled
+              style={{ width: '100%' }}
+            />
+          </Item>
+          </Form>
 
           {table}
 
