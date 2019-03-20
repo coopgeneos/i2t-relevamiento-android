@@ -8,8 +8,8 @@ export default (variables /*: * */ = variable) => {
     fontFamily: variables.fontFamily,
     color: variables.textColor,
     ".note": {
-      color: "#a7a7a7",
-      fontSize: variables.noteFontSize
+      fontSize: variables.noteFontSize,
+      textAlign: 'left'
     }
   };
 

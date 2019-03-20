@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { Header, Left, Title, Body, Right, Text, Button, Icon } from 'native-base';
+import { Header, Left, Title, Body, Right, Text, Button, Icon, View } from 'native-base';
+import { Image } from 'react-native';
 
 
 export default class HeaderNavBar extends React.Component {
@@ -18,26 +19,24 @@ export default class HeaderNavBar extends React.Component {
   render() {
     var map = this.props.map;
     if(map){
-      map = <Button transparent onPress={() => this.props.navigation.navigate('Map', {markers: this.props.markers})}   style={{fontSize: 40}}>
+      map = <Button transparent onPress={() => this.props.navigation.navigate('Map', {markers: this.props.markers})}   style={{fontSize: 50}}>
               <Icon name='map-marker'/>
             </Button>
     }
 
     return (
         <Header>
-          <Left>
+          <Left style={{width: 200}}>
             <Button transparent>
-              <Icon name='yelp' style={{fontSize: 40, color: 'white'}}/>
+            <Image source={require("../assets/i2tbco.png")} style={{width: 193, height: 80}} />
             </Button>
           </Left>
-          <Body>
-            <Title>{this.props.title}</Title>
-          </Body>
           <Right>
-            <Button transparent onPress={() => this.goBack()} style={{fontSize: 40}}>
+            {/* <Title>{this.props.title}</Title> */}
+            <Button transparent onPress={() => this.goBack()} style={{fontSize: 50}}>
               <Icon name='angle-double-left'/>
             </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 40}}>
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 50}}>
               <Icon name='home'/>
             </Button>
             {map}

@@ -52,7 +52,7 @@ export default (variables /*: * */ = variable) => {
         top: null,
         left: null,
         right: null,
-        paddingTop: 5,
+        //paddingTop: 5,
         alignSelf: "flex-start",
         fontSize: variables.inputFontSize - 2
       },
@@ -74,7 +74,7 @@ export default (variables /*: * */ = variable) => {
         }
       },
       flexDirection: null,
-      minHeight: variables.inputHeightBase + 15
+      minHeight: variables.inputHeightBase
     },
     ".inlineLabel": {
       "NativeBase.Label": {
@@ -233,7 +233,7 @@ export default (variables /*: * */ = variable) => {
     borderColor: variables.inputBorderColor,
     backgroundColor: "transparent",
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginLeft: 2,
     padding: 5,
     width: '95%'
