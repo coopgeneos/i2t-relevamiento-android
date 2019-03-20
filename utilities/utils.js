@@ -1,16 +1,21 @@
 import AppConstans from '../constants/constants';
 import { FileSystem, Location, Permissions } from 'expo';
 import { computeDistanceBetween } from 'spherical-geometry-js';
+import moment from 'moment';
 
 export function formatDate(date) {
-    if(typeof(date.getFullYear) === 'function'){
-      var month = date.getMonth() < 10 ? '0'+(date.getMonth()+1) : (date.getMonth()+1).toString();
-      var day = date.getDate() < 10 ? '0'+date.getDate() : date.getDate().toString();
-      //console.log(`${date.getFullYear()}/${month}/${day}`);
-      return `${date.getFullYear()}/${month}/${day}`;
-    }
-    return 'Error: is not a Date'
+  if(typeof(date.getFullYear) === 'function'){
+    var month = date.getMonth() < 10 ? '0'+(date.getMonth()+1) : (date.getMonth()+1).toString();
+    var day = date.getDate() < 10 ? '0'+date.getDate() : date.getDate().toString();
+    //console.log(`${date.getFullYear()}/${month}/${day}`);
+    return `${date.getFullYear()}/${month}/${day}`;
   }
+  return 'Error: is not a Date'
+}
+
+export function formatDatePrint(date_format) {
+  return moment(new Date(date_format)).format('DD-MM-YYYY');
+}
 
 export function formatFolderMap(provider, x, y, z) {
   console.log(`FOLDER ${provider} ${x} ${y} ${z}`)
