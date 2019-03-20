@@ -41,7 +41,7 @@ export default {
   // Button
   btnFontFamily: platform === "ios" ? "System" : "Roboto_medium",
   btnDisabledBg: "#b5b5b5",
-  buttonPadding: 10,
+  buttonPadding: 2,
   get btnPrimaryBg() {
     return this.brandPrimary;
   },
@@ -157,10 +157,10 @@ export default {
   toolbarDefaultBg: platform === "ios" ? "#534D64" : "#534D64",
   toolbarHeight: platform === "ios" ? 90 : 90,
   toolbarSearchIconSize: platform === "ios" ? 20 : 23,
-  toolbarInputColor: platform === "ios" ? "#CECDD2" : "#fff",
+  toolbarInputColor: platform === "ios" ? "#534D64" : "#534D64",
   searchBarHeight: platform === "ios" ? 30 : 40,
   searchBarInputHeight: platform === "ios" ? 30 : 50,
-  toolbarBtnTextColor: platform === "ios" ? "#007aff" : "#fff",
+  toolbarBtnTextColor: platform === "ios" ? "#FFF" : "#FFF",
   iosStatusbar: "dark-content",
   toolbarDefaultBorder: platform === "ios" ? "#a7a6ab" : "#3F51B5",
   get statusBarColor() {
@@ -204,7 +204,7 @@ export default {
   listBorderColor: "#c9c9c9",
   listDividerBg: "#f4f4f4",
   listBtnUnderlayColor: "#DDD",
-  listItemPadding: platform === "ios" ? 10 : 12,
+  listItemPadding: platform === "ios" ? 2 : 2,
   listNoteColor: "#808080",
   listNoteSize: 13,
   listItemSelected: platform === "ios" ? "#007aff" : "#3F51B5",
@@ -256,8 +256,8 @@ export default {
   titleFontfamily: platform === "ios" ? "System" : "Roboto_medium",
   titleFontSize: platform === "ios" ? 17 : 19,
   subTitleFontSize: platform === "ios" ? 11 : 14,
-  subtitleColor: platform === "ios" ? "#FFF" : "#FFF",
-  titleFontColor: platform === "ios" ? "#FFF" : "#FFF",
+  subtitleColor: platform === "ios" ? "#534D64" : "#534D64",
+  titleFontColor: platform === "ios" ? "#534D64" : "#534D64",
 
   // Other
   borderRadiusBase: platform === "ios" ? 5 : 2,

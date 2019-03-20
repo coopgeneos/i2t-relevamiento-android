@@ -30,10 +30,17 @@ export default class SurveyScreen extends React.Component {
   constructor(props) {
     super(props);
 
+    this.activity_id = this.props.navigation.getParam('activity_id', 0);
+    this.activity_desc = this.props.navigation.getParam('activity_desc', '');
+    this.activity_state = this.props.navigation.getParam('activity_state', '');
+    this.contact_name = this.props.navigation.getParam('contact_name', '');
+    this.contact_city = this.props.navigation.getParam('contact_city', '');
+    this.contact_dir = this.props.navigation.getParam('contact_dir', '');
+
     this.state = {
       seg: 1,
       seg_max: null,
-      activity: this.props.navigation.getParam('activity', null),
+      activity: null,
       cardsData: null,
       cards: [],
       answers: null,
@@ -44,6 +51,7 @@ export default class SurveyScreen extends React.Component {
       cant: 0,
       showButtonConfirm: false,
       buttonSaveEnable: false,
+      checkbox1: false,
     };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -52,7 +60,19 @@ export default class SurveyScreen extends React.Component {
 
   };
 
+  toggleSwitch() {
+    this.setState({
+      checkbox1: !this.state.checkbox1
+    });
+    //this.state.checkbox1 = !this.state.checkbox1;
+    console.info('Estado: ' + this.state.checkbox1);
+}
+
   componentDidMount() {
+    
+    
+
+    
     this.loadData();
 
     this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
@@ -71,7 +91,7 @@ export default class SurveyScreen extends React.Component {
           left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
           where act.id = ?
           --group by act.id, iat.id `,
-        [this.state.activity.id],
+        [this.activity_id],
         (_, { rows }) => {
           this.loadCards(rows._array, true)
           this.setState ({
@@ -160,6 +180,9 @@ export default class SurveyScreen extends React.Component {
           .catch(err => {
             reject(err)
           })
+      } else if(item.type === 'condicional') {
+        card = this.buildConditionalImageCard(item.description, answers[i])
+
       } else if(item.type === 'imagen') {
         card = this.buildImageCard(item.description, answers[i])
         
@@ -207,7 +230,7 @@ export default class SurveyScreen extends React.Component {
     global.DB.transaction(tx => {
       tx.executeSql(
         sql,
-        [this.state.activity.id],
+        [this.activity_id],
         (_, {rows}) => {
         },
         (_, err) => {
@@ -235,7 +258,7 @@ export default class SurveyScreen extends React.Component {
     var pendientes = await this.getPendientes(data, '1');
     var pendientes_norequired = await this.getPendientes(data, '0');
 
-    var mensaje = `Tareas Completas: ${completas}\nTareas Pendientes: ${pendientes_norequired}`;
+    var mensaje = `Tareas Completas: ${completas}\nTareas Pendientes Obligatorias: ${pendientes}\nTareas Pendientes: ${pendientes_norequired}`;
 
     this.setState({
       mensaje: mensaje
@@ -436,20 +459,31 @@ export default class SurveyScreen extends React.Component {
 
 
   buildImageCard(title, answer) {
+
+    // if (answer.requerido == 1)
+    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F00', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+    // else
+    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+
+    style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+
+
+
     return {
       text: title,
       info: <View>
             
-            <View style={{ flexDirection: 'row' }}>
+            {/* <View style={{ flexDirection: 'row' }}>
               <CheckBox
                 checked={answer.requerido}
                 disabled={true}
               />
               <Text style={{marginLeft: 10}}> Requerido</Text>
             </View>
-            <Text></Text>             
-            
-            <Text style={{ height: 30, width: '80%', fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 }} > {title} </Text>
+            <Text></Text>              */}
+
+            {/* <Text style={{ height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 }} > {title} </Text> */}
+            <Text style={ style_status_answer_req } > {title} </Text>
             <CardItem>
               <Left>
                 <Image style={{width: 150, height: 150}} 
@@ -478,20 +512,84 @@ export default class SurveyScreen extends React.Component {
     }
   }
 
-  buildNumberCard(title, answer) {
+  buildConditionalImageCard(title, answer) {
+
+    // if (answer.requerido == 1)
+    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F00', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+    // else
+    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+
+    style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+
+
+
     return {
       text: title,
       info: <View>
-            <View style={{ flexDirection: 'row' }}>
+            
+            <View style={{ flexDirection: 'row', textAlign: 'left', paddingLeft: 0, marginBottom: 5 }}>
+              <CheckBox style={{ backgroundColor: '#65727B', borderColor: '#65727B', borderRadius: 0 }} 
+                checked={this.state.checkbox1}
+                onPress={() => this.toggleSwitch()}
+              />
+              <Text style={{marginLeft: 10}}> Ingresa Imagen</Text>
+            </View>         
+            {this.state.checkbox1 ?               <View>
+              <Text style={ style_status_answer_req } > {title} </Text>
+              <CardItem>
+                <Left>
+                  <Image style={{width: 150, height: 150}} 
+                    source={{ uri: answer.img_val ? answer.img_val : AppConstants.PHOTO_DEFAULT }} />
+                </Left>
+                <Body></Body>
+                <Right>
+                  <Button 
+                    transparent 
+                    onPress={() => this.pickImage(true)}
+                    disabled={this.state.buttonSaveEnable}
+                  >
+                    <Icon name='camera' style={{fontSize: 26, color:'#F08377'}}/>
+                  </Button>
+                  <Button 
+                    transparent 
+                    onPress={() => {this.pickImage(false)}}
+                    disabled={this.state.buttonSaveEnable}
+                  >
+                    <Icon name='folder' style={{fontSize: 26, color:'#F08377'}}/>
+                  </Button>
+                </Right>
+              </CardItem>
+              </View> : null}
+
+
+
+            </View>
+
+    }
+  }
+
+  buildNumberCard(title, answer) {
+
+    // if (answer.requerido === 1)
+    //   style_status_answer_req = { backgroundColor: '#F00'};
+    // else
+    //   style_status_answer_req = { };
+
+    style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+
+    return {
+      text: title,
+      info: <View>
+            {/* <View style={{ flexDirection: 'row' }}>
               <CheckBox
                 checked={answer.requerido}
                 disabled={true}
               />
               <Text style={{marginLeft: 10}}> Requerido</Text>
             </View>
-            <Text></Text>
+            <Text></Text> */}
 
-            <Text> {title} </Text>
+            <Text style={style_status_answer_req}> {title} </Text>
             <Form>
                 <Item>
                   <Input 
@@ -526,19 +624,27 @@ export default class SurveyScreen extends React.Component {
 
     
   buildTextCard(title, answer) {
+
+    // if (answer.requerido === 1)
+    //   style_status_answer_req = { backgroundColor: '#F00'};
+    // else
+    //   style_status_answer_req = { };
+
+    style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+
     return {
       text: title,
       info: <View>
-            <View style={{ flexDirection: 'row' }}>
+            {/* <View style={{ flexDirection: 'row' }}>
               <CheckBox
                 checked={answer.requerido}
                 disabled={true}
               />
               <Text style={{marginLeft: 10}}> Requerido</Text>
             </View>
-            <Text></Text>
+            <Text></Text> */}
 
-            <Text> {title} </Text>
+            <Text style={style_status_answer_req}> {title} </Text>
             <Form>
               <Item>
                 <Textarea rowSpan={5} bordered placeholder="Ingrese detalle"  
@@ -553,6 +659,13 @@ export default class SurveyScreen extends React.Component {
   }
 
   buildListCard(title, answer) {
+    // if (answer.requerido === 1)
+    //   style_status_answer_req = { backgroundColor: '#F00'};
+    // else
+    //   style_status_answer_req = { };
+
+    style_status_answer_req = { backgroundColor: '#65727B'};
+
     return new Promise(async (resolve, reject) => {
       let listItems = [];
       global.DB.transaction(tx => {
@@ -582,15 +695,15 @@ export default class SurveyScreen extends React.Component {
             resolve({
               text: title,
               info: <View>
-                      <View style={{ flexDirection: 'row' }}>
+                      {/* <View style={{ flexDirection: 'row' }}>
                         <CheckBox
                           checked={answer.requerido}
                           disabled={true}
                         />
                         <Text style={{marginLeft: 10}}> Requerido</Text>
                       </View>
-                      <Text></Text>
-                      <Text> {title} </Text>
+                      <Text></Text> */}
+                      <Text style={style_status_answer_req}> {title} </Text>
                       {listItems}
                     </View>         
             })
@@ -620,36 +733,54 @@ export default class SurveyScreen extends React.Component {
     const {showAlert} = this.state;
     var isThereData = !!this.state.cardsData;
 
+    console.log('Renderizando')
+
+    // // Por defecto el fondo blanco para el estado nueva/en proceso
+    // var style_status = {backgroundColor: '#FFF'};
+    // console.info(this.activity_state);
+    // if(this.activity_state == 'close')
+    //   style_status = {backgroundColor: '#91f898'};
+    // else if(this.activity_state == 'canceled')
+    //   style_status = {backgroundColor: '#f86363'};
+    // console.info(style_status);
+
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Relevamiento" />
         <Content>
+
+
+          <Form>
+            <Item stackedLabel>
+              <Label style= {{ fontWeight: 'bold'}}>ACTIVIDAD DE RELEVAMIENTO</Label>
+              {/* <Input
+                value={ this.activity_desc }
+                disabled
+                style={{ width: '100%' }}
+              /> */}
+
+              <Text numberOfLines={2} note>
+                {this.activity_desc} - {this.contact_name}
+              </Text>
+              {/* <Input
+                value={ this.contact_name }
+                disabled
+                style={{ width: '100%' }}
+              /> */}
+              <Text numberOfLines={2} note>
+                Dirección: { this.contact_dir } - { this.contact_city }
+              </Text>
+              <Text note>
+                Estado: { this.activity_state }
+              </Text>
+              {/* <Input
+                value={  + ' - ' + this.contact_city }
+                disabled
+                style={{ width: '100%' }}
+              /> */}
+            </Item>
+          </Form>
           
-          <Card>
-            <CardItem header>                        
-              <Text>Resumen de Relevamiento</Text>
-            </CardItem>
-
-            <CardItem>                        
-              <Label style={{ width: 120 }}>Contacto</Label><Text>{global.context.contact.name}</Text>
-            </CardItem>
-            <CardItem>                        
-              <Label style={{ width: 120 }}>Domicilio</Label><Text>{global.context.contact.address}</Text>
-            </CardItem>
-            <CardItem>                        
-              <Label style={{ width: 120 }}>Ciudad</Label><Text>{global.context.contact.city}</Text>
-            </CardItem>
-            <CardItem>                        
-              <Label style={{ width: 120 }}>Detalle</Label><Text>{this.state.activity.description}</Text>
-            </CardItem>
-            <CardItem>                        
-              <Label style={{ width: 120 }}>Estado</Label><Text>{this.state.activity.state == 'close' ? 'Cerrada' : 'Nueva' }</Text>
-            </CardItem>
-            <CardItem footer>                        
-              <Text></Text>
-            </CardItem>
-          </Card>
-
           {
             !isThereData ? 
               (<Spinner />)
@@ -678,7 +809,7 @@ export default class SurveyScreen extends React.Component {
                       disabled={this.state.seg === this.state.seg_max ? true : false || this.state.buttonSaveEnable}
                       onPress={() => this.saveAnswer()}
                     >
-                      <Icon name="save" />
+                      {/* <Icon name="save" /> */}
                       <Icon name="arrow-circle-right" />
                     </Button>
                     
@@ -722,7 +853,7 @@ export default class SurveyScreen extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", marginBottom: 80, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  container: { flex: 1, justifyContent: "center", height: '100%', marginBottom: 80, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#94A6B5' },
   text: { margin: 6 },
   row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#94A6B5', height: 40 },
