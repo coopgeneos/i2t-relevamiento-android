@@ -559,7 +559,7 @@ export default class SurveyScreen extends React.Component {
         tx.executeSql(
           ` select * 
             from ListItemAct 
-            where itemActType_id = ?`,
+            where reference = (select reference from ItemActType where id = ?))`,
           [answer.itemActType_id],
           (_, { rows }) => {
             var r = rows._array;

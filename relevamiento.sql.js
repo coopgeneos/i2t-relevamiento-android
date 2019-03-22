@@ -2,6 +2,7 @@ var stms = [];
 stms.push(`
 	CREATE TABLE if not exists User (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uuid TEXT UNIQUE,
 		email TEXT NOT NULL,
 		name TEXT NOT NULL,
 		username TEXT NOT NULL,
@@ -11,8 +12,10 @@ stms.push(`
 
 stms.push(`
 	CREATE TABLE if not exists Contact (
-		id TEXT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uuid TEXT UNIQUE,
 		user_id INTEGER,
+		user_uuid TEXT,
 		name TEXT,
 		address TEXT,
 		city TEXT,
@@ -22,10 +25,11 @@ stms.push(`
 		hours TEXT,
 		latitude REAL,
 		longitude REAL,
-		FOREIGN KEY(user_id) REFERENCES User(id)
+		FOREIGN KEY(user_id) REFERENCES User(id),
+		FOREIGN KEY(user_uuid) REFERENCES User(uuid)
 	);`);
 
-stms.push(`
+/* stms.push(`
 	CREATE TABLE if not exists Schedule (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER,
@@ -42,31 +46,44 @@ stms.push(`
 		longitude REAL,
 		FOREIGN KEY(user_id) REFERENCES User(id),
 		FOREIGN KEY(contact_id) REFERENCES Contact(id)
-	);`);
+	);`); */
 
 stms.push(`
 	CREATE TABLE if not exists ActivityType (
-		id TEXT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uuid TEXT UNIQUE,
 		description TEXT NOT NULL
 	);`);
 
 stms.push(`
 	CREATE TABLE if not exists ItemActType (
-		id TEXT PRIMARY KEY,
-		activityType_id INTEGER NOT NULL,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uuid TEXT UNIQUE,
+		activityType_id INTEGER,
+		activityType_uuid TEXT,
 		type TEXT NOT NULL,
 		description TEXT NOT NULL,
 		required TEXT NOT NULL,
-		FOREIGN KEY(activityType_id) REFERENCES ActivityType(id)
+		reference TEXT,
+		FOREIGN KEY(activityType_id) REFERENCES ActivityType(id),
+		FOREIGN KEY(activityType_uuid) REFERENCES ActivityType(uuid)
 	);`);
 
-stms.push(`
+/* stms.push(`
 	CREATE TABLE if not exists ListItemAct (
 		id TEXT PRIMARY KEY,
 		itemActType_id INTEGER NOT NULL,
 		value TEXT NOT NULL,
 		FOREIGN KEY(itemActType_id) REFERENCES ItemActType(id)
-	);`);
+	);`); */
+
+	stms.push(`
+		CREATE TABLE if not exists ListItemAct (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			uuid TEXT UNIQUE,
+			reference TEXT NOT NULL,
+			value TEXT NOT NULL
+		);`);
 
 /* stms.push(`
 	CREATE TABLE if not exists Activity (
@@ -83,11 +100,14 @@ stms.push(`
 		FOREIGN KEY(contact_id) REFERENCES Contact(id)
 	);`); */
 
-	stms.push(`
+stms.push(`
 	CREATE TABLE if not exists Activity (
-		id TEXT PRIMARY KEY,
-		activityType_id TEXT NOT NULL,
-		contact_id TEXT NOT NULL,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uuid TEXT UNIQUE,
+		activityType_id INTEGER,
+		activityType_uuid TEXT,
+		contact_id INTEGER,
+		contact_uuid TEXT,
 		description TEXT NOT NULL,
 		priority INTEGER,
 		planned_date TEXT,
@@ -97,42 +117,51 @@ stms.push(`
 		notes TEXT,
 		percent REAL NOT NULL,
 		FOREIGN KEY(activityType_id) REFERENCES ActivityType(id),
-		FOREIGN KEY(contact_id) REFERENCES Contact(id)
+		FOREIGN KEY(activityType_uuid) REFERENCES ActivityType(uuid),
+		FOREIGN KEY(contact_id) REFERENCES Contact(id),
+		FOREIGN KEY(contact_uuid) REFERENCES Contact(uuid)
 	);`);
 
-stms.push(`
+/* stms.push(`
 	CREATE TABLE if not exists Contact_ActType (
 		contact_id INTEGER NOT NULL,
 		activity_id INTEGER NOT NULL,
 		PRIMARY KEY (contact_id, activity_id),
 		FOREIGN KEY(contact_id) REFERENCES Contact(id),
 		FOREIGN KEY(activity_id) REFERENCES Activity(id)
-	);`);
+	);`); */
+
 stms.push(`
 	CREATE TABLE if not exists Configuration (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		key TEXT NOT NULL,
 		value TEXT
 	);`);
+
 stms.push(`
 	CREATE TABLE if not exists Answer (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		activity_id INTEGER NOT NULL,
-		itemActType_id INTEGER NOT NULL,
+		uuid TEXT UNIQUE,
+		activity_id INTEGER,
+		activity_uuid TEXT,
+		itemActType_id INTEGER,
+		itemActType_uuid TEXT,
 		text_val TEXT,
 		img_val BLOB,
 		FOREIGN KEY(activity_id) REFERENCES Activity(id),
-		FOREIGN KEY(itemActType_id) REFERENCES ItemActType(id)
+		FOREIGN KEY(activity_uuid) REFERENCES Activity(uuid),
+		FOREIGN KEY(itemActType_id) REFERENCES ItemActType(id),
+		FOREIGN KEY(itemActType_uuid) REFERENCES ItemActType(uuid)
 	);`);
 
 stms.push(`INSERT INTO User (email, name, username, password, lastSync) 
-	values ('luis@unmail.com', 'Luis Juan', 'ljuan', 'robi123', '2019/01/16');`);
+	values ('aenrico@unmail.com', 'Luis Enrico', 'aenrico', 'robi123', '2019/01/16');`);
 
-stms.push(`INSERT INTO Contact(id, user_id, name, address, city, zipCode, phone, email, 
+/* stms.push(`INSERT INTO Contact(id, user_id, name, address, city, zipCode, phone, email, 
 	hours, latitude, longitude) 
 	values ('cc45bc93-77b3-08f4-8911-5c745233212f', 1, 'Jose Suarez (Dueño)', 'Buzon 456', 'Tandil', '7000', '2494875465', 'jsuarez@unmail.com', 
 	'8 a 16 hs', -37.3214476 , -59.1179599);`);
-/* stms.push(`INSERT INTO Contact(user_id, uuid, name, address, city, zipCode, phone, email, 
+stms.push(`INSERT INTO Contact(user_id, uuid, name, address, city, zipCode, phone, email, 
 	hours, latitude, longitude) 
 	values (1, 'werr', 'Mario Ferreyra (Dueño)', 'Paz 440', 'Tandil', '7000', '2494875465', 'mf@unmail.com', 
 	'8 a 16 hs', -37.3214476 , -59.1179599);`);
