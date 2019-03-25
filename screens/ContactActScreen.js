@@ -14,8 +14,14 @@ export default class ContactActScreen extends React.Component {
   _didFocusSubscription;
   _willBlurSubscription;
 
+  
+
   constructor(props) {
     super(props);
+
+    this.contact = this.props.navigation.getParam('contact', '');
+
+    console.log(this.contact);
 
     this.state = { index_id: '' };
 
@@ -81,61 +87,46 @@ export default class ContactActScreen extends React.Component {
   }
 
     
-  createSchedule(user_id, contact_id, activityType_id, latitude, longitude){   
+  // Ver los valores de priority se toma conveción que por ser creada a mano es prioridad baja (Low).
+
+  createActivity(activityType_id, description){
+    console.log('activityType_id: ' + activityType_id);
     let fecha = formatDate(new Date());
+    let user_id = 1;
+    console.log('Info de insert: ' + activityType_id + ' ' + 
+    this.contact.id + '-' + user_id  + '-' +  description  + '-' +  fecha  + '-' +  fecha);
     global.DB.transaction(tx => {
       tx.executeSql(
-        `INSERT INTO Schedule(user_id, contact_id, type, priority, planned_date, 
-          observations, state, exec_date, latitude, longitude)
-          values (?, ?,'Comun', 1, ?, '', 'Sin visitar', ?, ?, ?);`,
-        [user_id, contact_id, fecha, fecha, latitude, longitude],
+        `INSERT INTO Activity (activityType_id, contact_id, user_id, description, priority, 
+          planned_date, exec_date, state, cancellation, notes, percent) 
+          values (?, ?, ?, ?, 'Low', ?, ?, 'new', '0', '', 0);`,
+        [activityType_id, this.contact.id, user_id, description, fecha, fecha],
         (_, rows) => {
           let lastID = rows.insertId;
-          this.createActivity(lastID, contact_id, activityType_id); 
+          this.goToActivity(lastID, 'new', description);
         },
         (_, err) => {
           console.error(`ERROR consultando DB: ${err}`)
         }
       )
-    });     
+    });
   }
 
-  
-  createActivity(schedule_id, contact_id, activityType_id){
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        `INSERT INTO Activity (schedule_id, contact_id, activityType_id, state, percent) 
-          values (?, ?, ?, 'new', 0.0);`,
-        [schedule_id, contact_id, activityType_id],
-        (_, rows) => {
-          let lastID = rows.insertId;
-          this.Activity_get_lastID(lastID);
-        },
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      )
-    });     
-  }
 
-  Activity_get_lastID(activity_lastId){
-    let activity = {
-      'id': activity_lastId,
-      'description': this.state.tableData[this.state.index_id][0],
-    };
+  goToActivity(activity_id, activity_state, activity_desc){
+    console.log('activity_id: ' + activity_id);
+    this.props.navigation.navigate('Survey', {activity_id: activity_id, activity_state: activity_state, 
+      activity_desc: activity_desc, contact_name: this.contact.name, contact_dir: this.contact.dir, 
+      contact_city: this.contact.city, onGoBack: () => this.refresh()})
 
-    this.props.navigation.navigate('Survey',
-        {activity: activity, onGoBack: () => this.refresh()})
   }
    
   
-  go_Survey(data, index){
+  go_Survey(index){
+    let ind = index - 1;
     this.setState({index_id: index});
-    let user_id = global.context.contact.user_id;
-    let contact_id = global.context.contact.id;
-    let latitude = global.context.contact.latitude;
-    let longitude = global.context.contact.longitude;
-    this.createSchedule(user_id, contact_id, data, latitude, longitude);
+    console.log('data index ' + this.state.tableData + ' index ' + ind);
+    this.createActivity(this.state.tableData[ind][1], this.state.tableData[ind][0]);
   }
 
   render() {
@@ -188,13 +179,13 @@ export default class ContactActScreen extends React.Component {
           <Item stackedLabel>
             <Label>Contacto</Label>
             <Input
-              value={global.context.contact.name}
+              value={this.contact.name}
               disabled
               style={{ width: '100%' }}
             />
             <Label>Dirección</Label>
             <Input
-              value={ global.context.contact.address + ' - ' + global.context.contact.city }
+              value={ this.contact.address + ' - ' + this.contact.city }
               disabled
               style={{ width: '100%' }}
             />

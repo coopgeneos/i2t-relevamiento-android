@@ -68,9 +68,9 @@ export default class ContactsScreen extends React.Component {
     this.props.navigation.navigate('ContactAct')
   }
 
-  goToContactActivities(params){
-    global.context['contact'] = params.contact;
-    this.props.navigation.navigate('ContactAct', {onGoBack: () => this.refresh()})
+  goToContactActivities(contact){
+    console.log(contact);
+    this.props.navigation.navigate('ContactAct', {contact: contact.contact}, {onGoBack: () => this.refresh()})
   }
 
   refresh(){
@@ -109,7 +109,7 @@ export default class ContactsScreen extends React.Component {
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
                 <Label>Nombre</Label>
-                <Input value={this.state.name} editable={false}/>           
+                <Input style={{ height: 26 }} value={this.state.name} editable={false}/>           
               </Item>
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '30%'}}>               
                 <Label>Cercanos</Label>

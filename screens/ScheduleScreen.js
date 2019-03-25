@@ -28,7 +28,8 @@ export default class ScheduleScreen extends React.Component {
   getActivities(nears, dateFilter) {
 
     let sql = ` select a.id, a.planned_date, a.state, a.exec_date, a.percent,
-                actt.description, c.id as contact_id, c.name, c.address, c.city, c.latitude, c.longitude 
+                actt.description, c.id as contact_id, c.name, c.address, c.city, 
+                c.latitude, c.longitude 
                 from Activity a 
                 inner join ActivityType actt on (actt.id = a.activityType_id)
                 inner join Contact c on (c.id = a.contact_id)
@@ -47,6 +48,7 @@ export default class ScheduleScreen extends React.Component {
         async (_, { rows }) => {
           console.info('Ingreso a recorrer activities');
           var data = rows._array;
+          console.log(data);
           if(nears === true){
             var myLocation = await getLocationAsync();
             var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
@@ -157,7 +159,7 @@ export default class ScheduleScreen extends React.Component {
           <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '60%'}}>
-                <Label>Fecha</Label>
+                <Label style={{ marginTop: 9 }}>Fecha</Label>
                 <DatePicker
                   defaultDate={null}
                   minimumDate={new Date(2018, 1, 1)}
@@ -173,17 +175,15 @@ export default class ScheduleScreen extends React.Component {
                   onDateChange={this.setDate}
                   disabled={false}
                 />
-                <Button
-                  style={{ height: 25, backgroundColor: '#F08377', color: 'white', marginTop: 6}}
-                  onPress={() => { this.clearDate() }}
-                ><Text>Reset</Text>
+                <Button  onPress={() => {this.clearDate()}}  transparent style={styles.btnTextHeader} onPress={() => { this.clearDate() }}>
+                  <Icon name='close'  style={styles.btnIcon}/>
                 </Button>
 
               </Item>
 
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '40%'}}>
-                <Label>Cercanos</Label>
-                <CheckBox checked={this.state.nears} onPress={() => {this.toggleNears()}} />               
+                <Label style={{ marginTop: 9 }}>Cercanos</Label>
+                <CheckBox style={{ marginTop: 9 }} checked={this.state.nears} onPress={() => {this.toggleNears()}} />               
               </Item>
             
           </Form>
@@ -220,7 +220,7 @@ export default class ScheduleScreen extends React.Component {
                                 <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Activity',{activity_id: data.id, activity_desc: data.description, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
                                   <Icon name='edit' style={styles.btnIcon}/>
                                 </Button>
-                                <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Survey', {activity_id: data.id, activity_desc: data.description, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                                <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Survey', {activity_id: data.id, activity_desc: data.description, activity_state: data.state, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
                                   <Icon name={this.getIconBattery(data.percent)} style={styles.btnIcon}/>
                                 </Button>
                               </View>
@@ -277,5 +277,6 @@ const styles = StyleSheet.create({
   btn_cont: { flexDirection: 'row', width: 120, justifyContent: 'flex-start' },
 
   btnText: { width: 40 },
+  btnTextHeader: { width: 40, marginTop: 9, padding: 0, height: 26},
   btnIcon: { width: 40, marginLeft: 0 }
 });

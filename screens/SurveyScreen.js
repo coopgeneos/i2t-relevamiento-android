@@ -31,6 +31,7 @@ export default class SurveyScreen extends React.Component {
     super(props);
 
     this.activity_id = this.props.navigation.getParam('activity_id', 0);
+    console.log('activity_id: ' + this.activity_id);
     this.activity_desc = this.props.navigation.getParam('activity_desc', '');
     this.activity_state = this.props.navigation.getParam('activity_state', '');
     this.contact_name = this.props.navigation.getParam('contact_name', '');
@@ -61,12 +62,17 @@ export default class SurveyScreen extends React.Component {
   };
 
   toggleSwitch() {
-    this.setState({
-      checkbox1: !this.state.checkbox1
-    });
-    //this.state.checkbox1 = !this.state.checkbox1;
-    console.info('Estado: ' + this.state.checkbox1);
-}
+    this.state.checkbox1 = !this.state.checkbox1;
+    this.loadCards(this.state.cardsData, false)
+  }
+
+  // toggleSwitch() {
+  //   this.setState({
+  //     checkbox1: !this.state.checkbox1
+  //   });
+  //   //this.state.checkbox1 = !this.state.checkbox1;
+  //   console.info('Estado: ' + this.state.checkbox1);
+  // }
 
   componentDidMount() {
     
@@ -93,6 +99,10 @@ export default class SurveyScreen extends React.Component {
           --group by act.id, iat.id `,
         [this.activity_id],
         (_, { rows }) => {
+          console.log(rows);
+          console.log(rows.length);
+          
+          console.log('row: ' + rows._array);
           this.loadCards(rows._array, true)
           this.setState ({
             cardsData: rows._array,
@@ -118,6 +128,8 @@ export default class SurveyScreen extends React.Component {
   };
 
   async loadCards(data, firstTime) {
+    console.log(data);
+    console.log(data[0]);
     var cards = [];
     var answers = this.state.answers;
     
@@ -258,7 +270,8 @@ export default class SurveyScreen extends React.Component {
     var pendientes = await this.getPendientes(data, '1');
     var pendientes_norequired = await this.getPendientes(data, '0');
 
-    var mensaje = `Tareas Completas: ${completas}\nTareas Pendientes Obligatorias: ${pendientes}\nTareas Pendientes: ${pendientes_norequired}`;
+
+    var mensaje = `Consignas Completas: ${completas}\nConsignas Pendientes Obligatorias: ${pendientes}\nConsignas Pendientes: ${pendientes_norequired}`;
 
     this.setState({
       mensaje: mensaje
