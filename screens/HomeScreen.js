@@ -10,7 +10,7 @@ import { Permissions } from 'expo';
 export default class HomeScreen extends React.Component { 
   constructor() {
     super();
-    global.context = {}
+    global.context = {};
     this.state = {
       user: '',
       lastSync : '',
@@ -21,7 +21,7 @@ export default class HomeScreen extends React.Component {
 
   // Metodo donde llamar a los WS iniciales
   componentDidMount() {
-
+    
     /* Consulto permisos de localización para activar los botones */
     getLocationAsync()
       .then(loc => {
@@ -56,6 +56,7 @@ export default class HomeScreen extends React.Component {
   }
 
   render() {
+
     let formItem;
     if(this.state.user == ''){
       formItem = <Spinner />
@@ -85,7 +86,7 @@ export default class HomeScreen extends React.Component {
                       <Left>
                         <Button transparent textStyle={{color: '#87838B'}}>
                           <Icon name="retweet" />
-                          <Text style={{fontSize: 12}}>Ultima Sincronización {global.context.user.lastSync}</Text>
+                          <Text style={{fontSize: 12}}>Ultima Sincronización {this.state.user.lastSync}</Text>
                         </Button>
                       </Left>
                     </CardItem>

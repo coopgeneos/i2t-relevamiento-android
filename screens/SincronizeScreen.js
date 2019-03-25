@@ -96,17 +96,18 @@ export default class SincronizeScreen extends React.Component {
       this.url+contactURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
 
-    //console.log(ctsws);
-
     return new Promise(function(resolve, reject) {         
       global.DB.transaction(tx => {
         for(i=0; i<ctsws.length; i++){
          tx.executeSql(
-            ` insert or replace into Contact(uuid, user_id, name, address, city, zipCode, phone, email, latitude, longitude)  
-              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [ctsws[i].id_contacto, global.context.user.id, ctsws[i].nombre, ctsws[i].primary_address_street, 
-            ctsws[i].primary_address_city, ctsws[i].primary_address_postalcode, ctsws[i].phone_mobile, 
-            ctsws[i].email_c, ctsws[i].jjwg_maps_lat_c, ctsws[i].jjwg_maps_lng_c],
+            ` insert or replace into Contact(uuid, user_id, name, address, city, zipCode, phone, email, latitude, longitude, updated)  
+              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [ ctsws[i].id_contacto, global.context.user.id, ctsws[i].nombre, 
+              ctsws[i].primary_address_street, ctsws[i].primary_address_city, 
+              ctsws[i].primary_address_postalcode, ctsws[i].phone_mobile, 
+              ctsws[i].email_c, ctsws[i].jjwg_maps_lat_c, ctsws[i].jjwg_maps_lng_c,
+              new Date().toString()
+            ],
             (_, rows) => {},
             (_, err) => {
             console.error(`ERROR en una de las sentencias de sincronizacion de contactos ${err}`)
@@ -130,15 +131,13 @@ export default class SincronizeScreen extends React.Component {
     var acts = await this.getFromWS(
       this.url+activityTypeURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
-    
-    //console.log(acts);
-      
+          
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
         for(i=0; i<acts.length; i++){
           tx.executeSql(
-            ` insert or replace into ActivityType (uuid, description) values (?, ?)`,
-            [acts[i].id_actividad, acts[i].name],
+            ` insert or replace into ActivityType (uuid, description, updated) values (?, ?, ?)`,
+            [acts[i].id_actividad, acts[i].name, new Date().toString()],
             (_, rows) => {},
             (_, err) => {
             console.error(`ERROR en una de las sentencias de sincronizacion de ActivityType ${err}`)
@@ -163,20 +162,21 @@ export default class SincronizeScreen extends React.Component {
       this.url+itemActTypeURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
 
-    //console.log(items);
-
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
           for(i=0; i<items.length; i++){
             tx.executeSql(
-              ` insert or replace into ItemActType (uuid, activityType_uuid, description, type, required, reference) 
-                values (?, ?, ?, ?, ?, ?);`,
+              ` insert or replace into ItemActType (uuid, activityType_uuid, description, type, required, reference, position, state, updated) 
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
               [ items[i].id_consigna, 
                 items[i].id_actividad, 
                 items[i].name, 
                 items[i].con_tipodato == 'rel_simple' ? 'lista' : items[i].con_tipodato, 
                 items[i].con_requerido,
-                items[i].con_tablaref
+                items[i].con_tablaref,
+                items[i].rca_orden,
+                items[i].con_estado,
+                new Date().toString()
               ],
               (_, rows) => {},
               (_, err) => {
@@ -202,17 +202,17 @@ export default class SincronizeScreen extends React.Component {
       this.url+listItemActURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
 
-    //console.log(items);
-
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
           for(i=0; i<items.length; i++){
             let listValues = items[i].ref_valor.split(",");
             for(j=0; j<listValues.length; j++) {
               tx.executeSql(
-                ` insert or replace into ListItemAct (uuid, reference, value)  
-                  values (?, ?, ?);`,
-                [items[i].id_referencias, items[i].ref_tablaref, listValues[j]],
+                ` insert or replace into ListItemAct (uuid, reference, value, account_id, updated)  
+                  values (?, ?, ?, ?, ?);`,
+                [ items[i].id_referencias, items[i].ref_tablaref, listValues[j], 
+                  items[i].account_id_c, new Date().toString()
+                ],
                 (_, rows) => {},
                 (_, err) => {
                   console.error(`ERROR en una de las sentencias de sincronizacion de ItemActType ${err}`)
@@ -237,15 +237,13 @@ export default class SincronizeScreen extends React.Component {
     var items = await this.getFromWS(
       this.url+activityURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
-
-    //console.log(items);
     
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
           for(i=0; i<items.length; i++){
             tx.executeSql(
-              ` insert or replace into Activity (uuid, contact_uuid, description, activityType_uuid, state, percent, priority, planned_date, exec_date, contact_id, activityType_id) 
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, (select c.id from Contact c where c.uuid = ?), (select a.id from ActivityType a where a.uuid = ?));`,
+              ` insert or replace into Activity (uuid, contact_uuid, description, activityType_uuid, state, percent, priority, planned_date, exec_date, contact_id, activityType_id, updated) 
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, (select c.id from Contact c where c.uuid = ?), (select a.id from ActivityType a where a.uuid = ?), ?);`,
               [ items[i].id_tarea, 
                 items[i].contact_id, 
                 items[i].description, 
@@ -256,7 +254,8 @@ export default class SincronizeScreen extends React.Component {
                 items[i].planificacion, 
                 items[i].ejecucion,
                 items[i].contact_id,
-                items[i].rel_actividades_id_c
+                items[i].rel_actividades_id_c,
+                new Date().toString()
               ],
               (_, rows) => {},
               (_, err) => {
@@ -304,7 +303,7 @@ export default class SincronizeScreen extends React.Component {
   }
 
   showDB () {
-    let tables = ["Contact", "Activity", "ActivityType"];
+    let tables = ["Contact", "Activity", "ActivityType", "User"];
     tables.forEach(async table => {
       let data = await executeSQL(`select * from ${table}`)
         .catch(err => {
@@ -324,9 +323,9 @@ export default class SincronizeScreen extends React.Component {
     from = from.replace(/\//g, "-");
     try {
       await this.syncContacts(from).then(msg => this.state.modalMessagge = msg + "\n");
-      await this.syncActivityType(from).then(msg => this.state.modalMessagge += msg + "\n");
-      await this.syncItemActType(from).then(msg => this.state.modalMessagge += msg + "\n");
-      await this.syncListItemAct(from).then(msg => this.state.modalMessagge += msg + "\n");
+      await this.syncActivityType(from).then(/* msg => this.state.modalMessagge += msg + "\n" */);
+      await this.syncItemActType(from).then(/* msg => this.state.modalMessagge += msg + "\n" */);
+      await this.syncListItemAct(from).then(/* msg => this.state.modalMessagge += msg + "\n" */);
       await this.syncActivity(from).then(msg => this.state.modalMessagge += msg + "\n");
       await this.fixToTest(); //BORRAR ESTA LINEA CUANDO EL WS FUNCIONE BIEN!!!!
     } catch(err) {
@@ -338,13 +337,14 @@ export default class SincronizeScreen extends React.Component {
     executeSQL(
       'update user set lastSync = ?',
       [nld]
-      ).catch(err => {
+      )
+      .then(() => {
+        this.showDB ()
+      }).catch(err => {
         console.error(err);
       })
     global.context.user.lastSync = nld;
     this.setState({ modalMessagge: this.state.modalMessagge });
-    
-    this.showDB ()
   }
 
   setModalVisible(visible) {
