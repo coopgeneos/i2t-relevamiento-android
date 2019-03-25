@@ -14,7 +14,7 @@ import moment from 'moment';
 export default class HomeScreen extends React.Component { 
   constructor() {
     super();
-    global.context = {}
+    global.context = {};
     this.state = {
       user: '',
       lastSync : '',
@@ -118,6 +118,7 @@ export default class HomeScreen extends React.Component {
   }
 
   render() {
+
     let formItem;
     if(this.state.user == ''){
       formItem = <Spinner />
@@ -137,7 +138,7 @@ export default class HomeScreen extends React.Component {
                         <Icon active name="bookmark" style={{ color: '#65727B'}} />
                         <Body>
                           <Text>
-                          Pendientes de Sincronización 
+                            Pendientes de Sincronización 
                           </Text>
                           <Text note>[{this.state.user.pendingSyncs}] Relevamientos</Text>
                         </Body>
@@ -189,26 +190,45 @@ export default class HomeScreen extends React.Component {
         <Grid style={{ alignItems: 'center', backgroundColor: "#65727B" }}>
           <Row  style={{ height: 120 }}>
             <Col>
-            <Button transparent onPress={() => this.props.navigation.navigate('Schedule')} block style={{flex: 1}}>
+            <Button transparent block style={{flex: 1}} 
+              onPress={() =>  
+                this.state.locationAllowed ? 
+                this.props.navigation.navigate('Schedule') : 
+                alert("Sin permisos")}
+            >
               <Icon name='list-alt' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
-            <Button transparent onPress={() => this.props.navigation.navigate('Contacts', {user: this.state.user})} block style={{flex: 1}}>
+            <Button transparent block style={{flex: 1}} 
+              onPress={() =>  
+                this.state.locationAllowed ? 
+                this.props.navigation.navigate('Contacts', {user: this.state.user}) : 
+                alert("Sin permisos")}
+            >
               <Icon name='address-book' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
           </Row>
           <Row  style={{ height: 120 }}>
             <Col>
-            <Button transparent onPress={() => this.props.navigation.navigate('Configuration')} block style={{flex: 1}}>
+            <Button transparent block style={{flex: 1}} 
+              onPress={() =>  
+                this.state.locationAllowed ? 
+                this.props.navigation.navigate('Configuration') : 
+                alert("Sin permisos")}
+            >
               <Icon name='cog' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
-            <Button transparent onPress={() => this.props.navigation.navigate('Sincronize')} block style={{flex: 1}}>
+            <Button transparent block style={{flex: 1}} 
+              onPress={() =>  
+                this.state.locationAllowed ? 
+                this.props.navigation.navigate('Sincronize') : 
+                alert("Sin permisos")}
+            >
               <Icon name='retweet' style={{fontSize: 60, color: 'white'}}/>
-
             </Button>
             </Col>
           </Row>

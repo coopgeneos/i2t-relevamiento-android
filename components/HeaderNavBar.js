@@ -3,6 +3,8 @@ import React from 'react';
 import { Header, Left, Title, Body, Right, Text, Button, Icon, View } from 'native-base';
 import { Image } from 'react-native';
 
+import { executeSQL } from '../utilities/utils'
+
 
 export default class HeaderNavBar extends React.Component {
   constructor(props) {
@@ -15,6 +17,12 @@ export default class HeaderNavBar extends React.Component {
     }
     this.props.navigation.goBack()
   }
+
+  goHome(){
+    /* Envío como parámetro un objeto vacío, para que al cargar la página llame al render() */
+    this.props.navigation.navigate('Home', {})
+  }
+  
   
   render() {
     var map = this.props.map;
@@ -36,7 +44,7 @@ export default class HeaderNavBar extends React.Component {
             <Button transparent onPress={() => this.goBack()} style={{fontSize: 50}}>
               <Icon name='angle-double-left'/>
             </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Home')}  style={{fontSize: 50}}>
+            <Button transparent onPress={() => this.goHome()}  style={{fontSize: 50}}>
               <Icon name='home'/>
             </Button>
             {map}
