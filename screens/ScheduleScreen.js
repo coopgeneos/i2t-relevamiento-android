@@ -5,6 +5,7 @@ import { getLocationAsync, isClose, getConfiguration, formatDate, formatDatePrin
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 import {StyleSheet, TouchableOpacity, View} from "react-native";
+import AppConstans from '../constants/constants';
 
 const img_sample = require("../assets/icon.png");
 
@@ -22,21 +23,21 @@ export default class ScheduleScreen extends React.Component {
 
   componentDidMount() {
     this.getActivities(null, null);
-
   }
 
   getActivities(nears, dateFilter) {
-
+    
     let sql = ` select a.id, a.planned_date, a.state, a.exec_date, a.percent,
                 actt.description, c.id as contact_id, c.name, c.address, c.city, 
                 c.latitude, c.longitude 
                 from Activity a 
                 inner join ActivityType actt on (actt.id = a.activityType_id)
                 inner join Contact c on (c.id = a.contact_id)
-                where a.state != 'complete'`;
+                where a.state != '${AppConstans.ACTIVITY_COMPLETED}'`;
 
     if(dateFilter) {
-      sql += ` and planned_date = '${formatDate(dateFilter)}'`
+      let endDate = new Date(dateFilter.getTime()+86399000); //le sumo 23 hs 59 mins y 59 segs
+      sql += ` and planned_date between '${dateFilter}' and '${endDate}'`
     }
 
     sql += ` order by planned_date asc`;
@@ -46,9 +47,7 @@ export default class ScheduleScreen extends React.Component {
         sql,
         [],
         async (_, { rows }) => {
-          console.info('Ingreso a recorrer activities');
           var data = rows._array;
-          console.log(data);
           if(nears === true){
             var myLocation = await getLocationAsync();
             var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
@@ -82,45 +81,6 @@ export default class ScheduleScreen extends React.Component {
     if(percent <= 1) return 'battery-4';
   }
 
-  getEvents(nears, dateFilter) {
-    let sql = ` select a.id as activity_id, a.description as description, c.*     
-                from Activity a 
-                inner join Contact c on (c.id = a.contact_id)
-                where a.state != 'complete'`;
-    if(dateFilter) {
-      sql += ` and a.planned_date = '${formatDate(dateFilter)}'`
-    }
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        sql,
-        [],
-        async (_, { rows }) => {
-          var data = rows._array;
-          if(nears === true){
-            var myLocation = await getLocationAsync();
-            var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
-            var prox_range = await getConfiguration('PROXIMITY_RANGE');
-            data = rows._array.filter(item => {
-              var evLoc = {lat: item.latitude, lng: item.longitude};
-              return isClose(myLoc, evLoc, prox_range)
-            })
-          }
-          var markers = [];       
-          data.forEach(item => {
-            markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
-          });
-          this.setState ({
-            events: data,
-            markers: markers
-          });
-        },
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      )
-    });
-  }
-
   refresh() {
     this.getActivities(null,null);
   }
@@ -136,21 +96,47 @@ export default class ScheduleScreen extends React.Component {
   }
 
   clearDate(){
-    this.getActivities(this.state.nears, null);
     this.state.chosenDate = null;
+    this.getActivities(this.state.nears, null);   
   }
 
-  goToActivities(params){
-    //global.context['event_id'] = params.event_id;
-    global.context['activity_id'] = params.activity_id;
-    global.context['contact'] = params.contact; 
-    this.props.navigation.navigate('Activities', {onGoBack: () => this.refresh()})
+  getGoToParams(row){
+    let activity = {
+      id: row.id,
+      planned_date: row.planned_date,
+      state: row.state,
+      exec_date: row.exec_date,
+      percent: row.percent, 
+      description: row.description, 
+    };
+    let contact = {
+      id: row.contact_id,
+      name: row.name,
+      address: row.address,
+      city: row.city,
+      latitude: row.latitude,
+      longitude: row.longitude
+    }
+    return {activity: activity, contact: contact}
+  }
+
+  goToActivities(row){
+    let params = this.getGoToParams(row);
+    this.props.navigation.navigate('Activities',{contact: params.contact, onGoBack: () => this.refresh()})
+  }
+
+  goToActivity(row){
+    let params = this.getGoToParams(row);
+    this.props.navigation.navigate('Activity',{activity: params.activity, contact: params.contact, onGoBack: () => this.refresh()})
+  }
+
+  goToSurvey(row){
+    let params = this.getGoToParams(row);
+    this.props.navigation.navigate('Survey',{activity: params.activity, contact: params.contact, onGoBack: () => this.refresh()})
   }
   
   render() {
     var areThereEvents = this.state.events != null;
-
-    
 
     return (
       <Container>
@@ -196,9 +182,6 @@ export default class ScheduleScreen extends React.Component {
                   dataArray={this.state.events}
                   renderRow={data =>
                     <ListItem thumbnail>
-                      {/* <Left>
-                        <Thumbnail square source={img_sample} />
-                      </Left> */}
                       <Body>
                         <Text>
                           {data.description} - {data.name}
@@ -207,50 +190,50 @@ export default class ScheduleScreen extends React.Component {
                           {data.address} - {data.city}
                         </Text>
                         <Text numberOfLines={1} note>
-                          Fecha: {formatDatePrint(data.planned_date)}
+                          Fecha: {formatDatePrint(new Date(data.planned_date))}
                         </Text>
                       </Body>
                       <Right>
-                        { data.state == 'new' && 
+                        { data.state == AppConstans.ACTIVITY_NEW && 
                             <TouchableOpacity>
                               <View style={styles.btn_cont}>
-                                <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Activities', {contact_id: data.contact_id, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                                <Button transparent style={styles.btnText} onPress={() => this.goToActivities(data)}>
                                   <Icon name='user' style={styles.btnIcon}/>
                                 </Button>
-                                <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Activity',{activity_id: data.id, activity_desc: data.description, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                                <Button transparent style={styles.btnText} onPress={() => this.goToActivity(data)}>
                                   <Icon name='edit' style={styles.btnIcon}/>
                                 </Button>
-                                <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Survey', {activity_id: data.id, activity_desc: data.description, activity_state: data.state, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                                <Button transparent style={styles.btnText} onPress={() => this.goToSurvey(data)}>
                                   <Icon name={this.getIconBattery(data.percent)} style={styles.btnIcon}/>
                                 </Button>
                               </View>
                             </TouchableOpacity>
                         }
-                        { data.state == 'close' && 
+                        { data.state == AppConstans.ACTIVITY_COMPLETED && 
                             <TouchableOpacity>
                             <View style={styles.btn_cont}>
-                              <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Activities', {contact_id: data.contact_id, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                              <Button transparent style={styles.btnText} onPress={() => this.goToActivities(data)}>
                                   <Icon name='user' style={styles.btnIcon}/>
                                 </Button>
                               <Button transparent style={styles.btnText}>
                                 <Icon name='check' style={styles.btnIcon}/>
                               </Button>
-                              <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Survey', {activity_id: data.id, activity_state: data.state, activity_desc: data.description, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                              <Button transparent style={styles.btnText} onPress={() => this.goToSurvey(data)}>
                               <Icon name='search' style={styles.btnIcon}/>
                               </Button>
                             </View>
                             </TouchableOpacity>
                         }
-                        { data.state == 'canceled' && 
+                        { data.state == AppConstans.ACTIVITY_CANCELED && 
                             <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
                             <View style={styles.btn_cont}>
-                              <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Activities', {contact_id: data.contact_id, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                              <Button transparent style={styles.btnText} onPress={() => this.goToActivities(data)}>
                                   <Icon name='user' style={styles.btnIcon}/>
                                 </Button>
                               <Button transparent style={styles.btnText}>
                                 <Icon name='close' style={styles.btnIcon}/>
                               </Button>
-                              <Button transparent style={styles.btnText} onPress={() => this.props.navigation.navigate('Survey', {activity_id: data.id, activity_desc: data.description, contact_name: data.name, contact_dir: data.address, contact_city: data.city, onGoBack: () => this.refresh()})}>
+                              <Button transparent style={styles.btnText} onPress={() => this.goToActivity(data)}>
                                 <Icon name='search' style={styles.btnIcon}/>
                               </Button>
                             </View>

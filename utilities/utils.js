@@ -7,7 +7,6 @@ export function formatDate(date) {
   if(typeof(date.getFullYear) === 'function'){
     var month = date.getMonth() < 10 ? '0'+(date.getMonth()+1) : (date.getMonth()+1).toString();
     var day = date.getDate() < 10 ? '0'+date.getDate() : date.getDate().toString();
-    //console.log(`${date.getFullYear()}/${month}/${day}`);
     return `${date.getFullYear()}/${month}/${day}`;
   }
   return 'Error: is not a Date'
@@ -15,6 +14,10 @@ export function formatDate(date) {
 
 export function formatDatePrint(date_format) {
   return moment(new Date(date_format)).format('DD-MM-YYYY');
+}
+
+export function formatDateTo(date_format, format) {
+  return moment(new Date(date_format)).format(format);
 }
 
 export function formatFolderMap(provider, x, y, z) {
@@ -189,5 +192,20 @@ export async function getConfiguration(key){
         )
       });
     // }
+  })
+}
+
+export async function showDB (tables) {
+  if(typeof tables != "object")
+    return
+  tables.forEach(async table => {
+    let data = await executeSQL(`select * from ${table}`)
+      .catch(err => {
+        console.log(err)
+      })
+    console.log(`============================================`)
+    console.log(`${table}`)
+    console.log(`============================================`)
+    console.log(data)
   })
 }

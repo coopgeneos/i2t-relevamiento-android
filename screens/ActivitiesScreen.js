@@ -3,6 +3,8 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right } from 'native-base';
 import { StyleSheet, View, TouchableOpacity, Alert, BackHandler, ToastAndroid} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
+import { formatDatePrint } from '../utilities/utils';
+import AppConstans from '../constants/constants';
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -11,12 +13,7 @@ export default class ActivitiesScreen extends React.Component {
   constructor(props) {
     super(props);
 
-    this.contact_id = this.props.navigation.getParam('contact_id', 'SIN ACTIVIDAD');
-    this.contact_name = this.props.navigation.getParam('contact_name', 'NN');
-    this.contact_dir = this.props.navigation.getParam('contact_dir', 'NN');
-    this.contact_city = this.props.navigation.getParam('contact_city', 'NN');
-
-    console.info(this.contact_id);
+    this.contact = this.props.navigation.getParam('contact', null);
 
     this.state = {
       dataSource: [],
@@ -41,19 +38,21 @@ export default class ActivitiesScreen extends React.Component {
         ` select a.*, actt.description 
           from Activity a 
           inner join ActivityType actt on (actt.id = a.activityType_id) 
-          where a.contact_id = ? and a.state != 'close' and a.state != 'canceled'`,
-        [this.contact_id],
+          where a.contact_id = ? 
+          -- and a.state != 'close' and a.state != 'canceled'
+        `,
+        [this.contact.id],
         (_, { rows }) => {
           var resp = rows._array;
           var data = [];
           var visible_button = true;
-          resp.forEach(item => {
-            var aux = [item.description, item.planned_date, 'A'];
+          for(i=0; i<resp.length; i++) {
+            var aux = [resp[i].description, formatDatePrint(new Date(resp[i].planned_date)), 'A'];
             data.push(aux)
-            if (item.state == 'new'){
+            if (resp[i].state == AppConstans.ACTIVITY_NEW){
               visible_button = false;
             }
-          });
+          }
           this.setState ({
             dataSource: resp,
             tableData: data,
@@ -73,32 +72,8 @@ export default class ActivitiesScreen extends React.Component {
   };
 
   setStateComplet(){
-    this.saveComplet();
     this.goBack();
   }
-
-  async saveComplet() {     
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        ` update schedule set state = 'complete' where id = ?`,
-        [global.context.event_id],
-        (_, { rows }) => {},
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      );
-    });
-
-    ToastAndroid.showWithGravityAndOffset(
-      'Los datos se actualizaron correctamente.',
-      ToastAndroid.SHORT,
-      ToastAndroid.BOTTOM,
-      25,
-      50,
-    );
-    
-  }
-
 
   getIconBattery(index){
     var percent = this.state.dataSource[index].percent;
@@ -114,28 +89,35 @@ export default class ActivitiesScreen extends React.Component {
   }
 
   goToSurvey(activity){
-    if(activity.state !== 'canceled')
+    if(activity.state !== AppConstans.ACTIVITY_CANCELED) {
       this.props.navigation.navigate('Survey',
-        {activity: activity, onGoBack: () => this.refresh()})
+        {activity: activity, contact: this.contact, onGoBack: () => this.refresh()})
+    }
   }
 
+  goToActivity(activity){  
+    this.props.navigation.navigate('Activity',
+      {activity: activity, contact: this.contact, onGoBack: () => this.refresh()})
+    
+  }
 
   goBack(){
     this.props.navigation.state.params.onGoBack();
     this.props.navigation.goBack()
   }
 
-  
   render() {
     let table;
     const state = this.state;
 
     const element = (data, index) => {
-      if(this.state.dataSource[index].state === 'new') {
+      if( this.state.dataSource[index].state === AppConstans.ACTIVITY_NEW ||
+          this.state.dataSource[index].state === AppConstans.ACTIVITY_IN_PROGRESS ||
+          this.state.dataSource[index].state === AppConstans.ACTIVITY_PENDING) {
         return (
           <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
             <View style={styles.btn_cont}>
-              <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
+              <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
                 <Icon name='edit'/>
               </Button>
               <Button transparent>
@@ -144,14 +126,14 @@ export default class ActivitiesScreen extends React.Component {
             </View>
           </TouchableOpacity>
         )
-      } if(this.state.dataSource[index].state === 'close') {
+      } if(this.state.dataSource[index].state === AppConstans.ACTIVITY_COMPLETED) {
         return (
           <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
             <View style={styles.btn_cont}>
               <Button transparent>
                 <Icon name='check'/>
               </Button>
-              <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
+              <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
               <Icon name='search'/>
               </Button>
             </View>
@@ -163,7 +145,7 @@ export default class ActivitiesScreen extends React.Component {
             <Button transparent>
               <Icon name='close'/>
             </Button>
-            <Button transparent onPress={() => this.props.navigation.navigate('Activity',{activity: this.state.dataSource[index], onGoBack: () => this.refresh()})}>
+            <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
             <Icon name='search'/>
             </Button>
           </View>
@@ -194,14 +176,14 @@ export default class ActivitiesScreen extends React.Component {
                   }
                 </Table>
 
-                <View style={styles.modalContent}  >                  
+                {/*<View style={styles.modalContent}  >                  
                   <Button block style={{ marginTop: 10, marginBottom: 10 }}
                     onPress={()=>{this.setStateComplet()}}
                     disabled={!this.state.visible_button}
                     >
                     <Text>Cerrar</Text>
                   </Button>
-                </View>
+                </View>*/}
 
               </View>
     }
@@ -216,13 +198,13 @@ export default class ActivitiesScreen extends React.Component {
             <Item stackedLabel>
               <Label>Contacto</Label>
               <Input
-                value={this.contact_name}
+                value={this.contact.name}
                 disabled
                 style={{ width: '100%' }}
               />
               <Label>Dirección</Label>
               <Input
-                value={ this.contact_dir + ' - ' + this.contact_city }
+                value={ this.contact.address + ' - ' + this.contact.city }
                 disabled
                 style={{ width: '100%' }}
               />

@@ -9,8 +9,6 @@ import { TouchableHighlight, Modal, View, PermissionsAndroid, Platform } from 'r
 
 import moment from 'moment';
 
-//const DB = Expo.SQLite.openDatabase('relevamiento.db');
-
 export default class HomeScreen extends React.Component { 
   constructor() {
     super();
@@ -20,8 +18,7 @@ export default class HomeScreen extends React.Component {
       lastSync : '',
       pendingSyncs : '',
       modalVisible: false,
-      permission: '',
-      locationAllowed: false
+      permission: ''
     };    
   }
 
@@ -30,60 +27,24 @@ export default class HomeScreen extends React.Component {
   }
 
   checkPermissionGeolocation() {
-
     getLocationAsync()
       .then(loc => {
-
-        console.info("Location Paso 1 OK");
-
-        checkPermission = () => {
+          checkPermission = () => {
           navigator.geolocation.getCurrentPosition(
             () => this.setState({permission: 'GRANTED'}),
             () => this.setState({permission: 'DENIED'})
           );
         }
-        console.info('Estado Geolocalización: ' + checkPermission);
         if(this.state.permission === 'DENIED') {
-          console.info("Location Paso 2 KO");
           this.setModalVisible(true);
-    
         } else {
-          console.info("Location Paso 2 OK");
           this.setModalVisible(false);
-    
         }
-
       })
       .catch(err => {
-        console.info("Location KO");
+        console.info("Location active");
         this.setModalVisible(true);
       })
-
-
-
-    // async function requestLocationPermission() {
-    //   try {
-    //     const granted = await PermissionsAndroid.request(
-    //       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,{
-    //         'title': 'Location Access Required',
-    //         'message': 'This App needs to Access your location'
-    //       }
-    //     )
-    //     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-    //       //To Check, If Permission is granted
-    //       this.setModalVisible(false);
-    //     } else {
-    //       this.setModalVisible(true);
-    //     }
-    //   } catch (err) {
-    //     alert("err",err);
-    //     console.warn(err)
-    //   }
-    // }
-
-    // requestLocationPermission();
-
-
   }
 
   // Metodo donde llamar a los WS iniciales
@@ -91,17 +52,16 @@ export default class HomeScreen extends React.Component {
 
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select u.*, count(a.id) as pendingSyncs 
-          from user u
-          inner join activity a on (a.user_id =u.id)
-          where a.state != 'close'`,
+        ` select u.* , 
+            (SELECT count(a.id) 
+              from activity a 
+              where a.state != 'Completa'
+            ) as pendingSyncs 
+          from User u;`,
         [],
         (_, { rows }) => {
           //Me quedo con el primer usuario que encuentro para probar
           var loggedUser = rows._array[0];
-          // loggedUser.lastSync = new Date(loggedUser.lastSync);
-          console.info(loggedUser.lastSync);
-          loggedUser.lastSync = formatDatePrint(loggedUser.lastSync);
           global.context['user'] = loggedUser;
           this.setState ({
             user: loggedUser
@@ -148,7 +108,7 @@ export default class HomeScreen extends React.Component {
                       <Left>
                         <Button transparent textStyle={{color: '#87838B'}}>
                           <Icon name="retweet" />
-                          <Text style={{fontSize: 12}}>Ultima Sincronización {this.state.user.lastSync}</Text>
+                          <Text style={{fontSize: 12}}>Ultima Sincronización {formatDatePrint(this.state.user.lastSync)}</Text>
                         </Button>
                       </Left>
                     </CardItem>
@@ -191,20 +151,14 @@ export default class HomeScreen extends React.Component {
           <Row  style={{ height: 120 }}>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() =>  
-                this.state.locationAllowed ? 
-                this.props.navigation.navigate('Schedule') : 
-                alert("Sin permisos")}
+              onPress={() => this.props.navigation.navigate('Schedule')}
             >
               <Icon name='list-alt' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() =>  
-                this.state.locationAllowed ? 
-                this.props.navigation.navigate('Contacts', {user: this.state.user}) : 
-                alert("Sin permisos")}
+              onPress={() => this.props.navigation.navigate('Contacts', {user: this.state.user})}
             >
               <Icon name='address-book' style={{fontSize: 60, color: 'white'}}/>
             </Button>
@@ -213,20 +167,14 @@ export default class HomeScreen extends React.Component {
           <Row  style={{ height: 120 }}>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() =>  
-                this.state.locationAllowed ? 
-                this.props.navigation.navigate('Configuration') : 
-                alert("Sin permisos")}
+              onPress={() => this.props.navigation.navigate('Configuration')}
             >
               <Icon name='cog' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() =>  
-                this.state.locationAllowed ? 
-                this.props.navigation.navigate('Sincronize') : 
-                alert("Sin permisos")}
+              onPress={() => this.props.navigation.navigate('Sincronize')}
             >
               <Icon name='retweet' style={{fontSize: 60, color: 'white'}}/>
             </Button>

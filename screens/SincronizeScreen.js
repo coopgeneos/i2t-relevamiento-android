@@ -1,11 +1,8 @@
 import React from 'react';
-//import { Button } from 'react-native-elements';
-import { Container, Header, Content, Footer, FooterTab, Text, 
-  Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
-  Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
-import { getConfiguration, formatDate, executeSQL } from '../utilities/utils'
+import { Container, Content, Text, Button } from 'native-base';
+import { getConfiguration, formatDateTo, executeSQL } from '../utilities/utils'
 
-import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView, Modal} from 'react-native';
+import { StyleSheet, Alert, Modal} from 'react-native';
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -45,12 +42,14 @@ export default class SincronizeScreen extends React.Component {
     this.password = this.password == null ? await getConfiguration('PASS_BACKEND') : this.password;
   }
 
+  /*
+  curl -X POST http://tstvar.i2tsa.com.ar:3006/login/ -H "Content-Type: application/json" -H "Accept: application/json" -d '{"usuario":"aenrico","pass":"1q2w"}'
+  */
   async getToken() {
     return new Promise(async (resolve, reject) => {
       if(this.state.token){
         resolve(this.state.token);
       }
-      await this.getParams();
       try {
         let response = await fetch(`${this.url}login/`, {
           method: 'POST',
@@ -61,7 +60,6 @@ export default class SincronizeScreen extends React.Component {
           body: JSON.stringify({ usuario: this.username, pass: this.password}),
         });      
         let responseJson = await response.json();
-        //this.token = responseJson.dataset[0].jwt;
         this.setState({token: responseJson.dataset[0].jwt});
         resolve(this.state.token);
       } catch (error) {
@@ -82,7 +80,7 @@ export default class SincronizeScreen extends React.Component {
           'x-access-token': token,
         },
         body: JSON.stringify(body),
-      });      
+      });  
       let responseJson = await response.json();
       return responseJson.dataset;
     } catch (error) {
@@ -90,11 +88,15 @@ export default class SincronizeScreen extends React.Component {
     }
   }
 
+  /*
+  curl -X POST http://tstvar.i2tsa.com.ar:3006/api/proc/ExtraeContactos -H "Content-Type: application/json" -H "Accept: application/json" -H "x-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA1cDQyaDJyOWo4bHJ1azJwcTM0Mjk1NWs2IiwiaWF0IjoxNTUzNjAzMTY3LCJleHAiOjE1NTM2MjExNjd9.aLCl-aOrjSAPyGEaYl57PxsPItVwpO_sCr7WYYErBsY" -d '{"usuario":"aenrico","FechaDesde":"2019-01-16","Otros":""}'
+  */
   async syncContacts(from){
-    await this.getParams();
     var ctsws = await this.getFromWS(
       this.url+contactURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
+
+    // console.log(`CONTACTOS: \n ${JSON.stringify(ctsws)}`)
 
     return new Promise(function(resolve, reject) {         
       global.DB.transaction(tx => {
@@ -127,10 +129,11 @@ export default class SincronizeScreen extends React.Component {
   }
 
   async syncActivityType(from){
-    await this.getParams();
     var acts = await this.getFromWS(
       this.url+activityTypeURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
+
+    // console.log(`ACTIVITY TYPE: \n ${JSON.stringify(acts)}`)
           
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
@@ -157,19 +160,21 @@ export default class SincronizeScreen extends React.Component {
   }
 
   async syncItemActType(from){
-    await this.getParams();
     var items = await this.getFromWS(
       this.url+itemActTypeURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
+
+    // console.log(`ITEM ACT TYPE: ${JSON.stringify(items)}`)
 
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
           for(i=0; i<items.length; i++){
             tx.executeSql(
-              ` insert or replace into ItemActType (uuid, activityType_uuid, description, type, required, reference, position, state, updated) 
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+              ` insert or replace into ItemActType (uuid, activityType_id, activityType_uuid, description, type, required, reference, position, state, updated) 
+                values (?, (select at.id from ActivityType at where at.uuid = ?),?, ?, ?, ?, ?, ?, ?, ?);`,
               [ items[i].id_consigna, 
                 items[i].id_actividad, 
+                items[i].id_actividad,
                 items[i].name, 
                 items[i].con_tipodato == 'rel_simple' ? 'lista' : items[i].con_tipodato, 
                 items[i].con_requerido,
@@ -197,10 +202,11 @@ export default class SincronizeScreen extends React.Component {
   }
 
   async syncListItemAct(from){
-    await this.getParams();
     var items = await this.getFromWS(
       this.url+listItemActURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
+
+    // console.log(`LIST ITEMS: \n ${JSON.stringify(items)}`)
 
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
@@ -233,12 +239,13 @@ export default class SincronizeScreen extends React.Component {
   }
 
   async syncActivity(from){
-    await this.getParams();
     var items = await this.getFromWS(
       this.url+activityURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
+
+    // console.log(`ACTIVITY: ${JSON.stringify(items)}`)
     
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       global.DB.transaction(tx => {
           for(i=0; i<items.length; i++){
             tx.executeSql(
@@ -251,8 +258,8 @@ export default class SincronizeScreen extends React.Component {
                 items[i].status, 
                 0, 
                 items[i].priority, 
-                items[i].planificacion, 
-                items[i].ejecucion,
+                this.fixDate(items[i].planificacion), 
+                this.fixDate(items[i].ejecucion),
                 items[i].contact_id,
                 items[i].rel_actividades_id_c,
                 new Date().toString()
@@ -275,6 +282,11 @@ export default class SincronizeScreen extends React.Component {
     })
   }
 
+  fixDate(dateString) {
+    dateString = dateString.replace(/-/g, "/");
+    return new Date(dateString).toString();
+  }
+
   async fixToTest() {
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
@@ -286,13 +298,20 @@ export default class SincronizeScreen extends React.Component {
           `,
           [],
           (_, rows) => {},
-          (_, err) => {
-            console.error(`ERROR FIXIANDO...`)
-            reject(`ERROR en una de las sentencias ${err}`)
-          })
+          (_, err) => {}
+        )
+        tx.executeSql(
+          ` update contact set 
+              latitude = -31.639989, longitude = -60.7069067 
+            where uuid = '9e52fc6e-6381-11e4-8658-94de807927f7';
+          `,
+          [],
+          (_, rows) => {},
+          (_, err) => {}
+        )
         },
         err => {
-          console.error(`ERROR en la transaccion ${err}`)
+          console.error(`ERROR en la transaccion de FixToTest${err}`)
           reject(`ERROR en una de las transacción ${err}`)
         },
         () => {
@@ -302,30 +321,17 @@ export default class SincronizeScreen extends React.Component {
     })
   }
 
-  showDB () {
-    let tables = ["Contact", "Activity", "ActivityType", "User"];
-    tables.forEach(async table => {
-      let data = await executeSQL(`select * from ${table}`)
-        .catch(err => {
-          console.log(err)
-        })
-      console.log(`============================================`)
-      console.log(`${table}`)
-      console.log(data)
-    })
-  }
-
   async syncAll(){
     this.state.modalMessagge = "Sincronizando...";
     this.setModalVisible(true);
     /* El campo from debe ser String con formato yyyy-MM-dd */
-    var from = global.context.user.lastSync;
-    from = from.replace(/\//g, "-");
+    var from = formatDateTo(global.context.user.lastSync, 'YYYY-MM-DD')
     try {
+      await this.getParams();
       await this.syncContacts(from).then(msg => this.state.modalMessagge = msg + "\n");
-      await this.syncActivityType(from).then(/* msg => this.state.modalMessagge += msg + "\n" */);
-      await this.syncItemActType(from).then(/* msg => this.state.modalMessagge += msg + "\n" */);
-      await this.syncListItemAct(from).then(/* msg => this.state.modalMessagge += msg + "\n" */);
+      await this.syncActivityType(from);
+      await this.syncItemActType(from);
+      await this.syncListItemAct(from);
       await this.syncActivity(from).then(msg => this.state.modalMessagge += msg + "\n");
       await this.fixToTest(); //BORRAR ESTA LINEA CUANDO EL WS FUNCIONE BIEN!!!!
     } catch(err) {
@@ -333,14 +339,11 @@ export default class SincronizeScreen extends React.Component {
       console.error(error);
     }
 
-    let nld = formatDate(new Date());
+    let nld = new Date().toString();
     executeSQL(
       'update user set lastSync = ?',
       [nld]
-      )
-      .then(() => {
-        this.showDB ()
-      }).catch(err => {
+      ).catch(err => {
         console.error(err);
       })
     global.context.user.lastSync = nld;
@@ -371,7 +374,7 @@ export default class SincronizeScreen extends React.Component {
           <Button onPress={() => this.syncAll()}>
             <Text>Sincronizar</Text>
           </Button>
-          <Text>Última sincronización: {global.context.user.lastSync}</Text>
+          <Text>Última sincronización: {formatDateTo(global.context.user.lastSync, 'YYYY-MM-DD HH:mm:ss')}</Text>
         </Content>
         <FooterNavBar navigation={this.props.navigation} />
       </Container>

@@ -10,7 +10,8 @@ import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 import AppConstants from '../constants/constants'
 import AwesomeAlert from 'react-native-awesome-alerts';
-import {getConfiguration} from "../utilities/utils";
+import {getConfiguration, showDB, executeSQL} from "../utilities/utils";
+import AppConstans from '../constants/constants';
 
 export default class SurveyScreen extends React.Component {
   /* 
@@ -30,14 +31,9 @@ export default class SurveyScreen extends React.Component {
   constructor(props) {
     super(props);
 
-    this.activity_id = this.props.navigation.getParam('activity_id', 0);
-    console.log('activity_id: ' + this.activity_id);
-    this.activity_desc = this.props.navigation.getParam('activity_desc', '');
-    this.activity_state = this.props.navigation.getParam('activity_state', '');
-    this.contact_name = this.props.navigation.getParam('contact_name', '');
-    this.contact_city = this.props.navigation.getParam('contact_city', '');
-    this.contact_dir = this.props.navigation.getParam('contact_dir', '');
-
+    this.activity = this.props.navigation.getParam('activity', null);
+    this.contact = this.props.navigation.getParam('contact', null);
+    
     this.state = {
       seg: 1,
       seg_max: null,
@@ -52,7 +48,7 @@ export default class SurveyScreen extends React.Component {
       cant: 0,
       showButtonConfirm: false,
       buttonSaveEnable: false,
-      checkbox1: false,
+      checkbox1: false
     };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -66,43 +62,26 @@ export default class SurveyScreen extends React.Component {
     this.loadCards(this.state.cardsData, false)
   }
 
-  // toggleSwitch() {
-  //   this.setState({
-  //     checkbox1: !this.state.checkbox1
-  //   });
-  //   //this.state.checkbox1 = !this.state.checkbox1;
-  //   console.info('Estado: ' + this.state.checkbox1);
-  // }
-
   componentDidMount() {
-    
-    
-
-    
     this.loadData();
 
     this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
       BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
     );
   }
-
-  
+ 
   loadData(){
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, 
           a.id as answer_id, act.id as activity_id, a.text_val, a.img_val, act.state, iat.required
           from Activity act
-          left join ItemActType iat on (iat.activityType_id = act.activityType_id)
+          inner join ItemActType iat on (iat.activityType_id = act.activityType_id)
           left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
           where act.id = ?
           --group by act.id, iat.id `,
-        [this.activity_id],
+        [this.activity.id],
         (_, { rows }) => {
-          console.log(rows);
-          console.log(rows.length);
-          
-          console.log('row: ' + rows._array);
           this.loadCards(rows._array, true)
           this.setState ({
             cardsData: rows._array,
@@ -128,13 +107,11 @@ export default class SurveyScreen extends React.Component {
   };
 
   async loadCards(data, firstTime) {
-    console.log(data);
-    console.log(data[0]);
     var cards = [];
     var answers = this.state.answers;
     
     //si la activity esta cerrada, desactivo el button de grabar
-    if (data[0].state === 'close'){
+    if (data[0].state === AppConstans.ACTIVITY_COMPLETED){
       this.setState ({
         buttonSaveEnable: true
       });
@@ -237,12 +214,12 @@ export default class SurveyScreen extends React.Component {
       showAlert: false
     });
 
-    var sql = `update Activity set state = 'close'
+    var sql = `update Activity set state = '${AppConstans.ACTIVITY_COMPLETED}'
                where id = ?;`;
     global.DB.transaction(tx => {
       tx.executeSql(
         sql,
-        [this.activity_id],
+        [this.activity.id],
         (_, {rows}) => {
         },
         (_, err) => {
@@ -266,10 +243,10 @@ export default class SurveyScreen extends React.Component {
 
 
   async loadResumen(data) {
-    var completas = await this.getCompletas(data);
-    var pendientes = await this.getPendientes(data, '1');
-    var pendientes_norequired = await this.getPendientes(data, '0');
 
+    completas = await this.getCompletas(data);
+    pendientes = await this.getPendientes(data, 1);
+    pendientes_norequired = await this.getPendientes(data, 0);
 
     var mensaje = `Consignas Completas: ${completas}\nConsignas Pendientes Obligatorias: ${pendientes}\nConsignas Pendientes: ${pendientes_norequired}`;
 
@@ -299,7 +276,7 @@ export default class SurveyScreen extends React.Component {
         tx.executeSql(
           ` select coalesce(count(*),0) as cantidad
             from Activity act
-            left join ItemActType iat on (iat.activityType_id = act.activityType_id)
+            inner join ItemActType iat on (iat.activityType_id = act.activityType_id)
             left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
             where act.id = ? and a.id is not null
             group by act.id`,
@@ -324,11 +301,11 @@ export default class SurveyScreen extends React.Component {
     return new Promise(async function(resolve, reject) {
       global.DB.transaction(tx => {
         tx.executeSql(
-          ` select coalesce(count(*),0) as cantidad
-            from Activity act
-            left join ItemActType iat on (iat.activityType_id = act.activityType_id)
-            left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
-            where act.id = ? and a.id is null and iat.required = ?
+          ` select coalesce(count(*),0) as cantidad   
+            from Activity act 
+            inner join ItemActType iat on (iat.activityType_id = act.activityType_id) 
+            left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)  
+            where act.id = ? and a.id is null and iat.required = ? 
             group by act.id`,
           [activity_id, required],
           (_, { rows }) => {
@@ -409,7 +386,6 @@ export default class SurveyScreen extends React.Component {
       answer.text_val = answer.number;
     }
 
-   
     if(answer.img_val || answer.text_val) {//Solo se crea una respuesta si la imagen o el texto vienen con algo
       var base64 = null;
       if(answer.img_val && answer.img_val_change){ //Solo se guarda si
@@ -425,9 +401,9 @@ export default class SurveyScreen extends React.Component {
         if(answer.img_val_change){
           upd_img = `img_val = '${base64}',`
         }
-        sql = `update Answer set ${upd_img} text_val = '${answer.text_val}' where id = ${answer.id}`;
+        sql = `update Answer set ${upd_img} text_val = '${answer.text_val}', updated = '${new Date().toString()}' where id = ${answer.id}`;
       } else {
-        sql = `insert into Answer (activity_id, itemActType_id, text_val, img_val) values (${answer.activity_id}, ${answer.itemActType_id}, '${answer.text_val}', '${base64}')`;
+        sql = `insert into Answer (activity_id, itemActType_id, text_val, img_val, updated) values (${answer.activity_id}, ${answer.itemActType_id}, '${answer.text_val}', '${base64}', '${new Date().toString()}')`;
       }
 
       global.DB.transaction(tx => {
@@ -446,9 +422,9 @@ export default class SurveyScreen extends React.Component {
                   count(iat.id) when 0 then 0 else count(a.id)*1.0/count(iat.id)*1.0   
                 end percent 
               from ItemActType iat 
-              left join answer a on (a.itemActType_id = iat.id) 
+              left join answer a on (a.itemActType_id = iat.id)
               where iat.activityType_id = activity.activityType_id 
-            )
+            ), state = '${AppConstans.ACTIVITY_IN_PROGRESS}'  
             where id = ?;`,
           [answer.activity_id],
           (_, { rows }) => {},
@@ -458,8 +434,7 @@ export default class SurveyScreen extends React.Component {
         );
       });
     }
-    
-
+   
     if ((this.state.seg) === this.state.seg_max-1){
       this.loadResumen(this.state.cardsData);
     }
@@ -472,30 +447,10 @@ export default class SurveyScreen extends React.Component {
 
 
   buildImageCard(title, answer) {
-
-    // if (answer.requerido == 1)
-    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F00', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-    // else
-    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-
-
-
     return {
       text: title,
       info: <View>
-            
-            {/* <View style={{ flexDirection: 'row' }}>
-              <CheckBox
-                checked={answer.requerido}
-                disabled={true}
-              />
-              <Text style={{marginLeft: 10}}> Requerido</Text>
-            </View>
-            <Text></Text>              */}
-
-            {/* <Text style={{ height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 }} > {title} </Text> */}
             <Text style={ style_status_answer_req } > {title} </Text>
             <CardItem>
               <Left>
@@ -526,15 +481,7 @@ export default class SurveyScreen extends React.Component {
   }
 
   buildConditionalImageCard(title, answer) {
-
-    // if (answer.requerido == 1)
-    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F00', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-    // else
-    //   style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#F08377', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-
-
 
     return {
       text: title,
@@ -547,7 +494,8 @@ export default class SurveyScreen extends React.Component {
               />
               <Text style={{marginLeft: 10}}> Ingresa Imagen</Text>
             </View>         
-            {this.state.checkbox1 ?               <View>
+            {this.state.checkbox1 ?               
+              <View>
               <Text style={ style_status_answer_req } > {title} </Text>
               <CardItem>
                 <Left>
@@ -575,33 +523,17 @@ export default class SurveyScreen extends React.Component {
               </View> : null}
 
 
-
             </View>
 
     }
   }
 
   buildNumberCard(title, answer) {
-
-    // if (answer.requerido === 1)
-    //   style_status_answer_req = { backgroundColor: '#F00'};
-    // else
-    //   style_status_answer_req = { };
-
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
 
     return {
       text: title,
       info: <View>
-            {/* <View style={{ flexDirection: 'row' }}>
-              <CheckBox
-                checked={answer.requerido}
-                disabled={true}
-              />
-              <Text style={{marginLeft: 10}}> Requerido</Text>
-            </View>
-            <Text></Text> */}
-
             <Text style={style_status_answer_req}> {title} </Text>
             <Form>
                 <Item>
@@ -637,26 +569,11 @@ export default class SurveyScreen extends React.Component {
 
     
   buildTextCard(title, answer) {
-
-    // if (answer.requerido === 1)
-    //   style_status_answer_req = { backgroundColor: '#F00'};
-    // else
-    //   style_status_answer_req = { };
-
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
 
     return {
       text: title,
       info: <View>
-            {/* <View style={{ flexDirection: 'row' }}>
-              <CheckBox
-                checked={answer.requerido}
-                disabled={true}
-              />
-              <Text style={{marginLeft: 10}}> Requerido</Text>
-            </View>
-            <Text></Text> */}
-
             <Text style={style_status_answer_req}> {title} </Text>
             <Form>
               <Item>
@@ -672,11 +589,6 @@ export default class SurveyScreen extends React.Component {
   }
 
   buildListCard(title, answer) {
-    // if (answer.requerido === 1)
-    //   style_status_answer_req = { backgroundColor: '#F00'};
-    // else
-    //   style_status_answer_req = { };
-
     style_status_answer_req = { backgroundColor: '#65727B'};
 
     return new Promise(async (resolve, reject) => {
@@ -708,14 +620,6 @@ export default class SurveyScreen extends React.Component {
             resolve({
               text: title,
               info: <View>
-                      {/* <View style={{ flexDirection: 'row' }}>
-                        <CheckBox
-                          checked={answer.requerido}
-                          disabled={true}
-                        />
-                        <Text style={{marginLeft: 10}}> Requerido</Text>
-                      </View>
-                      <Text></Text> */}
                       <Text style={style_status_answer_req}> {title} </Text>
                       {listItems}
                     </View>         
@@ -746,17 +650,6 @@ export default class SurveyScreen extends React.Component {
     const {showAlert} = this.state;
     var isThereData = !!this.state.cardsData;
 
-    console.log('Renderizando')
-
-    // // Por defecto el fondo blanco para el estado nueva/en proceso
-    // var style_status = {backgroundColor: '#FFF'};
-    // console.info(this.activity_state);
-    // if(this.activity_state == 'close')
-    //   style_status = {backgroundColor: '#91f898'};
-    // else if(this.activity_state == 'canceled')
-    //   style_status = {backgroundColor: '#f86363'};
-    // console.info(style_status);
-
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Relevamiento" />
@@ -766,31 +659,17 @@ export default class SurveyScreen extends React.Component {
           <Form>
             <Item stackedLabel>
               <Label style= {{ fontWeight: 'bold'}}>ACTIVIDAD DE RELEVAMIENTO</Label>
-              {/* <Input
-                value={ this.activity_desc }
-                disabled
-                style={{ width: '100%' }}
-              /> */}
-
+             
               <Text numberOfLines={2} note>
-                {this.activity_desc} - {this.contact_name}
-              </Text>
-              {/* <Input
-                value={ this.contact_name }
-                disabled
-                style={{ width: '100%' }}
-              /> */}
+                {this.activity_description} - {this.contact.name}
+              </Text> 
               <Text numberOfLines={2} note>
-                Dirección: { this.contact_dir } - { this.contact_city }
+                Dirección: { this.contact.address } - { this.contact.city }
               </Text>
               <Text note>
-                Estado: { this.activity_state }
+                Estado: { this.activity.state }
               </Text>
-              {/* <Input
-                value={  + ' - ' + this.contact_city }
-                disabled
-                style={{ width: '100%' }}
-              /> */}
+             
             </Item>
           </Form>
           
@@ -822,7 +701,6 @@ export default class SurveyScreen extends React.Component {
                       disabled={this.state.seg === this.state.seg_max ? true : false || this.state.buttonSaveEnable}
                       onPress={() => this.saveAnswer()}
                     >
-                      {/* <Icon name="save" /> */}
                       <Icon name="arrow-circle-right" />
                     </Button>
                     

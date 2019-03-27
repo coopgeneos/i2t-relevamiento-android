@@ -10,22 +10,17 @@ import HeaderNavBar from '../components/HeaderNavBar';
 import ValidationComponent from 'react-native-form-validator';
 
 import { NavigationActions } from 'react-navigation'; // Version can be specified in package.json
-
+import AppConstans from '../constants/constants';
 
 export default class ActivityScreen extends ValidationComponent {
   constructor(props) {
     super(props);
     
-    //this.activity = this.props.navigation.getParam('activity_id', 'SIN ACTIVIDAD');
-    this.activity_id = this.props.navigation.getParam('activity_id', 'SIN ACTIVIDAD');
-    this.activity_desc = this.props.navigation.getParam('activity_desc', 'SIN ACTIVIDAD');
-    this.contact_name = this.props.navigation.getParam('contact_name', 'NN');
-    this.contact_dir = this.props.navigation.getParam('contact_dir', 'NN');
-    this.contact_city = this.props.navigation.getParam('contact_city', 'NN');
+    this.activity = this.props.navigation.getParam('activity', null);
+    this.contact = this.props.navigation.getParam('contact', null);
     
     this.state = {
       canceled: false,
-      //cancellation: this.activity.cancellation,
       cancellation: '',
       name: '',
       notes: '',
@@ -42,15 +37,15 @@ export default class ActivityScreen extends ValidationComponent {
         ` select * 
           from activity  
           where id = ?`,
-        [this.activity_id],
+        [this.activity.id],
         (_, { rows }) => {
           this.activity = rows._array[0];
           this.setState({
-            canceled: this.activity.state == 'canceled' ? true : false, 
+            canceled: this.activity.state == AppConstans.ACTIVITY_CANCELED ? true : false, 
             cancellation: this.activity.cancellation, 
             notes: this.activity.notes,
             name: this.activity.description,
-            disabled: this.activity.state == 'canceled' ? true : false
+            disabled: this.activity.state == AppConstans.ACTIVITY_CANCELED ? true : false
           });
         },
         (_, err) => {
@@ -62,11 +57,8 @@ export default class ActivityScreen extends ValidationComponent {
 
   
   saveActivity(){
-    var state = this.state.canceled ? 'canceled' : 'new';
 
     if(this.state.canceled) {
-      console.log("canceled");
-
       if(this.state.cancellation === "" || !this.state.cancellation) {
         this.state.error_msg += "Completar motivo de cancelación.\n";
         this.setModalVisible(true);
@@ -76,7 +68,7 @@ export default class ActivityScreen extends ValidationComponent {
           tx.executeSql(
             ` update activity set state = ?, cancellation = ?, notes = ? where id = ?`,
             [ 
-              state, 
+              AppConstans.ACTIVITY_CANCELED, 
               this.state.canceled ? this.state.cancellation : '', 
               this.state.notes, 
               this.activity.id
@@ -100,9 +92,8 @@ export default class ActivityScreen extends ValidationComponent {
     } else {
       global.DB.transaction(tx => {
         tx.executeSql(
-          ` update activity set state = ?, cancellation = ?, notes = ? where id = ?`,
-          [ 
-            state, 
+          ` update activity set cancellation = ?, notes = ? where id = ?`,
+          [  
             this.state.canceled ? this.state.cancellation : '', 
             this.state.notes, 
             this.activity.id
@@ -180,13 +171,13 @@ export default class ActivityScreen extends ValidationComponent {
           <Item stackedLabel>
             <Label>Contacto</Label>
             <Input
-              value={this.contact_name_activity}
+              value={this.contact.name}
               disabled
               style={{ width: '100%' }}
             />
             <Label>Dirección</Label>
             <Input
-              value={ this.contact_dir + ' - ' + this.contact_city }
+              value={ this.contact.address + ' - ' + this.contact.city }
               disabled
               style={{ width: '100%' }}
             />
@@ -195,7 +186,7 @@ export default class ActivityScreen extends ValidationComponent {
 
           <Form>
             <Item>
-              <Text style={{fontSize: 18}}>Registro {this.activity_desc}</Text>
+              <Text style={{fontSize: 18}}>Registro {this.activity.description}</Text>
             </Item>
             <Item>
               <Textarea rowSpan={3} bordered placeholder="Ingrese sus notas aquí ..." 
@@ -211,7 +202,7 @@ export default class ActivityScreen extends ValidationComponent {
             {cancelArea}
             
             <Item style={styles.btn_cont}>
-              <Button onPress={() => this.props.navigation.navigate('Activities')}><Text>Cancelar</Text></Button>
+              <Button onPress={() => this.props.navigation.navigate('Schedule')}><Text>Cancelar</Text></Button>
               <Button onPress={() => this.saveActivity()} disabled={this.state.disabled}><Text>Guardar</Text></Button>
             </Item>         
           </Form>

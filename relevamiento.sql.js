@@ -48,7 +48,7 @@ stms.push(`
 		activityType_uuid TEXT,
 		type TEXT NOT NULL,
 		description TEXT NOT NULL,
-		required TEXT NOT NULL,
+		required INTEGER NOT NULL,
 		reference TEXT,
 		position INTEGER,
 		state INTEGER,
@@ -76,7 +76,7 @@ stms.push(`
 		contact_id INTEGER,
 		contact_uuid TEXT,
 		description TEXT NOT NULL,
-		priority INTEGER,
+		priority TEXT,
 		planned_date TEXT,
 		exec_date TEXT,
 		state TEXT NOT NULL,
@@ -120,7 +120,7 @@ stms.push(`
 	);`);
 
 stms.push(`INSERT INTO User (email, name, username, password, lastSync, updated) 
-	values ('aenrico@unmail.com', 'Luis Enrico', 'aenrico', 'robi123', '2019/01/16', '${new Date().toString()}');`);
+	values ('aenrico@unmail.com', 'Luis Enrico', 'aenrico', 'robi123', '2019/01/16 10:50:23', '${new Date().toString()}');`);
 
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_NAME', 'Adrian Enrico', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_EMAIL', 'aenrico@unmail.com', '${new Date().toString()}');`);

@@ -7,23 +7,22 @@ import { StyleSheet, View, Alert, BackHandler} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
-import {formatDate} from '../utilities/utils';
+import { formatDate, executeSQL } from '../utilities/utils';
+import AppConstans from '../constants/constants';
 
 export default class ContactActScreen extends React.Component {
   
   _didFocusSubscription;
   _willBlurSubscription;
 
-  
-
   constructor(props) {
     super(props);
 
     this.contact = this.props.navigation.getParam('contact', '');
 
-    console.log(this.contact);
-
-    this.state = { index_id: '' };
+    this.state = { 
+      data: '' 
+    };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
       BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
@@ -38,7 +37,6 @@ export default class ContactActScreen extends React.Component {
     );
   }
 
-
   getActivities(){
     global.DB.transaction(tx => {
       tx.executeSql(
@@ -48,6 +46,7 @@ export default class ContactActScreen extends React.Component {
         (_, { rows }) => {
           var tableHead = ['Actividad', ''];
           var tableData = [];
+          this.state.data = rows._array;
           rows._array.forEach(item => {
             tableData.push([item.description, item.id ])
           })
@@ -85,25 +84,32 @@ export default class ContactActScreen extends React.Component {
   refresh(){
     this.getActivities();
   }
-
-    
-  // Ver los valores de priority se toma conveción que por ser creada a mano es prioridad baja (Low).
-
-  createActivity(activityType_id, description){
-    console.log('activityType_id: ' + activityType_id);
-    let fecha = formatDate(new Date());
-    let user_id = 1;
-    console.log('Info de insert: ' + activityType_id + ' ' + 
-    this.contact.id + '-' + user_id  + '-' +  description  + '-' +  fecha  + '-' +  fecha);
+   
+  /*
+   Por convención toda actividad se crea en:
+    estado: 'Not Started'
+    priority: 'Low'
+  */
+  createActivity(index){
+    let activityType = this.state.data[index]
+    let now = new Date().toString();
     global.DB.transaction(tx => {
       tx.executeSql(
-        `INSERT INTO Activity (activityType_id, contact_id, user_id, description, priority, 
-          planned_date, exec_date, state, cancellation, notes, percent) 
-          values (?, ?, ?, ?, 'Low', ?, ?, 'new', '0', '', 0);`,
-        [activityType_id, this.contact.id, user_id, description, fecha, fecha],
+        `INSERT INTO Activity (activityType_id, contact_id, description, priority, 
+          planned_date, exec_date, state, notes, percent, updated) 
+          values (?, ?, ?, ?, ?, ?, ?, '', 0, ?);`,
+        [ activityType.id, 
+          this.contact.id, 
+          activityType.description, 
+          AppConstans.ACTIVITY_PRIORITY_LOW, 
+          now, 
+          now,
+          AppConstans.ACTIVITY_NEW,
+          now
+        ],
         (_, rows) => {
           let lastID = rows.insertId;
-          this.goToActivity(lastID, 'new', description);
+          this.goToSurvey(lastID);
         },
         (_, err) => {
           console.error(`ERROR consultando DB: ${err}`)
@@ -112,21 +118,14 @@ export default class ContactActScreen extends React.Component {
     });
   }
 
-
-  goToActivity(activity_id, activity_state, activity_desc){
-    console.log('activity_id: ' + activity_id);
-    this.props.navigation.navigate('Survey', {activity_id: activity_id, activity_state: activity_state, 
-      activity_desc: activity_desc, contact_name: this.contact.name, contact_dir: this.contact.dir, 
-      contact_city: this.contact.city, onGoBack: () => this.refresh()})
-
-  }
-   
-  
-  go_Survey(index){
-    let ind = index - 1;
-    this.setState({index_id: index});
-    console.log('data index ' + this.state.tableData + ' index ' + ind);
-    this.createActivity(this.state.tableData[ind][1], this.state.tableData[ind][0]);
+  goToSurvey(activity_id, activity_state, activity_desc){
+    executeSQL('select * from activity where id = ?', [activity_id])
+      .then(result => {
+        this.props.navigation.navigate('Survey', {activity: result[0], contact: this.contact, onGoBack: () => this.refresh()})
+      })
+      .catch(err => {
+        console.error(err)
+      })
   }
 
   render() {
@@ -136,14 +135,11 @@ export default class ContactActScreen extends React.Component {
 
     const element = (data, index) => (
         <View style={styles.btn_cont}>
-          <Button style={styles.btn} onPress={() => this.go_Survey(data, index)}>
+          <Button style={styles.btn} onPress={() => this.createActivity(index)}>
             <Text>Iniciar</Text>
           </Button>
         </View>
     );
-
-    
-
 
     if(!this.state.tableData){
       table = <Spinner/>

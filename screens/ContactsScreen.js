@@ -69,8 +69,7 @@ export default class ContactsScreen extends React.Component {
   }
 
   goToContactActivities(contact){
-    console.log(contact);
-    this.props.navigation.navigate('ContactAct', {contact: contact.contact}, {onGoBack: () => this.refresh()})
+    this.props.navigation.navigate('ContactAct', {contact: contact.contact, onGoBack: () => this.refresh()})
   }
 
   refresh(){
