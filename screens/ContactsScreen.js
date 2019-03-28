@@ -45,8 +45,8 @@ export default class ContactsScreen extends React.Component {
           }
           var markers = [];       
           data.forEach(item => {
-            markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
-          })         
+            markers.push({title: item.name, description: item.address+' - '+item.city, coords: { latitude: item.latitude, longitude: item.longitude}});
+          })
           this.setState ({
             contacts: data,
             markers: markers

@@ -48,7 +48,10 @@ export default class SurveyScreen extends React.Component {
       cant: 0,
       showButtonConfirm: false,
       buttonSaveEnable: false,
-      checkbox1: false
+      checkbox1: false,
+      completas: 0,
+      pendientes: 0,
+      pendientes_norequired: 0
     };
 
     this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -164,18 +167,18 @@ export default class SurveyScreen extends React.Component {
         answers.push(answer);
 
       }
-      if(item.type === 'lista') {
+      if(item.type === AppConstans.ITEM_TYPE_CHOICE) {
         card = await this.buildListCard(item.description, answers[i])
           .catch(err => {
             reject(err)
           })
-      } else if(item.type === 'condicional') {
+      } else if(item.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
         card = this.buildConditionalImageCard(item.description, answers[i])
 
-      } else if(item.type === 'imagen') {
+      } else if(item.type === AppConstans.ITEM_TYPE_IMAGE) {
         card = this.buildImageCard(item.description, answers[i])
         
-      } else if(item.type === 'numerico') {
+      } else if(item.type === AppConstans.ITEM_TYPE_NUMBER) {
         this.setState({ number: item.text_val });
         card = this.buildNumberCard(item.description, answers[i])
           
@@ -214,12 +217,14 @@ export default class SurveyScreen extends React.Component {
       showAlert: false
     });
 
-    var sql = `update Activity set state = '${AppConstans.ACTIVITY_COMPLETED}'
+    let newState = this.state.pendientes > 0 ? AppConstans.ACTIVITY_PENDING : AppConstans.ACTIVITY_COMPLETED;
+
+    var sql = `update Activity set state = ? 
                where id = ?;`;
     global.DB.transaction(tx => {
       tx.executeSql(
         sql,
-        [this.activity.id],
+        [newState, this.activity.id],
         (_, {rows}) => {
         },
         (_, err) => {
@@ -244,17 +249,17 @@ export default class SurveyScreen extends React.Component {
 
   async loadResumen(data) {
 
-    completas = await this.getCompletas(data);
-    pendientes = await this.getPendientes(data, 1);
-    pendientes_norequired = await this.getPendientes(data, 0);
+    this.state.completas = await this.getCompletas(data);
+    this.state.pendientes = await this.getPendientes(data, 1);
+    this.state.pendientes_norequired = await this.getPendientes(data, 0);
 
-    var mensaje = `Consignas Completas: ${completas}\nConsignas Pendientes Obligatorias: ${pendientes}\nConsignas Pendientes: ${pendientes_norequired}`;
+    var mensaje = `Consignas Completas: ${this.state.completas}\nConsignas Pendientes Obligatorias: ${this.state.pendientes}\nConsignas Pendientes: ${this.state.pendientes_norequired}`;
 
     this.setState({
       mensaje: mensaje
     });
 
-    if (pendientes === 0){
+    /* if (this.state.pendientes === 0){
       this.setState({
         showButtonConfirm: true
       });
@@ -262,7 +267,10 @@ export default class SurveyScreen extends React.Component {
       this.setState({
         showButtonConfirm: false
       });
-    }
+    } */
+
+    //Siempre muestro el boton para poder poner la actividad en estado pendiente
+    this.setState({ showButtonConfirm: true }); 
 
     this.showAlert();
     //this.loadData();
@@ -378,15 +386,15 @@ export default class SurveyScreen extends React.Component {
   async saveAnswer() {    
     var answer = this.state.answers[this.state.seg - 1];
     
-    if (answer.type === 'texto'){
+    if (answer.type === AppConstans.ITEM_TYPE_TEXT || answer.type === AppConstans.ITEM_TYPE_NUMBER){
       answer.text_val = answer.notes;
     }
 
-    if (answer.type === 'numerico'){
-      answer.text_val = answer.number;
-    }
-
-    if(answer.img_val || answer.text_val) {//Solo se crea una respuesta si la imagen o el texto vienen con algo
+    /*
+      Solo se crea una respuesta si la imagen o el texto vienen con algo.
+      Si la respuesta ya tiene id (ya existia de antes), se actualiza
+    */
+    if(answer.img_val || answer.text_val || answer.id != null) {
       var base64 = null;
       if(answer.img_val && answer.img_val_change){ //Solo se guarda si
         base64 = await FileSystem.readAsStringAsync(answer.img_val, {encoding: FileSystem.EncodingTypes.Base64})
@@ -597,7 +605,7 @@ export default class SurveyScreen extends React.Component {
         tx.executeSql(
           ` select * 
             from ListItemAct 
-            where reference = (select reference from ItemActType where id = ?))`,
+            where reference = (select reference from ItemActType where id = ?)`,
           [answer.itemActType_id],
           (_, { rows }) => {
             var r = rows._array;

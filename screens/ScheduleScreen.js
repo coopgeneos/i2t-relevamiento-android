@@ -59,8 +59,13 @@ export default class ScheduleScreen extends React.Component {
           }
           var markers = [];       
           data.forEach(item => {
-            markers.push({title: item.name, description: 'Contacto', coords: { latitude: item.latitude, longitude: item.longitude}});
+            markers.push({title: item.name, description: item.address+' - '+item.city, coords: { latitude: item.latitude, longitude: item.longitude}});
           });
+          /* 
+            Elimino los repetidos para evitar problemas de key repetidas en el mapa
+            y evitar solapamientos en pines
+          */
+          this.removeDuplicated(markers, this.markerEquals);
           this.setState ({
             events: data,
             markers: markers
@@ -71,6 +76,23 @@ export default class ScheduleScreen extends React.Component {
         }
       )
     });
+  }
+
+  /* Dos marcadores son iguales si tienen la misma latitud y longitud */
+  markerEquals(m1, m2) {
+    return (m1.coords.latitude == m2.coords.latitude) && (m1.coords.longitude == m2.coords.longitude)
+  }
+
+  removeDuplicated(array, areEquals) {
+    for(i=0; i<(array.length - 1); i++) {
+      for(j=i+1; j<array.length; j++) {
+        if(areEquals(array[i], array[j])){
+          array.splice(j, 1);
+          j--; // Retrocedo un casillero porque el arreglo se acaba de achicar
+        }
+      }
+    }
+    return array;
   }
 
   getIconBattery(percent){
@@ -194,7 +216,9 @@ export default class ScheduleScreen extends React.Component {
                         </Text>
                       </Body>
                       <Right>
-                        { data.state == AppConstans.ACTIVITY_NEW && 
+                        { ( data.state == AppConstans.ACTIVITY_NEW || 
+                            data.state == AppConstans.ACTIVITY_IN_PROGRESS ||
+                            data.state == AppConstans.ACTIVITY_PENDING ) && 
                             <TouchableOpacity>
                               <View style={styles.btn_cont}>
                                 <Button transparent style={styles.btnText} onPress={() => this.goToActivities(data)}>

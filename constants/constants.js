@@ -17,4 +17,12 @@ export default {
   ACTIVITY_PRIORITY_LOW: 'Low',
   ACTIVITY_PRIORITY_MEDIUM: 'Medium',
   ACTIVITY_PRIORITY_HIGH: 'High',
+
+  ITEM_TYPE_IMAGE: 'imagen',
+  ITEM_TYPE_TEXT: 'texto',
+  ITEM_TYPE_CHOICE: 'sel_simpl',
+  ITEM_TYPE_CHOICE_MULT: 'sel_mult',
+  ITEM_TYPE_NUMBER: 'number',
+  ITEM_TYPE_CONDITIONAL_IMAGE: 'conditional'
+  
 }
