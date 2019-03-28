@@ -10,7 +10,7 @@ import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 import AppConstants from '../constants/constants'
 import AwesomeAlert from 'react-native-awesome-alerts';
-import {getConfiguration, showDB, executeSQL} from "../utilities/utils";
+import {getConfiguration, showDB, executeSQL, formatDateTo} from "../utilities/utils";
 import AppConstans from '../constants/constants';
 
 export default class SurveyScreen extends React.Component {
@@ -219,12 +219,12 @@ export default class SurveyScreen extends React.Component {
 
     let newState = this.state.pendientes > 0 ? AppConstans.ACTIVITY_PENDING : AppConstans.ACTIVITY_COMPLETED;
 
-    var sql = `update Activity set state = ? 
+    var sql = `update Activity set state = ?, updated = ?  
                where id = ?;`;
     global.DB.transaction(tx => {
       tx.executeSql(
         sql,
-        [newState, this.activity.id],
+        [newState, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'), this.activity.id],
         (_, {rows}) => {
         },
         (_, err) => {
@@ -409,9 +409,9 @@ export default class SurveyScreen extends React.Component {
         if(answer.img_val_change){
           upd_img = `img_val = '${base64}',`
         }
-        sql = `update Answer set ${upd_img} text_val = '${answer.text_val}', updated = '${new Date().toString()}' where id = ${answer.id}`;
+        sql = `update Answer set ${upd_img} text_val = '${answer.text_val}', updated = '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}' where id = ${answer.id}`;
       } else {
-        sql = `insert into Answer (activity_id, itemActType_id, text_val, img_val, updated) values (${answer.activity_id}, ${answer.itemActType_id}, '${answer.text_val}', '${base64}', '${new Date().toString()}')`;
+        sql = `insert into Answer (activity_id, itemActType_id, text_val, img_val, updated) values (${answer.activity_id}, ${answer.itemActType_id}, '${answer.text_val}', '${base64}', '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}')`;
       }
 
       global.DB.transaction(tx => {
@@ -432,9 +432,12 @@ export default class SurveyScreen extends React.Component {
               from ItemActType iat 
               left join answer a on (a.itemActType_id = iat.id)
               where iat.activityType_id = activity.activityType_id 
-            ), state = '${AppConstans.ACTIVITY_IN_PROGRESS}'  
+            ), state = ?, updated = ?   
             where id = ?;`,
-          [answer.activity_id],
+          [ 
+            AppConstans.ACTIVITY_IN_PROGRESS,
+            formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
+            answer.activity_id],
           (_, { rows }) => {},
           (_, err) => {
             console.error(`ERROR consultando DB: ${err}`)

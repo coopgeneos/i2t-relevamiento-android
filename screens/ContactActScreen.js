@@ -7,7 +7,7 @@ import { StyleSheet, View, Alert, BackHandler} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
-import { formatDate, executeSQL } from '../utilities/utils';
+import { formatDateTo, executeSQL } from '../utilities/utils';
 import AppConstans from '../constants/constants';
 
 export default class ContactActScreen extends React.Component {
@@ -92,7 +92,7 @@ export default class ContactActScreen extends React.Component {
   */
   createActivity(index){
     let activityType = this.state.data[index]
-    let now = new Date().toString();
+    let now = formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss');
     global.DB.transaction(tx => {
       tx.executeSql(
         `INSERT INTO Activity (activityType_id, contact_id, description, priority, 

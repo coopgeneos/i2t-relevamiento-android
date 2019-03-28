@@ -108,7 +108,7 @@ export default class SincronizeScreen extends React.Component {
               ctsws[i].primary_address_street, ctsws[i].primary_address_city, 
               ctsws[i].primary_address_postalcode, ctsws[i].phone_mobile, 
               ctsws[i].email_c, ctsws[i].jjwg_maps_lat_c, ctsws[i].jjwg_maps_lng_c,
-              new Date().toString()
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
             ],
             (_, rows) => {},
             (_, err) => {
@@ -133,14 +133,14 @@ export default class SincronizeScreen extends React.Component {
       this.url+activityTypeURL, 
       {usuario: this.username, FechaDesde: from, Otros: ''});
 
-    // console.log(`ACTIVITY TYPE: \n ${JSON.stringify(acts)}`)
+    console.log(`ACTIVITY TYPE: \n ${JSON.stringify(acts)}`)
           
     return new Promise(function(resolve, reject) {
       global.DB.transaction(tx => {
         for(i=0; i<acts.length; i++){
           tx.executeSql(
             ` insert or replace into ActivityType (uuid, description, updated) values (?, ?, ?)`,
-            [acts[i].id_actividad, acts[i].name, new Date().toString()],
+            [acts[i].id_actividad, acts[i].name, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')],
             (_, rows) => {},
             (_, err) => {
             console.error(`ERROR en una de las sentencias de sincronizacion de ActivityType ${err}`)
@@ -181,7 +181,7 @@ export default class SincronizeScreen extends React.Component {
                 items[i].con_tablaref,
                 items[i].rca_orden,
                 items[i].con_estado,
-                new Date().toString()
+                formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
               ],
               (_, rows) => {},
               (_, err) => {
@@ -217,7 +217,7 @@ export default class SincronizeScreen extends React.Component {
                 ` insert or replace into ListItemAct (uuid, reference, value, account_id, updated)  
                   values (?, ?, ?, ?, ?);`,
                 [ items[i].id_referencias, items[i].ref_tablaref, listValues[j], 
-                  items[i].account_id_c, new Date().toString()
+                  items[i].account_id_c, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
                 ],
                 (_, rows) => {},
                 (_, err) => {
@@ -262,7 +262,7 @@ export default class SincronizeScreen extends React.Component {
                 this.fixDate(items[i].ejecucion),
                 items[i].contact_id,
                 items[i].rel_actividades_id_c,
-                new Date().toString()
+                formatDateTo('2000-01-01 00:00:01', 'YYYY/MM/DD HH:mm:ss')
               ],
               (_, rows) => {},
               (_, err) => {
@@ -285,6 +285,32 @@ export default class SincronizeScreen extends React.Component {
   fixDate(dateString) {
     dateString = dateString.replace(/-/g, "/");
     return new Date(dateString).toString();
+  }
+
+  uploadActivities(){
+    console.log(`LAST SYNC: ${global.context.user.lastSync}`)
+    global.DB.transaction(tx => {
+        // for(i=0; i<items.length; i++){
+          tx.executeSql(
+            ` select a.* from Activity a where a.updated > ?`,
+            [global.context.user.lastSync],
+            (_, rows) => {
+              console.log(JSON.stringify(rows))
+            },
+            (_, err) => {
+              console.error(`ERROR en una de las sentencias de sincronizacion de Activity ${err}`)
+              reject(`ERROR en una de las sentencias ${err}`)
+            })
+        // }
+      },
+      err => {
+        console.error(`ERROR en la transaccion ${err}`)
+        // reject(`ERROR en una de las transacción ${err}`)
+      },
+      () => {
+        // resolve(`${items.length} actividades sincronizadas`)
+      }
+    )
   }
 
   async fixToTest() {
@@ -339,7 +365,7 @@ export default class SincronizeScreen extends React.Component {
       console.error(error);
     }
 
-    let nld = new Date().toString();
+    let nld = formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss');
     executeSQL(
       'update user set lastSync = ?',
       [nld]
@@ -373,6 +399,9 @@ export default class SincronizeScreen extends React.Component {
           </Modal>
           <Button onPress={() => this.syncAll()}>
             <Text>Sincronizar</Text>
+          </Button>
+          <Button onPress={() => this.uploadActivities()}>
+            <Text>Subir</Text>
           </Button>
           <Text>Última sincronización: {formatDateTo(global.context.user.lastSync, 'YYYY-MM-DD HH:mm:ss')}</Text>
         </Content>

@@ -16,8 +16,16 @@ export function formatDatePrint(date_format) {
   return moment(new Date(date_format)).format('DD-MM-YYYY');
 }
 
-export function formatDateTo(date_format, format) {
-  return moment(new Date(date_format)).format(format);
+export function formatDateTo(dateToFormat, format) {
+  let result = null;
+  try {
+    result = typeof dateToFormat == "string" ? 
+      moment(new Date(dateToFormat)).format(format) :
+      moment(dateToFormat).format(format);
+  } catch (err) {
+    throw new Error('Error formateando la fecha '+dateToFormat)
+  }
+  return result;
 }
 
 export function formatFolderMap(provider, x, y, z) {

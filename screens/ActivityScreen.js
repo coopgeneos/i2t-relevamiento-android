@@ -11,6 +11,7 @@ import ValidationComponent from 'react-native-form-validator';
 
 import { NavigationActions } from 'react-navigation'; // Version can be specified in package.json
 import AppConstans from '../constants/constants';
+import { formatDateTo } from '../utilities/utils'
 
 export default class ActivityScreen extends ValidationComponent {
   constructor(props) {
@@ -66,11 +67,12 @@ export default class ActivityScreen extends ValidationComponent {
       } else {
         global.DB.transaction(tx => {
           tx.executeSql(
-            ` update activity set state = ?, cancellation = ?, notes = ? where id = ?`,
+            ` update activity set state = ?, cancellation = ?, notes = ? , updated = ? where id = ?`,
             [ 
               AppConstans.ACTIVITY_CANCELED, 
               this.state.canceled ? this.state.cancellation : '', 
-              this.state.notes, 
+              this.state.notes,
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'), 
               this.activity.id
             ],
             (_, { rows }) => {},
@@ -92,10 +94,11 @@ export default class ActivityScreen extends ValidationComponent {
     } else {
       global.DB.transaction(tx => {
         tx.executeSql(
-          ` update activity set cancellation = ?, notes = ? where id = ?`,
+          ` update activity set cancellation = ?, notes = ?, updated = ? where id = ?`,
           [  
             this.state.canceled ? this.state.cancellation : '', 
             this.state.notes, 
+            formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
             this.activity.id
           ],
           (_, { rows }) => {},
