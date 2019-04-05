@@ -128,15 +128,15 @@ stms.push(`
 stms.push(`INSERT INTO User (email, name, username, password, lastSync, lastDownload, lastUpload, updated) 
 	values ('user@unmail.com', 'not Identified', 'user', 'password', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '${new Date().toString()}');`);
 
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_NAME', 'Adrian Enrico', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_EMAIL', 'aenrico@unmail.com', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('URL_BACKEND', 'http://relevamiento.i2tsa.com.ar:3006', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_BACKEND', 'aenrico', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('PASS_BACKEND', '1q2w', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROXIMITY_RANGE', '1000', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('SHIPMENTS_SHOW', '30', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROJECTION_AGENDA', '15', '${new Date().toString()}');`);
-// stms.push(`INSERT INTO Configuration (key, value, updated) values ('CONSULTANT_NUM', '12', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_NAME', 'Adrian Enrico', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_EMAIL', 'aenrico@unmail.com', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('URL_BACKEND', 'http://relevamiento.i2tsa.com.ar:3006', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_BACKEND', 'aenrico', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('PASS_BACKEND', '1q2w', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROXIMITY_RANGE', '1000', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('SHIPMENTS_SHOW', '30', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROJECTION_AGENDA', '15', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('CONSULTANT_NUM', '12', '${new Date().toString()}');`);
 
 stms.push(`UPDATE sqlite_sequence SET seq = 1000000 WHERE NAME = 'Answer'`);
 

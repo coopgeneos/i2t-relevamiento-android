@@ -150,19 +150,19 @@ export async function getLocationAsync(){
         alert("Ud no otorgó los permisos necesarios y la app no podrá utilizarse. Si desea usarla deberá desinstalarla y volver a instalar")
         throw new Error('Permission to access location was denied');
       }
-      //let location = await Location.getCurrentPositionAsync({});
-      let location = {
-        "timestamp":1550166625527,
-        "mocked":false,
-        "coords":{
-          "heading":0,
-          "longitude":-59.131096,
-          "speed":0,
-          "altitude":210.8000030517578,
-          "latitude":-37.3266809,
-          "accuracy":15.392999649047852
-        }
-      }
+      let location = await Location.getCurrentPositionAsync({});
+      // let location = {
+      //   "timestamp":1550166625527,
+      //   "mocked":false,
+      //   "coords":{
+      //     "heading":0,
+      //     "longitude":-59.131096,
+      //     "speed":0,
+      //     "altitude":210.8000030517578,
+      //     "latitude":-37.3266809,
+      //     "accuracy":15.392999649047852
+      //   }
+      // }
       resolve(location);
     } catch (err) {
       console.log(err)
