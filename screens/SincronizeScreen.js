@@ -1,8 +1,9 @@
 import React from 'react';
-import { Container, Content, Text, Button } from 'native-base';
+import { Container, Content, Text, Button, Icon } from 'native-base';
 import { getConfiguration, formatDateTo, executeSQL, showDB } from '../utilities/utils'
 import AppConstans from '../constants/constants';
 import { StyleSheet, Alert, Modal} from 'react-native';
+import { Grid, Row, Col } from "react-native-easy-grid";
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -27,8 +28,8 @@ export default class SincronizeScreen extends React.Component {
     this.password = null;
     this.consultant_num = null;
     this.state = {
-      modalVisible: false,
-      modalMessagge: ""
+      //modalVisible: false,
+      modalMessagge: "",
     };
   }
 
@@ -386,7 +387,7 @@ export default class SincronizeScreen extends React.Component {
 
   async downloadAll(){
     this.state.modalMessagge = "Sincronizando...";
-    this.setModalVisible(true);     
+    
     try {
       /* El campo from debe ser String con formato YYYY-MM-DD */
       let from = formatDateTo(global.context.user.lastDownload, 'YYYY-MM-DD')
@@ -398,7 +399,7 @@ export default class SincronizeScreen extends React.Component {
       await this.syncListItemAct(from);
       await this.syncActivity(from).then(msg => this.state.modalMessagge += msg + "\n");
       
-      await this.fixToTest(); //BORRAR ESTA LINEA CUANDO EL WS FUNCIONE BIEN!!!!
+      // await this.fixToTest(); //BORRAR ESTA LINEA CUANDO EL WS FUNCIONE BIEN!!!!
 
       /* Actualizo la fecha de última descarga */
       let nld = formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss');
@@ -566,7 +567,7 @@ export default class SincronizeScreen extends React.Component {
 
   async uploadAll(){
     this.state.modalMessagge = "Sincronizando...";
-    this.setModalVisible(true);
+    
     try {
       let from = global.context.user.lastUpload;
       if(from == null) throw new Error("Error en la fecha de última subida de datos")
@@ -596,9 +597,9 @@ export default class SincronizeScreen extends React.Component {
     this.setState({ modalMessagge: this.state.modalMessagge });
   }
 
-  setModalVisible(visible) {
-    this.setState({modalVisible: visible});
-  }
+  // setModalVisible(visible) {
+  //   this.setState({modalVisible: visible});
+  // }
   
   render() {
     const { navigation } = this.props;
@@ -607,23 +608,44 @@ export default class SincronizeScreen extends React.Component {
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Sincronización" />
-        <Content>
-          <Modal animationType="slide" transparent={false} visible={this.state.modalVisible} 
-            onRequestClose={() => {
-              Alert.alert(this.state.modalMessagge);
-            }}>
-              <Text>{this.state.modalMessagge}</Text>
-              <Button onPress={() => this.setModalVisible(false)}>
-                <Text>Cerrar</Text>
+        {/* <Modal animationType="slide" transparent={false} visible={this.state.modalVisible} 
+          onRequestClose={() => {
+            Alert.alert(this.state.modalMessagge);
+          }}>
+            <Text>{this.state.modalMessagge}</Text>
+            <Button onPress={() => this.setModalVisible(false)}>
+              <Text>Cerrar</Text>
+            </Button>
+        </Modal> */}
+        <Content style={{padding: 10}}>
+        <Grid style={{ alignItems: 'center' }}>
+          <Row style={styles.row}>
+            <Col style={{ alignItems: 'center' }}>
+              <Button onPress={() => this.downloadAll()} block>
+              <Icon active name="cloud-download" />
+              <Text>Bajar Información</Text>
               </Button>
-          </Modal>
-          <Button onPress={() => this.downloadAll()}>
-            <Text>Sincronizar</Text>
-          </Button>
-          <Button onPress={() => this.uploadAll()}>
-            <Text>Subir</Text>
-          </Button>
-          <Text>Última sincronización: {formatDateTo(global.context.user.lastSync, 'YYYY-MM-DD HH:mm:ss')}</Text>
+            </Col>
+          </Row>
+          <Row style={styles.row}>
+            <Col style={{ alignItems: 'center' }}>
+              <Button onPress={() => this.uploadAll()} block>
+              <Icon active name="cloud-upload" />
+              <Text>Subir Información</Text>
+              </Button>
+            </Col>
+          </Row>
+          <Row style={styles.row}>
+            <Col style={{ alignItems: 'center' }}>
+            <Text>Última sincronización: {formatDateTo(global.context.user.lastSync, 'YYYY-MM-DD HH:mm:ss')}</Text>
+            </Col>
+          </Row>
+          <Row style={styles.row}>
+            <Col style={{ alignItems: 'center' }}>
+            <Text style={styles.textResult}>{this.state.modalMessagge}</Text>
+            </Col>
+          </Row>
+        </Grid>
         </Content>
         <FooterNavBar navigation={this.props.navigation} />
       </Container>
@@ -635,10 +657,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#94A6B5' },
   text: { margin: 6 },
-  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#94A6B5', height: 40 },
+  row: { flexDirection: 'row', backgroundColor: '#FFF', height: 60 },
+  rowResult: { flexDirection: 'row', backgroundColor: '#F08377', color: '#FFF', height: 60 },
   cellAction: { margin: 6, width: 100 },
   btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12, color: 'white'},
   btn_cont: { flexDirection: 'row'},
   btn_card: { flexDirection: 'row', justifyContent: 'space-around' },
-  btnText: { textAlign: 'center', color: '#fff' }
+  btnText: { textAlign: 'center', color: '#fff' },
+  textResult: {fontSize: 16}
 });
