@@ -97,10 +97,10 @@ export default class MapScreen extends React.Component {
         <MapView
           style={{ flex: 1 }}
           initialRegion={{
-            latitude: -38.1973369,
-            longitude: -61.9635813,
-            latitudeDelta: 1,
-            longitudeDelta: 1
+            latitude: -34.7973008,
+            longitude: -60.9947733,
+            latitudeDelta: 6,
+            longitudeDelta: 6,
           }}
           onRegionChange={this.handleMapRegionChange}>
           <MapView.UrlTile urlTemplate={urlTemplate} zIndex={1} />

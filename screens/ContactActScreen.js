@@ -40,7 +40,7 @@ export default class ContactActScreen extends React.Component {
   getActivities(){
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select ate.id, ate.description
+        ` select * 
           from ActivityType ate ;`,
         [],
         (_, { rows }) => {
@@ -95,11 +95,14 @@ export default class ContactActScreen extends React.Component {
     let now = formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss');
     global.DB.transaction(tx => {
       tx.executeSql(
-        `INSERT INTO Activity (activityType_id, contact_id, description, priority, 
+        `INSERT INTO Activity (activityType_id, activityType_uuid, contact_id, contact_uuid, name, description, priority, 
           planned_date, exec_date, state, notes, percent, updated) 
-          values (?, ?, ?, ?, ?, ?, ?, '', 0, ?);`,
-        [ activityType.id, 
-          this.contact.id, 
+          values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?);`,
+        [ activityType.id,
+          activityType.uuid, 
+          this.contact.id,
+          this.contact.uuid, 
+          activityType.description+' en '+this.contact.name,
           activityType.description, 
           AppConstans.ACTIVITY_PRIORITY_LOW, 
           now, 

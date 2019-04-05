@@ -10,7 +10,7 @@ import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 import AppConstants from '../constants/constants'
 import AwesomeAlert from 'react-native-awesome-alerts';
-import {getConfiguration, showDB, executeSQL, formatDateTo} from "../utilities/utils";
+import {getConfiguration, showDB, executeSQL, formatDateTo, getLocationAsync} from "../utilities/utils";
 import AppConstans from '../constants/constants';
 
 export default class SurveyScreen extends React.Component {
@@ -76,11 +76,18 @@ export default class SurveyScreen extends React.Component {
   loadData(){
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select iat.id as itemActType_id, iat.activityType_id, iat.description, iat.type, 
-          a.id as answer_id, act.id as activity_id, a.text_val, a.img_val, act.state, iat.required
-          from Activity act
-          inner join ItemActType iat on (iat.activityType_id = act.activityType_id)
-          left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
+        ` select iat.id as itemActType_id, iat.uuid as itemActType_uuid, 
+          iat.activityType_id, at.uuid as activityType_uuid, 
+          iat.description, iat.type, 
+          act.id as activity_id, act.uuid as activity_uuid, 
+          c.id as contact_id, c.uuid as contact_uuid,  
+          a.id as answer_id, a.text_val, a.img_val, a.number_val, a.latitude, a.longitude, 
+          act.state, iat.required 
+          from Activity act 
+          inner join ActivityType at on (at.id = act.activityType_id) 
+          inner join ItemActType iat on (iat.activityType_id = act.activityType_id) 
+          inner join Contact c on (c.id = act.contact_id) 
+          left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id) 
           where act.id = ?
           --group by act.id, iat.id `,
         [this.activity.id],
@@ -146,23 +153,28 @@ export default class SurveyScreen extends React.Component {
           item.img_val = `${AppConstants.TMP_FOLDER}/${name}.jpg`;
         }
 
-        if (item.required === '1'){
+        /* if (item.required === '1'){
           requerido = true
         }else{
           requerido = false
-        }
+        } */
         
         var answer = {
           id: item.answer_id, //Si answer_id viene en null, es porque nunca se respondió.
           activity_id: item.activity_id,
+          activity_uuid: item.activity_uuid,
           itemActType_id: item.itemActType_id,
+          itemActType_uuid: item.itemActType_uuid,
+          contact_id: item.contact_id,
+          contact_uuid: item.contact_uuid,
+          type: item.type,
+          required: item.required === '1' ? true : false,
           text_val: item.text_val,
           img_val: item.img_val,
           img_val_change: false,
-          type: item.type,
-          requerido: requerido,
-          notes: item.text_val,
-          number: item.text_val,
+          number_val: item.number_val,         
+          latitude: item.latitude,
+          longitude: item.longitude  
         }
         answers.push(answer);
 
@@ -179,13 +191,12 @@ export default class SurveyScreen extends React.Component {
         card = this.buildImageCard(item.description, answers[i])
         
       } else if(item.type === AppConstans.ITEM_TYPE_NUMBER) {
-        this.setState({ number: item.text_val });
+        this.setState({ number: item.number_val });
         card = this.buildNumberCard(item.description, answers[i])
           
       } else {
         this.setState({ notes: item.text_val });
-        card = this.buildTextCard(item.description, answers[i])
-          
+        card = this.buildTextCard(item.description, answers[i])      
       }
       cards.push(card);
     }
@@ -385,16 +396,22 @@ export default class SurveyScreen extends React.Component {
 
   async saveAnswer() {    
     var answer = this.state.answers[this.state.seg - 1];
+
+    console.log(`ANSWER: ${JSON.stringify(answer)}`)
     
-    if (answer.type === AppConstans.ITEM_TYPE_TEXT || answer.type === AppConstans.ITEM_TYPE_NUMBER){
+    /* if (answer.type === AppConstans.ITEM_TYPE_TEXT){
       answer.text_val = answer.notes;
     }
+
+    if (answer.type === AppConstans.ITEM_TYPE_NUMBER) {
+      answer.number_val = answer.number_val;
+    } */
 
     /*
       Solo se crea una respuesta si la imagen o el texto vienen con algo.
       Si la respuesta ya tiene id (ya existia de antes), se actualiza
     */
-    if(answer.img_val || answer.text_val || answer.id != null) {
+    if(answer.img_val || answer.text_val || answer.number_val || answer.id != null) {
       var base64 = null;
       if(answer.img_val && answer.img_val_change){ //Solo se guarda si
         base64 = await FileSystem.readAsStringAsync(answer.img_val, {encoding: FileSystem.EncodingTypes.Base64})
@@ -402,6 +419,11 @@ export default class SurveyScreen extends React.Component {
             console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
           })
       }
+
+      let position = await getLocationAsync()
+        .catch(err => {
+          throw new Error("Error obteniendo la posición del dispositivo")
+        })
       
       var sql = '';
       if(answer.id){
@@ -409,9 +431,23 @@ export default class SurveyScreen extends React.Component {
         if(answer.img_val_change){
           upd_img = `img_val = '${base64}',`
         }
-        sql = `update Answer set ${upd_img} text_val = '${answer.text_val}', updated = '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}' where id = ${answer.id}`;
+        sql = ` update Answer set ${upd_img} text_val = '${answer.text_val}', 
+                  number_val = ${answer.number_val}, 
+                  updated = '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
+                  latitude = ${position.coords.latitude}, longitude = ${position.coords.longitude}  
+                where id = ${answer.id}`;
       } else {
-        sql = `insert into Answer (activity_id, itemActType_id, text_val, img_val, updated) values (${answer.activity_id}, ${answer.itemActType_id}, '${answer.text_val}', '${base64}', '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}')`;
+        sql = ` insert into Answer (activity_id, activity_uuid, 
+                  itemActType_id, itemActType_uuid,
+                  contact_id, contact_uuid, 
+                  text_val, img_val, number_val, updated, latitude, longitude) 
+                values (${answer.activity_id}, '${answer.activity_uuid}',
+                  ${answer.itemActType_id}, '${answer.itemActType_uuid}',
+                  ${answer.contact_id}, '${answer.contact_uuid}', 
+                  '${answer.text_val}', '${base64}', ${answer.number_val}, 
+                  '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
+                  ${position.coords.latitude}, ${position.coords.longitude}
+                )`;
       }
 
       global.DB.transaction(tx => {
@@ -552,7 +588,7 @@ export default class SurveyScreen extends React.Component {
                     placeholder="Ingrese valor" 
                     bordered keyboardType={'numeric'} 
                     style={{ width: 100 }} 
-                    defaultValue={answer.number}
+                    defaultValue={answer.number_val}
                     onChangeText={this.handleNumberChange.bind(this)}
                     disabled={this.state.buttonSaveEnable}
                   />
@@ -566,14 +602,14 @@ export default class SurveyScreen extends React.Component {
   
   handleChange(event) {
     var answers = this.state.answers;
-    answers[this.state.seg - 1].notes = event;
+    answers[this.state.seg - 1].text_val = event;
     this.setState({ answers: answers});
     this.loadCards(this.state.cardsData, false);
   }  
 
   handleNumberChange(event){
     var answers = this.state.answers;
-    answers[this.state.seg - 1].number = event;
+    answers[this.state.seg - 1].number_val = event;
     this.setState({ answers: answers});
     this.loadCards(this.state.cardsData, false);
   }
@@ -589,7 +625,7 @@ export default class SurveyScreen extends React.Component {
             <Form>
               <Item>
                 <Textarea rowSpan={5} bordered placeholder="Ingrese detalle"  
-                  defaultValue={answer.notes}
+                  defaultValue={answer.text_val}
                   onChangeText={this.handleChange.bind(this) }
                   disabled={this.state.buttonSaveEnable}
                 />

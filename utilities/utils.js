@@ -17,6 +17,9 @@ export function formatDatePrint(date_format) {
 }
 
 export function formatDateTo(dateToFormat, format) {
+  if(dateToFormat == null || format == null)
+    return null;
+
   let result = null;
   try {
     result = typeof dateToFormat == "string" ? 
@@ -147,8 +150,8 @@ export async function getLocationAsync(){
         alert("Ud no otorgó los permisos necesarios y la app no podrá utilizarse. Si desea usarla deberá desinstalarla y volver a instalar")
         throw new Error('Permission to access location was denied');
       }
-      let location = await Location.getCurrentPositionAsync({});
-      /* let location = {
+      //let location = await Location.getCurrentPositionAsync({});
+      let location = {
         "timestamp":1550166625527,
         "mocked":false,
         "coords":{
@@ -159,7 +162,7 @@ export async function getLocationAsync(){
           "latitude":-37.3266809,
           "accuracy":15.392999649047852
         }
-      } */
+      }
       resolve(location);
     } catch (err) {
       console.log(err)
@@ -190,6 +193,9 @@ export async function getConfiguration(key){
           ` select value from Configuration where key = ?`,
           [key],
           (_, { rows }) => {
+            if(rows._array.length == 0){
+              return resolve(null);
+            }
             global.context.conf[key] = rows._array[0].value;
             resolve(rows._array[0].value);
           },

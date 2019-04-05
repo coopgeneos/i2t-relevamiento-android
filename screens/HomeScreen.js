@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Header, Content, Icon, Text, Button, Item,
         Form, Input, Label, Left, Spinner, Body, Right, Title, Card, CardItem, Thumbnail, } from 'native-base';
-import {formatDate, formatDatePrint, getLocationAsync} from '../utilities/utils';
+import {formatDate, formatDatePrint, getLocationAsync, getConfiguration} from '../utilities/utils';
 import { Grid, Row, Col } from "react-native-easy-grid";
 import { Image } from 'react-native';
 
@@ -10,15 +10,16 @@ import { TouchableHighlight, Modal, View, PermissionsAndroid, Platform } from 'r
 import moment from 'moment';
 
 export default class HomeScreen extends React.Component { 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     global.context = {};
     this.state = {
       user: '',
       lastSync : '',
       pendingSyncs : '',
       modalVisible: false,
-      permission: ''
+      permission: '',
+      configurationLoaded: false,
     };    
   }
 
@@ -47,9 +48,52 @@ export default class HomeScreen extends React.Component {
       })
   }
 
+  setConfigurationLoaded(loaded) {
+    this.setState({configurationLoaded: loaded})
+  }
+
+  async checkValue(key) {
+    return new Promise(async (resolve, reject) => {
+
+    })
+  }
+
+  async checkConfiguration() {
+    let requiredFields = [
+      "USER_NAME","USER_EMAIL","URL_BACKEND","USER_BACKEND",
+      "PASS_BACKEND","PROXIMITY_RANGE","SHIPMENTS_SHOW","PROJECTION_AGENDA",
+      "CONSULTANT_NUM"
+    ];
+    
+    let promises = [];
+    for(i=0; i<requiredFields.length; i++) {
+      promises.push(getConfiguration(requiredFields[i]));
+    }
+
+    let values = await Promise.all(promises)
+      .catch(err => {
+        console.error(err)
+      })
+    for(i=0; i<values.length; i++) {
+      if(values[i] == null) {
+        this.setConfigurationLoaded(true);
+        return
+      }
+    }
+    this.setConfigurationLoaded(false);
+    return;
+  }
+
   // Metodo donde llamar a los WS iniciales
   componentDidMount() {
+    this.getUserInfo()
 
+    this.checkPermissionGeolocation();
+    this.checkConfiguration();
+
+  }
+
+  getUserInfo(){
     global.DB.transaction(tx => {
       tx.executeSql(
         ` select u.* , 
@@ -72,9 +116,15 @@ export default class HomeScreen extends React.Component {
         }
       )
     });
+  }
 
-    this.checkPermissionGeolocation();
+  refresh() {
+    this.getUserInfo();
+  }
 
+  goToConfiguration() {
+    this.setConfigurationLoaded(false);
+    this.props.navigation.navigate('Configuration', {onGoBack: () => this.refresh()});
   }
 
   render() {
@@ -120,12 +170,12 @@ export default class HomeScreen extends React.Component {
         <Modal
           animationType="slide"
           transparent={false}
-          visible={this.state.modalVisible}
+          visible={this.state.modalVisible || this.state.configurationLoaded}
           onRequestClose={() => {
             Alert.alert('Configuración de geolocalización verificada.');
           }}>
           <View style={{ flex: 1, alignItems: 'center', backgroundColor: '#F08377', padding: 100 }}>
-              <Text>Permisos de acceso a Geolocalización desactivados. Por favor verifique para continuar</Text>
+              <Text>Para que esta aplicación funcione necesita permisos de acceso a Geolocalización y tener cargada la configuración. Por favor verifique para continuar</Text>
 
               <Button
                 onPress={() => {
@@ -134,6 +184,15 @@ export default class HomeScreen extends React.Component {
                 <Icon name='map-marker'/>
                 <Text>Verificar Geolocalización</Text>
               </Button>
+
+              <Button
+                onPress={() => {
+                  this.goToConfiguration();
+                }}>
+                <Icon name='cog'/>
+                <Text>Verificar Configuración</Text>
+              </Button>
+
           </View>
         </Modal>
         <Header>
@@ -167,7 +226,7 @@ export default class HomeScreen extends React.Component {
           <Row  style={{ height: 120 }}>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() => this.props.navigation.navigate('Configuration')}
+              onPress={() => this.goToConfiguration()}
             >
               <Icon name='cog' style={{fontSize: 60, color: 'white'}}/>
             </Button>

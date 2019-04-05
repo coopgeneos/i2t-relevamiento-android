@@ -5,6 +5,7 @@ import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
 import ValidationComponent from 'react-native-form-validator';
+import { formatDateTo } from '../utilities/utils';
 
 
 
@@ -20,6 +21,7 @@ export default class ConfigurationScreen extends ValidationComponent {
       proximity_range: '',
       shipments_show: '',
       projection_agenda: '',
+      consultant_num: '',
       showToast: false,
       modalVisible: false,
       error_msg: '',
@@ -68,8 +70,11 @@ export default class ConfigurationScreen extends ValidationComponent {
                 case 'PROJECTION_AGENDA':
                   this.setState({projection_agenda:item.value,});
                   break;
+                case 'CONSULTANT_NUM':
+                  this.setState({consultant_num:item.value,});
+                  break;
                 default:
-                  console.error( 'el fieldname no existe!' );
+                  console.info(`el fieldname ${fieldName} no existe!`);
               }
             })
           }else{
@@ -83,6 +88,7 @@ export default class ConfigurationScreen extends ValidationComponent {
               proximity_range: '',
               shipments_show: '',
               projection_agenda: '',
+              consultant_num: ''
             });
           }
         }
@@ -120,7 +126,9 @@ export default class ConfigurationScreen extends ValidationComponent {
     if(!this.validate({shipments_show: {numbers: true}})){ 
       this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
     }
-
+    if(!this.validate({consultant_num: {numbers: true, minlength:1, maxlength:2, required: true}})){ 
+      this.state.error_msg += "Error en el campo número de asesor. Debe ser numérico y obligatorio.\n";
+    }
 
     if(this.state.error_msg.length > 0) {
       
@@ -141,27 +149,33 @@ export default class ConfigurationScreen extends ValidationComponent {
     const { proximity_range } = this.state;
     const { shipments_show } = this.state;
     const { projection_agenda } = this.state;
+    const { consultant_num } = this.state;
     const campos = ['user_name','user_email','url_backend','user_backend',
-      'pass_backend','proximity_range','shipments_show','projection_agenda']
+      'pass_backend','proximity_range','shipments_show','projection_agenda', 'consultant_num']
     var errordb = false;
     var item_ = '';
+    let user = {};
     global.DB.transaction(tx => {
       campos.forEach(item_campo => {
         switch (item_campo) {
           case 'user_name':
             item_ = user_name;
+            user.name = user_name;
             break;
           case 'user_email':
             item_ = user_email;
+            user.email = user_email;
             break;
           case 'url_backend':
             item_ = url_backend;
             break;
           case 'user_backend':
             item_ = user_backend;
+            user.username = user_backend;
             break;
           case 'pass_backend':
             item_ = pass_backend;
+            user.password = pass_backend;
             break;
           case 'proximity_range':
             item_ = proximity_range;
@@ -171,6 +185,9 @@ export default class ConfigurationScreen extends ValidationComponent {
             break;
           case 'projection_agenda':
             item_ = projection_agenda;
+            break;
+          case 'consultant_num':
+            item_ = consultant_num;
             break;
           default:
             console.error( 'el fieldname no existe!' );
@@ -186,6 +203,17 @@ export default class ConfigurationScreen extends ValidationComponent {
           }
         );
       });
+
+      tx.executeSql(
+        `UPDATE User set email = ?, name = ?, username = ?, password = ?, updated = ? `,
+        [user.email, user.name, user.username, user.password, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')],
+        (tx, results) => {},
+        (tx, err) => {
+          console.error(`ERROR actualizando el usuario: ${err}`)
+          errordb = true;
+        }
+      );
+
     });
 
     if (!errordb){
@@ -199,13 +227,18 @@ export default class ConfigurationScreen extends ValidationComponent {
       this.props.navigation.goBack();
     }
 
+    this.goBack();
+
   };
 
   setModalVisible(visible) {
     this.setState({modalVisible: visible});
   };
 
-
+  goBack(){
+    this.props.navigation.state.params.onGoBack();
+    this.props.navigation.goBack()
+  }
 
   render() {
     const { navigation } = this.props;
@@ -249,6 +282,16 @@ export default class ConfigurationScreen extends ValidationComponent {
               style={{width: '100%',  margin: 6}}
               keyboardType={'email-address'}
               placeholder="Ingrese el mail"
+            />
+          </Item>
+          <Item stackedLabel>
+            <Label>Numero de asesor</Label>
+            <TextInput
+              value={this.state.consultant_num}
+              onChangeText={consultant_num => this.setState({ consultant_num })}
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'numeric'}
+              placeholder="Ingrese su número de asesor"
             />
           </Item>
           <Item stackedLabel>
@@ -321,7 +364,7 @@ export default class ConfigurationScreen extends ValidationComponent {
 
 
         </Content>
-        <FooterNavBar navigation={this.props.navigation} />
+        {/*<FooterNavBar navigation={this.props.navigation} />*/}
       </Container>
     );
   }
