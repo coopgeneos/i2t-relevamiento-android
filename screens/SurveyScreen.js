@@ -179,7 +179,7 @@ export default class SurveyScreen extends React.Component {
         answers.push(answer);
 
       }
-      if(item.type === AppConstans.ITEM_TYPE_CHOICE) {
+      if(item.type === AppConstans.ITEM_TYPE_CHOICE || item.type === AppConstans.ITEM_TYPE_CHOICE_MULT) {
         card = await this.buildListCard(item.description, answers[i])
           .catch(err => {
             reject(err)
@@ -397,7 +397,7 @@ export default class SurveyScreen extends React.Component {
   async saveAnswer() {    
     var answer = this.state.answers[this.state.seg - 1];
 
-    console.log(`ANSWER: ${JSON.stringify(answer)}`)
+    // console.log(`ANSWER: ${JSON.stringify(answer)}`)
     
     /* if (answer.type === AppConstans.ITEM_TYPE_TEXT){
       answer.text_val = answer.notes;
@@ -635,6 +635,40 @@ export default class SurveyScreen extends React.Component {
     }
   }
 
+  elementList(answer, reg) {
+    if(answer.type == "sel_simpl")
+      return  <Radio
+                selected={answer.text_val == reg.value ? true : false }
+                onPress={() => {this.chooseOption(reg.value)}}
+                disabled={this.state.buttonSaveEnable}
+              />;
+    
+    if(answer.type == "sel_mult") {
+      return  <CheckBox 
+                checked={this.checkIfSelected(answer, value)} 
+                onPress={() => {this.selectCheckBox(reg.value)}}
+              />;
+    }
+  }
+
+  checkIfSelected(answer, value) {
+    return answer.text_val.includes(value);
+  }
+
+  cutFromString(str, value) {
+    str = str.substring(0, str.indexOf(value)) + 
+        str.substring(str.indexOf(value) + value.length, str.length);
+    return str;
+  }
+
+  selectCheckBox(answer, value) {
+    if(answer.text_val.includes(value)) {
+      answer.text_val = this.cutFromString(answer.text_val, value)
+    } else {
+      answer.text_val = answer.text_val + ',' + value;
+    }
+  }
+
   buildListCard(title, answer) {
     style_status_answer_req = { backgroundColor: '#65727B'};
 
@@ -655,11 +689,7 @@ export default class SurveyScreen extends React.Component {
                     <Text>{reg.value}</Text>
                   </Left>
                   <Right>
-                    <Radio
-                      selected={answer.text_val == reg.value ? true : false }
-                      onPress={() => {this.chooseOption(reg.value)}}
-                      disabled={this.state.buttonSaveEnable}
-                    />
+                    {this.elementList(answer, reg)}
                   </Right>
                 </ListItem>
               )
@@ -690,8 +720,6 @@ export default class SurveyScreen extends React.Component {
     this.props.navigation.state.params.onGoBack();
     this.props.navigation.goBack()
   }
-
-
 
   render() {
     const {showAlert} = this.state;

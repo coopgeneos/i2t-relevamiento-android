@@ -33,7 +33,7 @@ export default class SincronizeScreen extends React.Component {
   }
 
   async getParams(){
-    //this.url = 'http://tstvar.i2tsa.com.ar:3006'; 
+    // this.url = 'http://tstvar.i2tsa.com.ar:3006'; 
     this.url = this.url == null ? await getConfiguration('URL_BACKEND') : this.url;
     this.username = this.username == null ? await getConfiguration('USER_BACKEND') : this.username;
     this.password = this.password == null ? await getConfiguration('PASS_BACKEND') : this.password;
@@ -80,7 +80,7 @@ export default class SincronizeScreen extends React.Component {
       try {
         var token = await this.getToken()
 
-        /* let msg = {
+        let msg = {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -89,7 +89,7 @@ export default class SincronizeScreen extends React.Component {
           },
           body: JSON.stringify(body),
         };
-        console.log(`MESSAGE: url: ${url} \n ${JSON.stringify(msg)}`) */
+        console.log(`MESSAGE: url: ${url} \n ${JSON.stringify(msg)}`)
 
         let response = await fetch(url, {
           method: 'POST',
@@ -101,10 +101,11 @@ export default class SincronizeScreen extends React.Component {
           body: JSON.stringify(body),
         }); 
         let responseJson = await response.json();
-        // console.log(`RESPONSE: ${JSON.stringify(responseJson)}`)
+        console.log(`RESPONSE: ${JSON.stringify(responseJson)}`)
 
-        if(responseJson.returnset[0].RCode != 1) {
-          return reject(`El par usuario y contraseña no es correcto`)
+        if(responseJson.returnset[0].RCode && responseJson.returnset[0].RCode != 1) {
+          console.info(`Falló la consulta al WS. Devolvió ${JSON.stringify(responseJson)}`)
+          return reject(`Falló la consulta al WS`)
         }
 
         /* 
@@ -397,7 +398,7 @@ export default class SincronizeScreen extends React.Component {
       await this.syncListItemAct(from);
       await this.syncActivity(from).then(msg => this.state.modalMessagge += msg + "\n");
       
-      // await this.fixToTest(); //BORRAR ESTA LINEA CUANDO EL WS FUNCIONE BIEN!!!!
+      await this.fixToTest(); //BORRAR ESTA LINEA CUANDO EL WS FUNCIONE BIEN!!!!
 
       /* Actualizo la fecha de última descarga */
       let nld = formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss');
@@ -433,13 +434,16 @@ export default class SincronizeScreen extends React.Component {
         }
         return obj;
       case "Answer":
+
+        // TODO: Hacer lo de sel_mult
+
         obj = {
           id_movil: this.encodeID(item.id),
           fecha_ult_mod: item.updated,
           latitud: item.latitude,
           longitud: item.longitude,
-          caracter: null,
-          texto: item.text_val,
+          caracter: item.type == "sel_simpl" ? item.text_val : null,
+          texto: item.type == "sel_simpl" ? null : item.text_val,
           numero: item.number_val,
           url_imagen: null,
           id_contacto: item.contact_uuid,
@@ -450,6 +454,18 @@ export default class SincronizeScreen extends React.Component {
         console.log("No debería haber default!");    
     }
     return obj;  
+  }
+
+  getSQLStatement(table) {
+    switch(table){
+      case "Activity":
+        return `select * from Activity where updated > ?`;
+      case "Answer":
+        return `select a.*, t.type  
+                from Answer a 
+                inner join itemActType t on (t.id = a.itemActType_id) 
+                where a.updated > ?`;
+    }
   }
 
   getAPIUrl(table) {
@@ -480,14 +496,19 @@ export default class SincronizeScreen extends React.Component {
             return reject(err)
           });
 
-        executeSQL(`select * from ${table} where updated > ?`, [from])
+        executeSQL(this.getSQLStatement(table), [from])
           .then(async (items) => {
+
+            if(items.length == 0) {
+              return resolve({total: 0, synchronized: 0})
+            }
 
             let data = []
             for(i=0; i<items.length; i++){
               let obj = this.createObjectBody(table, items[i])
               data.push(obj)
             }
+
             let url = this.getAPIUrl(table);
             let uuids = await this.getFromWS(url, {json_in: JSON.stringify(data)});
 
@@ -533,8 +554,9 @@ export default class SincronizeScreen extends React.Component {
                   resolve({total: items.length, synchronized: uuids.length})
                 }
               )
-            }
-            
+            } else {
+              resolve({total: items.length, synchronized: 0})
+            }        
           })
           .catch(err => {
             reject(err)
@@ -546,9 +568,9 @@ export default class SincronizeScreen extends React.Component {
     this.state.modalMessagge = "Sincronizando...";
     this.setModalVisible(true);
     try {
-      /* El campo from debe ser String con formato YYYY-MM-DD */
-      let from = formatDateTo(global.context.user.lastUpload, 'YYYY-MM-DD');
+      let from = global.context.user.lastUpload;
       if(from == null) throw new Error("Error en la fecha de última subida de datos")
+
       await this.getParams()
       await this.upload("Activity", from)
         .then(msg => {
@@ -556,7 +578,7 @@ export default class SincronizeScreen extends React.Component {
         })
       await this.upload("Answer", from)
         .then(msg => {
-          this.state.modalMessagge += `Subidas ${answers.synchronized} respuestas de ${answers.total}`;
+          this.state.modalMessagge += `Subidas ${msg.synchronized} respuestas de ${msg.total}`;
         })
   
       /*
