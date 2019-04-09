@@ -34,11 +34,14 @@ export default class SincronizeScreen extends React.Component {
   }
 
   async getParams(){
-    // this.url = 'http://tstvar.i2tsa.com.ar:3006'; 
-    this.url = this.url == null ? await getConfiguration('URL_BACKEND') : this.url;
-    this.username = this.username == null ? await getConfiguration('USER_BACKEND') : this.username;
-    this.password = this.password == null ? await getConfiguration('PASS_BACKEND') : this.password;
-    this.consultant_num = this.consultant_num == null ? await getConfiguration('CONSULTANT_NUM') : this.consultant_num;
+    try {// this.url = 'http://tstvar.i2tsa.com.ar:3006'; 
+      this.url = this.url == null ? await getConfiguration('URL_BACKEND') : this.url;
+      this.username = this.username == null ? await getConfiguration('USER_BACKEND') : this.username;
+      this.password = this.password == null ? await getConfiguration('PASS_BACKEND') : this.password;
+      this.consultant_num = this.consultant_num == null ? Number(await getConfiguration('CONSULTANT_NUM')) : this.consultant_num;
+    } catch (error) {
+      throw new Error(error)
+    }
   }
 
   async getToken() {
@@ -52,6 +55,8 @@ export default class SincronizeScreen extends React.Component {
         if(this.state.token != null){
           return resolve(this.state.token);
         }
+
+        // console.info(`URL: ${this.url + AppConstans.WS_LOGIN} body: ${JSON.stringify({ usuario: this.username, pass: this.password})}`)
 
         let response = await fetch(this.url + AppConstans.WS_LOGIN, {
           method: 'POST',
@@ -81,7 +86,7 @@ export default class SincronizeScreen extends React.Component {
       try {
         var token = await this.getToken()
 
-        let msg = {
+        /* let msg = {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -90,7 +95,7 @@ export default class SincronizeScreen extends React.Component {
           },
           body: JSON.stringify(body),
         };
-        console.log(`MESSAGE: url: ${url} \n ${JSON.stringify(msg)}`)
+        console.log(`MESSAGE: url: ${url} \n ${JSON.stringify(msg)}`) */
 
         let response = await fetch(url, {
           method: 'POST',
@@ -102,12 +107,7 @@ export default class SincronizeScreen extends React.Component {
           body: JSON.stringify(body),
         }); 
         let responseJson = await response.json();
-        console.log(`RESPONSE: ${JSON.stringify(responseJson)}`)
-
-        if(responseJson.returnset[0].RCode && responseJson.returnset[0].RCode != 1) {
-          console.info(`Falló la consulta al WS. Devolvió ${JSON.stringify(responseJson)}`)
-          return reject(`Falló la consulta al WS`)
-        }
+        // console.log(`RESPONSE: ${JSON.stringify(responseJson)}`)       
 
         /* 
           Si el token esta vencido, consigo otro.
@@ -117,6 +117,11 @@ export default class SincronizeScreen extends React.Component {
           delete this.state.token;
           await executeSQL('delete from Configuration where key = ?', ["TOKEN"])
           return this.getFromWS(url, body) //invoco nuevamente el metodo, ahora con el nuevo token
+        }
+
+        if(responseJson.returnset[0].RCode && responseJson.returnset[0].RCode != 1) {
+          console.info(`Falló la consulta al WS. Devolvió ${JSON.stringify(responseJson)}`)
+          return reject(`Falló la consulta al WS`)
         }
 
         return resolve(responseJson);
@@ -387,7 +392,6 @@ export default class SincronizeScreen extends React.Component {
 
   async downloadAll(){
     this.state.modalMessagge = "Sincronizando...";
-    
     try {
       /* El campo from debe ser String con formato YYYY-MM-DD */
       let from = formatDateTo(global.context.user.lastDownload, 'YYYY-MM-DD')

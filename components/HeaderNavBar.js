@@ -18,7 +18,11 @@ export default class HeaderNavBar extends React.Component {
     this.props.navigation.goBack()
   }
 
-  goHome(){
+  goHome(){ 
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
+
     /* Envío como parámetro un objeto vacío, para que al cargar la página llame al render() */
     this.props.navigation.navigate('Home', {})
   }

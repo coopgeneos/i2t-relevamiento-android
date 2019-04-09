@@ -52,12 +52,6 @@ export default class HomeScreen extends React.Component {
     this.setState({configurationLoaded: loaded})
   }
 
-  async checkValue(key) {
-    return new Promise(async (resolve, reject) => {
-
-    })
-  }
-
   async checkConfiguration() {
     let requiredFields = [
       "USER_NAME","USER_EMAIL","URL_BACKEND","USER_BACKEND",
@@ -120,6 +114,8 @@ export default class HomeScreen extends React.Component {
 
   refresh() {
     this.getUserInfo();
+    this.checkPermissionGeolocation();
+    this.checkConfiguration();
   }
 
   goToConfiguration() {
@@ -128,7 +124,6 @@ export default class HomeScreen extends React.Component {
   }
 
   render() {
-
     let formItem;
     if(this.state.user == ''){
       formItem = <Spinner />

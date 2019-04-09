@@ -151,18 +151,18 @@ export async function getLocationAsync(){
         throw new Error('Permission to access location was denied');
       }
       let location = await Location.getCurrentPositionAsync({});
-      // let location = {
-      //   "timestamp":1550166625527,
-      //   "mocked":false,
-      //   "coords":{
-      //     "heading":0,
-      //     "longitude":-59.131096,
-      //     "speed":0,
-      //     "altitude":210.8000030517578,
-      //     "latitude":-37.3266809,
-      //     "accuracy":15.392999649047852
-      //   }
-      // }
+      /* let location = {
+        "timestamp":1550166625527,
+        "mocked":false,
+        "coords":{
+          "heading":0,
+          "longitude":-59.131096,
+          "speed":0,
+          "altitude":210.8000030517578,
+          "latitude":-37.3266809,
+          "accuracy":15.392999649047852
+        }
+      } */
       resolve(location);
     } catch (err) {
       console.log(err)
@@ -220,5 +220,52 @@ export async function showDB (tables) {
     console.log(`${table}`)
     console.log(`============================================`)
     console.log(data)
+  })
+}
+
+export async function checkConfiguration() {
+  return new Promise(async function(resolve, reject) {
+    let requiredFields = [
+      "USER_NAME","USER_EMAIL","URL_BACKEND","USER_BACKEND",
+      "PASS_BACKEND","PROXIMITY_RANGE","SHIPMENTS_SHOW","PROJECTION_AGENDA",
+      "CONSULTANT_NUM"
+    ];
+    
+    let promises = [];
+    for(i=0; i<requiredFields.length; i++) {
+      promises.push(getConfiguration(requiredFields[i]));
+    }
+
+    let values = await Promise.all(promises)
+      .catch(err => {
+        reject("DENIED")
+      })
+    for(i=0; i<values.length; i++) {
+      if(values[i] == null) {
+        return resolve("DENIED")
+      }
+    }
+    return resolve("GRANTED")
+  })
+}
+
+export async function checkGeolocation() {
+  return new Promise(async (resolve, reject) => {
+    if(global.context.geolocation) {
+      return global.context.geolocation
+    } else {
+      getLocationAsync()
+        .then(loc => {
+          checkPermission = () => {
+          navigator.geolocation.getCurrentPosition(
+            () => resolve("GRANTED"),
+            () => resolve("DENIED")
+          );
+          }
+        })
+        .catch(err => {
+          reject("DENIED")
+        })
+    }
   })
 }

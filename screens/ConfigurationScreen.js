@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Content, Text, Button, Form, Item, Label } from 'native-base';
-import {StyleSheet, TextInput, ToastAndroid, Modal, View} from 'react-native';
+import {StyleSheet, TextInput, ToastAndroid, Modal, View, BackHandler} from 'react-native';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
@@ -26,12 +26,20 @@ export default class ConfigurationScreen extends ValidationComponent {
       modalVisible: false,
       error_msg: '',
     };
+
+  this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
+    BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+  );
   }
+
+  onBackButtonPressAndroid = () => {
+    this.goBack()
+    return true;
+  };
 
   componentDidMount() {
     this.getParameters();
   }
-
 
   getParameters = () => {
     global.DB.transaction(tx => {
@@ -108,9 +116,10 @@ export default class ConfigurationScreen extends ValidationComponent {
     if(!this.validate({ user_backend: {minlength:3, maxlength:8, required: true} })){ 
       this.state.error_msg += "Error en Usuario Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
     }
-    if(!this.validate({ pass_backend: {minlength:6, maxlength:8, required: true} })){ 
+    /* Esta verificación se quita para que I2T pueda testear la primer version de WS */
+    /* if(!this.validate({ pass_backend: {minlength:6, maxlength:8, required: true} })){ 
       this.state.error_msg += "Error en Password Backend debe contener entre 6 y 8 caracteres y es de carga obligatoria.\n";
-    }
+    } */
     if(!this.validate({ url_backend: {required: true} })){ 
       this.state.error_msg += "Error en URL, el campo es de carga obligatoria.\n";
     }
@@ -127,7 +136,7 @@ export default class ConfigurationScreen extends ValidationComponent {
       this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
     }
     if(!this.validate({consultant_num: {numbers: true, minlength:1, maxlength:2, required: true}})){ 
-      this.state.error_msg += "Error en el campo número de asesor. Debe ser numérico y obligatorio.\n";
+      this.state.error_msg += "Error en el campo número de asesor. Debe ser numérico y es obligatorio.\n";
     }
 
     if(this.state.error_msg.length > 0) {
@@ -194,8 +203,8 @@ export default class ConfigurationScreen extends ValidationComponent {
         }
 
         tx.executeSql(
-          'UPDATE Configuration set value=? where key=?',
-          [item_, String(item_campo).toLocaleUpperCase()],
+          'insert or replace into Configuration(key, value, updated) values (?, ?, ?)',
+          [String(item_campo).toLocaleUpperCase(), item_, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')],
           (tx, results) => {},
           (tx, err) => {
             console.error(`ERROR actualizando la DB: ${err}`)
@@ -236,7 +245,9 @@ export default class ConfigurationScreen extends ValidationComponent {
   };
 
   goBack(){
-    this.props.navigation.state.params.onGoBack();
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
     this.props.navigation.goBack()
   }
 
