@@ -81,7 +81,7 @@ export default class SurveyScreen extends React.Component {
           iat.description, iat.type, 
           act.id as activity_id, act.uuid as activity_uuid, 
           c.id as contact_id, c.uuid as contact_uuid,  
-          a.id as answer_id, a.text_val, a.img_val, a.number_val, a.latitude, a.longitude, 
+          a.id as answer_id, a.text_val, a.img_val, a.img_val_change, a.number_val, a.latitude, a.longitude, 
           act.state, iat.required 
           from Activity act 
           inner join ActivityType at on (at.id = act.activityType_id) 
@@ -171,7 +171,7 @@ export default class SurveyScreen extends React.Component {
           required: item.required === '1' ? true : false,
           text_val: item.text_val,
           img_val: item.img_val,
-          img_val_change: false,
+          img_val_change: 0,
           number_val: item.number_val,         
           latitude: item.latitude,
           longitude: item.longitude  
@@ -388,7 +388,7 @@ export default class SurveyScreen extends React.Component {
       }
       if (!result.cancelled) {
         this.state.answers[this.state.seg - 1].img_val = result.uri;
-        this.state.answers[this.state.seg - 1].img_val_change = true;
+        this.state.answers[this.state.seg - 1].img_val_change = 1;
         this.loadCards(this.state.cardsData, false);
       }
     }
@@ -429,7 +429,7 @@ export default class SurveyScreen extends React.Component {
       if(answer.id){
         var upd_img = '';
         if(answer.img_val_change){
-          upd_img = `img_val = '${base64}',`
+          upd_img = `img_val = '${base64}', img_val_change = 1, `
         }
         sql = ` update Answer set ${upd_img} text_val = '${answer.text_val}', 
                   number_val = ${answer.number_val}, 
@@ -440,11 +440,11 @@ export default class SurveyScreen extends React.Component {
         sql = ` insert into Answer (activity_id, activity_uuid, 
                   itemActType_id, itemActType_uuid,
                   contact_id, contact_uuid, 
-                  text_val, img_val, number_val, updated, latitude, longitude) 
+                  text_val, img_val, img_val_change, number_val, updated, latitude, longitude) 
                 values (${answer.activity_id}, '${answer.activity_uuid}',
                   ${answer.itemActType_id}, '${answer.itemActType_uuid}',
                   ${answer.contact_id}, '${answer.contact_uuid}', 
-                  '${answer.text_val}', '${base64}', ${answer.number_val}, 
+                  '${answer.text_val}', '${base64}', ${answer.img_val_change}, ${answer.number_val}, 
                   '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
                   ${position.coords.latitude}, ${position.coords.longitude}
                 )`;

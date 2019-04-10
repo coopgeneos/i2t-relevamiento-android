@@ -106,8 +106,6 @@ export default class ConfigurationScreen extends ValidationComponent {
 
 
   setParameters = () => {
-    console.log("setParameters");
-
     this.state.error_msg = '';
 
     if(!this.validate({user_name: {minlength:3, maxlength:50, required: true}})){ 

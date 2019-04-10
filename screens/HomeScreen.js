@@ -55,7 +55,7 @@ export default class HomeScreen extends React.Component {
   async checkConfiguration() {
     let requiredFields = [
       "USER_NAME","USER_EMAIL","URL_BACKEND","USER_BACKEND",
-      "PASS_BACKEND","PROXIMITY_RANGE","SHIPMENTS_SHOW","PROJECTION_AGENDA",
+      "PASS_BACKEND","PROJECTION_AGENDA",
       "CONSULTANT_NUM"
     ];
     

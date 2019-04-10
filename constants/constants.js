@@ -33,6 +33,8 @@ export default {
   WS_ITEMACTTYPE_DOWNLOAD: '/api/proc/ExtraeConsignas',
   WS_LISTITEMACT_DOWNLOAD: '/api/proc/ExtraeReferencias',
   WS_ACTIVITY_UPLOAD: '/api/proc/tasksINS',
-  WS_ANSWER_UPLOAD: '/api/proc/relevamientoINS'
+  WS_ANSWER_UPLOAD: '/api/proc/relevamientoINS',
+  WS_IMAGE_UPLOAD: '/api/imagenes/attachments',
+  WS_IMAGE_LINKING: '/api/proc/actualizarURLImagenUPD'
   
 }
