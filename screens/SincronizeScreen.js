@@ -150,7 +150,7 @@ export default class SincronizeScreen extends React.Component {
           for(i=0; i<ctsws.length; i++){
            tx.executeSql(
               ` insert or replace into Contact(uuid, user_id, name, address, city, zipCode, phone, email, latitude, longitude, updated, state)  
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [ ctsws[i].id_contacto, global.context.user.id, ctsws[i].nombre, 
                 ctsws[i].primary_address_street, ctsws[i].primary_address_city, 
                 ctsws[i].primary_address_postalcode, ctsws[i].phone_mobile, 
@@ -187,7 +187,7 @@ export default class SincronizeScreen extends React.Component {
           {usuario: this.username, FechaDesde: from, Otros: ''})
 
         acts = acts.dataset;
-        // console.log(`ACTIVITY TYPE: \n ${JSON.stringify(acts)}`)
+        console.log(`ACTIVITY TYPE: \n ${JSON.stringify(acts)}`)
   
         global.DB.transaction(tx => {
           for(i=0; i<acts.length; i++){
@@ -313,7 +313,7 @@ export default class SincronizeScreen extends React.Component {
           {usuario: this.username, FechaDesde: from, Otros: ''})
           .catch(err => {reject(err)})
         items = items.dataset;
-        // console.log(`ACTIVITY: ${JSON.stringify(items)}`)
+        console.log(`ACTIVITY: ${JSON.stringify(items)}`)
   
         global.DB.transaction(tx => {
             for(i=0; i<items.length; i++){
