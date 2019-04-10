@@ -105,13 +105,13 @@ export default class ContactsScreen extends React.Component {
       <Container>
           <HeaderNavBar navigation={this.props.navigation} title="Actividades" map={true} markers={this.state.markers} />
           <Content>
-          <Form style={{flexDirection: 'row', justifyContent: 'center'}}>
+          <Form style={{flexDirection: 'row'}}>
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
                 <Label>Nombre</Label>
-                <Input style={{ height: 26 }} value={this.state.name} editable={false}/>           
+                <Text>{this.state.name}</Text>           
               </Item>
-              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '30%'}}>               
+              <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>               
                 <Label>Cercanos</Label>
                 <CheckBox checked={this.state.nears} onPress={() => {this.toggleNears()}} />               
               </Item>

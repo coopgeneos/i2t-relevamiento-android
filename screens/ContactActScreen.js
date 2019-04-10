@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
-         Icon, Form, Item, Label, Input, Left, Title, Body, Right } from 'native-base';
+         Icon, Form, Item, Label, Input, Left, Title, Body, Right, Textarea } from 'native-base';
 
 import { StyleSheet, View, Alert, BackHandler} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
@@ -156,7 +156,7 @@ export default class ContactActScreen extends React.Component {
                         <TableWrapper key={index} style={styles.row}>
                           {
                             rowData.map((cellData, cellIndex) => (
-                              <Cell key={cellIndex} data={cellIndex === 1 ? element(cellData, index) : cellData} textStyle={styles.text}/>
+                              <Cell key={cellIndex} data={cellIndex === 1 ? element(cellData, index) : cellData} style={cellIndex === 1 ? styles.row_btn : styles.row_data} textStyle={styles.text}/>
                             ))
                           }
                         </TableWrapper>
@@ -177,17 +177,17 @@ export default class ContactActScreen extends React.Component {
           <Form>
           <Item stackedLabel>
             <Label>Contacto</Label>
-            <Input
-              value={this.contact.name}
-              disabled
-              style={{ width: '90%' }}
-            />
+            <Textarea rowSpan={2}  
+                value={this.contact.name}
+                disabled
+                style={{ marginLeft: 10, fontSize: 16 }}
+              />
             <Label>Dirección</Label>
-            <Input
-              value={ this.contact.address + ' - ' + this.contact.city }
-              disabled
-              style={{ width: '90%' }}
-            />
+            <Textarea rowSpan={2} 
+                value={ this.contact.address + ' - ' + this.contact.city }
+                disabled
+                style={{ marginLeft: 10, fontSize: 16 }}
+              />
           </Item>
           </Form>
 
@@ -201,12 +201,14 @@ export default class ContactActScreen extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 5, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#778591' },
-  text: { margin: 6, fontSize: 14},
+  text: { margin: 6, fontSize: 16},
   text_head: { margin: 6, color: '#FFF',  fontSize: 18},
   row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 50 },
-  btn: { height: 22, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
-  btn_cont: { flexDirection: 'row', width: 100 },
-  btnText: { textAlign: 'center', color: '#fff'}
+  btn: { height: 25, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
+  btn_cont: { flexDirection: 'row' },
+  btnText: { textAlign: 'center', color: '#fff'},
+  row_data: {width: 250 },
+  row_btn: { width: 100 }
 });

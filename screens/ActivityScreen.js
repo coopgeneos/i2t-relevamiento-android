@@ -172,24 +172,28 @@ export default class ActivityScreen extends ValidationComponent {
 
           <Form>
           <Item stackedLabel>
-            <Label>Contacto</Label>
-            <Input
-              value={this.contact.name}
-              disabled
-              style={{ width: '100%' }}
-            />
+          <Label>Contacto</Label>
+            <Textarea rowSpan={2}  
+                value={this.contact.name}
+                disabled
+                style={{ marginLeft: 10, fontSize: 16 }}
+              />
             <Label>Dirección</Label>
-            <Input
-              value={ this.contact.address + ' - ' + this.contact.city }
-              disabled
-              style={{ width: '100%' }}
-            />
+            <Textarea rowSpan={2} 
+                value={ this.contact.address + ' - ' + this.contact.city }
+                disabled
+                style={{ marginLeft: 10, fontSize: 16 }}
+              />
           </Item>
           </Form>
 
           <Form>
             <Item>
-              <Text style={{fontSize: 18}}>Registro {this.activity.description}</Text>
+              <Textarea rowSpan={2} 
+                value={ 'REGISTRO: ' + this.activity.description }
+                disabled
+                style={{ fontSize: 16, padding: 0 }}
+              />
             </Item>
             <Item>
               <Textarea rowSpan={3} bordered placeholder="Ingrese sus notas aquí ..." 

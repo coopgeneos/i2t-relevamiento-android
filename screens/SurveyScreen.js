@@ -736,7 +736,7 @@ export default class SurveyScreen extends React.Component {
               <Label style= {{ fontWeight: 'bold'}}>ACTIVIDAD DE RELEVAMIENTO</Label>
              
               <Text numberOfLines={2} note>
-                {this.activity_description} - {this.contact.name}
+                Referencia: {this.activity.description} - {this.contact.name}
               </Text> 
               <Text numberOfLines={2} note>
                 Dirección: { this.contact.address } - { this.contact.city }
