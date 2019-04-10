@@ -396,6 +396,13 @@ export default class SincronizeScreen extends React.Component {
     })
   } */
 
+  async syncAll(){
+
+    //this.uploadAll();
+    this.downloadAll();
+  
+  }
+
   async downloadAll(){
     this.state.modalMessagge = "Sincronizando...";
     try {
@@ -778,19 +785,19 @@ export default class SincronizeScreen extends React.Component {
         <HeaderNavBar navigation={this.props.navigation}  title="Sincronización" />
         <Content style={{padding: 10}}>
         <Grid style={{ alignItems: 'center' }}>
-          <Row style={styles.row}>
+          {/* <Row style={styles.row}>
             <Col style={{ alignItems: 'center' }}>
               <Button onPress={() => this.downloadAll()} block>
               <Icon active name="cloud-download" />
               <Text>Bajar Información</Text>
               </Button>
             </Col>
-          </Row>
+          </Row> */}
           <Row style={styles.row}>
             <Col style={{ alignItems: 'center' }}>
-              <Button onPress={() => this.uploadAll()} block>
+              <Button onPress={() => this.syncAll()} block>
               <Icon active name="cloud-upload" />
-              <Text>Subir Información</Text>
+              <Text>Sincronizar Información</Text>
               </Button>
             </Col>
           </Row>

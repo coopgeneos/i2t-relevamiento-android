@@ -180,13 +180,13 @@ export default class ContactActScreen extends React.Component {
             <Input
               value={this.contact.name}
               disabled
-              style={{ width: '100%' }}
+              style={{ width: '90%' }}
             />
             <Label>Dirección</Label>
             <Input
               value={ this.contact.address + ' - ' + this.contact.city }
               disabled
-              style={{ width: '100%' }}
+              style={{ width: '90%' }}
             />
           </Item>
           </Form>
@@ -205,8 +205,8 @@ const styles = StyleSheet.create({
   head: { height: 40, backgroundColor: '#778591' },
   text: { margin: 6, fontSize: 14},
   text_head: { margin: 6, color: '#FFF',  fontSize: 18},
-  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 40 },
+  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 50 },
   btn: { height: 22, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
-  btn_cont: { flexDirection: 'row'},
+  btn_cont: { flexDirection: 'row', width: 100 },
   btnText: { textAlign: 'center', color: '#fff'}
 });

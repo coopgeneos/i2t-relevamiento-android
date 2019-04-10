@@ -122,9 +122,9 @@ export default class ContactsScreen extends React.Component {
               dataArray={this.state.contacts}
               renderRow={data =>
               <ListItem thumbnail>
-                <Left>
+                {/* <Left>
                   <Thumbnail square source={img_sample} />
-                </Left>
+                </Left> */}
                 <Body>
                   <Text>
                     {data.name}
@@ -138,7 +138,7 @@ export default class ContactsScreen extends React.Component {
                 </Body>
                 <Right>
                   <Button transparent style={styles.btn} onPress={() => {this.goToContactActivities({contact: data})}}>
-                    <Text>+ Actividad</Text>
+                    <Text>+ ACT</Text>
                   </Button>
                 </Right>
               </ListItem>}
