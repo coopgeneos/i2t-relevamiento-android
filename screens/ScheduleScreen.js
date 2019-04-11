@@ -27,13 +27,13 @@ export default class ScheduleScreen extends React.Component {
 
   getActivities(nears, dateFilter) {
     
-    let sql = ` select a.id, a.planned_date, a.state, a.exec_date, a.percent,
+    let sql = ` select a.id, a.planned_date, a.state, a.status, a.exec_date, a.percent,
                 actt.description, c.id as contact_id, c.name, c.address, c.city, 
                 c.latitude, c.longitude 
                 from Activity a 
                 inner join ActivityType actt on (actt.id = a.activityType_id)
                 inner join Contact c on (c.id = a.contact_id)
-                where a.state != '${AppConstans.ACTIVITY_COMPLETED}'`;
+                where a.status != '${AppConstans.ACTIVITY_COMPLETED}'`;
 
     if(dateFilter) {
       let endDate = new Date(dateFilter.getTime()+86399000); //le sumo 23 hs 59 mins y 59 segs
@@ -216,9 +216,9 @@ export default class ScheduleScreen extends React.Component {
                         </Text>
                       </Body>
                       <Right>
-                        { ( data.state == AppConstans.ACTIVITY_NEW || 
-                            data.state == AppConstans.ACTIVITY_IN_PROGRESS ||
-                            data.state == AppConstans.ACTIVITY_PENDING ) && 
+                        { ( data.status == AppConstans.ACTIVITY_NEW || 
+                            data.status == AppConstans.ACTIVITY_IN_PROGRESS ||
+                            data.status == AppConstans.ACTIVITY_PENDING ) && 
                             <TouchableOpacity>
                               <View style={styles.btn_cont}>
                                 <Button transparent style={styles.btnText} onPress={() => this.goToActivities(data)}>
@@ -233,7 +233,7 @@ export default class ScheduleScreen extends React.Component {
                               </View>
                             </TouchableOpacity>
                         }
-                        { data.state == AppConstans.ACTIVITY_COMPLETED && 
+                        { data.status == AppConstans.ACTIVITY_COMPLETED && 
                             <TouchableOpacity>
                             <View style={styles.btn_cont}>
                               <Button transparent style={styles.btnText} onPress={() => this.goToActivities(data)}>
@@ -248,7 +248,7 @@ export default class ScheduleScreen extends React.Component {
                             </View>
                             </TouchableOpacity>
                         }
-                        { data.state == AppConstans.ACTIVITY_CANCELED && 
+                        { data.status == AppConstans.ACTIVITY_CANCELED && 
                             <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
                             <View style={styles.btn_cont}>
                               <Button transparent style={styles.btnText} onPress={() => this.goToActivities(data)}>

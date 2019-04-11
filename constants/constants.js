@@ -28,6 +28,7 @@ export default {
 
   WS_LOGIN: '/login/',
   WS_CONTACT_DOWNLOAD: '/api/proc/ExtraeContactos', 
+  WS_CONTACT_DEGUB: '/api/proc/ExtraeContactosDepurados',
   WS_ACTIVITY_DOWNLOAD: '/api/proc/ExtraeTareas',
   WS_ACTIVITYTYPE_DOWNLOAD: '/api/proc/ExtraeActividades',
   WS_ITEMACTTYPE_DOWNLOAD: '/api/proc/ExtraeConsignas',

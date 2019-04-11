@@ -39,7 +39,7 @@ export default class ActivitiesScreen extends React.Component {
           from Activity a 
           inner join ActivityType actt on (actt.id = a.activityType_id) 
           where a.contact_id = ? 
-          -- and a.state != 'close' and a.state != 'canceled'
+          and a.state != 1 
         `,
         [this.contact.id],
         (_, { rows }) => {

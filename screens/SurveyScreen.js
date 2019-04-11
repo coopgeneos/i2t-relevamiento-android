@@ -121,7 +121,7 @@ export default class SurveyScreen extends React.Component {
     var answers = this.state.answers;
     
     //si la activity esta cerrada, desactivo el button de grabar
-    if (data[0].state === AppConstans.ACTIVITY_COMPLETED){
+    if (data[0].status === AppConstans.ACTIVITY_COMPLETED){
       this.setState ({
         buttonSaveEnable: true
       });
@@ -172,6 +172,7 @@ export default class SurveyScreen extends React.Component {
           text_val: item.text_val,
           img_val: item.img_val,
           img_val_change: 0,
+          img_condition: item.img_condition,
           number_val: item.number_val,         
           latitude: item.latitude,
           longitude: item.longitude  
@@ -228,14 +229,14 @@ export default class SurveyScreen extends React.Component {
       showAlert: false
     });
 
-    let newState = this.state.pendientes > 0 ? AppConstans.ACTIVITY_PENDING : AppConstans.ACTIVITY_COMPLETED;
+    let status = this.state.pendientes > 0 ? AppConstans.ACTIVITY_PENDING : AppConstans.ACTIVITY_COMPLETED;
 
-    var sql = `update Activity set state = ?, updated = ?  
+    var sql = `update Activity set status = ?, updated = ?  
                where id = ?;`;
     global.DB.transaction(tx => {
       tx.executeSql(
         sql,
-        [newState, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'), this.activity.id],
+        [status, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'), this.activity.id],
         (_, {rows}) => {
         },
         (_, err) => {
@@ -407,6 +408,10 @@ export default class SurveyScreen extends React.Component {
       answer.number_val = answer.number_val;
     } */
 
+    if (answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
+      answer.img_condition = this.state.checkbox1 ? 1 : 0;
+    }
+
     /*
       Solo se crea una respuesta si la imagen o el texto vienen con algo.
       Si la respuesta ya tiene id (ya existia de antes), se actualiza
@@ -468,7 +473,7 @@ export default class SurveyScreen extends React.Component {
               from ItemActType iat 
               left join answer a on (a.itemActType_id = iat.id)
               where iat.activityType_id = activity.activityType_id 
-            ), state = ?, updated = ?   
+            ), status = ?, updated = ?   
             where id = ?;`,
           [ 
             AppConstans.ACTIVITY_IN_PROGRESS,

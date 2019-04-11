@@ -22,6 +22,7 @@ stms.push(`
 		user_id INTEGER,
 		user_uuid TEXT,
 		name TEXT,
+		description TEXT,
 		address TEXT,
 		city TEXT,
 		zipCode TEXT,
@@ -40,7 +41,9 @@ stms.push(`
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		uuid TEXT UNIQUE,
 		updated TEXT NOT NULL,
-		description TEXT NOT NULL
+		description TEXT NOT NULL,
+		short_name TEXT NOT NULL,
+		state INTEGER NOT NULL
 	);`);
 
 stms.push(`
@@ -67,6 +70,8 @@ stms.push(`
 			updated TEXT NOT NULL,
 			reference TEXT NOT NULL,
 			value TEXT NOT NULL,
+			position INTEGER,
+			state INTEGER,
 			account_id TEXT
 		);`);
 
@@ -84,7 +89,8 @@ stms.push(`
 		priority TEXT,
 		planned_date TEXT,
 		exec_date TEXT,
-		state TEXT NOT NULL,
+		status TEXT NOT NULL,
+		state INTEGER NOT NULL,
 		cancellation TEXT,
 		notes TEXT,
 		percent REAL NOT NULL,
@@ -116,6 +122,7 @@ stms.push(`
 		text_val TEXT,
 		img_val BLOB,
 		img_val_change INTEGER,
+		img_condition INTEGER,
 		img_url TEXT,
 		number_val REAL,
 		latitude REAL,
@@ -139,10 +146,11 @@ stms.push(`INSERT INTO Configuration (key, value, updated) values ('PASS_BACKEND
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROXIMITY_RANGE', '1000', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('SHIPMENTS_SHOW', '30', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROJECTION_AGENDA', '15', '${new Date().toString()}');`);
-stms.push(`INSERT INTO Configuration (key, value, updated) values ('CONSULTANT_NUM', '20', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('CONSULTANT_NUM', '23', '${new Date().toString()}');`);
 
-stms.push(`INSERT INTO Answer(updated) values ('3000/01/01 00:00:01')`);
-stms.push(`UPDATE sqlite_sequence SET seq = 1000000 WHERE name = 'Answer'`);
+// stms.push(`INSERT INTO Answer(updated) values ('3000/01/01 00:00:01')`);
+// stms.push(`UPDATE sqlite_sequence SET seq = 1000000 WHERE name = 'Answer'`);
+// stms.push(`DELETE FROM Answer where updated = '3000/01/01 00:00:01'`);
 
 stms.push(`commit;`);
 

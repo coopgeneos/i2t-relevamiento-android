@@ -231,7 +231,7 @@ export default class ConfigurationScreen extends ValidationComponent {
         25,
         50,
       );
-      this.props.navigation.goBack();
+      // this.goBack();
     }
 
     this.goBack();
@@ -342,7 +342,7 @@ export default class ConfigurationScreen extends ValidationComponent {
               onChangeText={proximity_range => this.setState({ proximity_range })}
               style={{width: '100%',  margin: 6}}
               keyboardType={'numeric'}
-              placeholder="Ingrese la distancia de cercanos"
+              placeholder="Ingrese la distancia de cercanos (en metros)"
             />
           </Item>
           <Item stackedLabel>
@@ -352,7 +352,7 @@ export default class ConfigurationScreen extends ValidationComponent {
               onChangeText={shipments_show => this.setState({ shipments_show })}
               style={{width: '100%',  margin: 6}}
               keyboardType={'numeric'}
-              placeholder="Ingrese la cantidad de envios"
+              placeholder="Ingrese el tamaño del paquete de envío"
             />
           </Item>
           <Item stackedLabel>

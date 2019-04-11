@@ -92,8 +92,10 @@ export default class HomeScreen extends React.Component {
       tx.executeSql(
         ` select u.* , 
             (SELECT count(a.id) 
-              from activity a 
-              where a.state != 'Completa'
+              from Answer a 
+              where a.updated > (
+                select lastSync from user u where u.id = 1
+              )
             ) as pendingSyncs 
           from User u;`,
         [],
@@ -205,14 +207,14 @@ export default class HomeScreen extends React.Component {
           <Row  style={{ height: 120 }}>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() => this.props.navigation.navigate('Schedule')}
+              onPress={() => this.props.navigation.navigate('Schedule', {onGoBack: () => this.refresh()})}
             >
               <Icon name='list-alt' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() => this.props.navigation.navigate('Contacts', {user: this.state.user})}
+              onPress={() => this.props.navigation.navigate('Contacts', {user: this.state.user, onGoBack: () => this.refresh()})}
             >
               <Icon name='address-book' style={{fontSize: 60, color: 'white'}}/>
             </Button>
@@ -228,7 +230,7 @@ export default class HomeScreen extends React.Component {
             </Col>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() => this.props.navigation.navigate('Sincronize')}
+              onPress={() => this.props.navigation.navigate('Sincronize',{onGoBack: () => this.refresh()})}
             >
               <Icon name='retweet' style={{fontSize: 60, color: 'white'}}/>
             </Button>
