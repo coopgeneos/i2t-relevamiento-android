@@ -58,7 +58,7 @@ export default class MapScreen extends React.Component {
     if(this.state.markers) {
       this.state.markers.forEach(elem => {
         markers_onMap.push(
-          <MapView.Marker key={elem.title}
+          <MapView.Marker key={elem.key}
             coordinate= {elem.coords}
             title = {elem.title}
             description= {elem.description}

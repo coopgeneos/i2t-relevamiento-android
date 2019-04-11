@@ -23,46 +23,80 @@ export default class ContactsScreen extends React.Component {
 
   componentDidMount() {
     this.getContacts(null)
+      .then(() => {
+        this.setState({});
+      })
   }
 
-  getContacts(nears) {
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        ` select * 
-          from Contact 
-          where state != 1 
-          order by name;`,
-        [],
-        async (_, { rows }) => {
-          var data = rows._array;
-          if(nears === true){
-            var myLocation = await getLocationAsync();
-            var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
-            var prox_range = await getConfiguration('PROXIMITY_RANGE');
-            var data = rows._array.filter(item => {
-              var ctLoc = {lat: item.latitude, lng: item.longitude};
-              return isClose(myLoc, ctLoc, prox_range)
+  getContacts(nears, ) {
+    return new Promise((resolve, reject) => {
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` select * 
+            from Contact 
+            where state != 1 
+            order by name;`,
+          [],
+          async (_, { rows }) => {
+            var data = rows._array;
+            if(nears === true){
+              var myLocation = await getLocationAsync();
+              var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
+              var prox_range = await getConfiguration('PROXIMITY_RANGE');
+              var data = rows._array.filter(item => {
+                var ctLoc = {lat: item.latitude, lng: item.longitude};
+                return isClose(myLoc, ctLoc, prox_range)
+              })
+            }
+            var markers = [];       
+            data.forEach((item, index) => {
+              if(item.latitude != null && item.longitude != null)
+                markers.push({title: item.name, description: item.address+' - '+item.city, coords: { latitude: item.latitude, longitude: item.longitude}, key: index});
             })
+            /* 
+              Elimino los repetidos para evitar problemas de key repetidas en el mapa
+              y evitar solapamientos en pines
+            */
+            this.removeDuplicated(markers, this.markerEquals);
+            /* this.setState ({
+              contacts: data,
+              markers: markers
+            }); */
+            this.state.contacts = data;
+            this.state.markers = markers;
+            resolve("Ok")
+          },
+          (_, err) => {
+            reject(`ERROR consultando DB: ${err}`)
           }
-          var markers = [];       
-          data.forEach(item => {
-            markers.push({title: item.name, description: item.address+' - '+item.city, coords: { latitude: item.latitude, longitude: item.longitude}});
-          })
-          this.setState ({
-            contacts: data,
-            markers: markers
-          });
-        },
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
+        )
+      });
+    })
+  }
+
+  /* Dos marcadores son iguales si tienen la misma latitud y longitud */
+  markerEquals(m1, m2) {
+    return (m1.coords.latitude == m2.coords.latitude) && (m1.coords.longitude == m2.coords.longitude)
+  }
+
+  removeDuplicated(array, areEquals) {
+    for(i=0; i<(array.length - 1); i++) {
+      for(j=i+1; j<array.length; j++) {
+        if(this.markerEquals(array[i], array[j])){
+          array.splice(j, 1);
+          j--; // Retrocedo un casillero porque el arreglo se acaba de achicar
         }
-      )
-    });
+      }
+    }
+    return array;
   }
 
   toggleNears(){
     this.state.nears = !this.state.nears;
-    this.getContacts(this.state.nears);
+    this.getContacts(this.state.nears)
+      .then(() => {
+        this.setState({});
+      })
   }
 
   onPressRow(contact){ 
@@ -74,7 +108,10 @@ export default class ContactsScreen extends React.Component {
   }
 
   refresh(){
-    this.getContacts(null);
+    this.getContacts(null)
+      .catch(err => {
+        console.error("Error obteniendo datos para página de contactos")
+      })
   }
 
   render() {
@@ -144,7 +181,7 @@ export default class ContactsScreen extends React.Component {
               </ListItem>}
             />
         </Content>
-        <FooterNavBar navigation={this.props.navigation} />
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh()}/>
       </Container>
     );
   }

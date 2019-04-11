@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Content, Text, Button, Icon } from 'native-base';
 import { getConfiguration, formatDateTo, executeSQL, showDB } from '../utilities/utils'
 import AppConstants from '../constants/constants';
-import { StyleSheet, Alert, Modal} from 'react-native';
+import { StyleSheet, Alert, Modal, NetInfo} from 'react-native';
 import { Grid, Row, Col } from "react-native-easy-grid";
 import { FileSystem } from 'expo';
 
@@ -30,7 +30,22 @@ export default class SincronizeScreen extends React.Component {
     this.consultant_num = null;
     this.state = {
       modalMessagge: "",
+      isWifiConnected: false
     };
+
+    const subscription = NetInfo.addEventListener('connectionChange', () => {
+      NetInfo.getConnectionInfo()
+        .then(connection => {
+          this.setState({isWifiConnected: connection.type === "wifi"})
+        });
+    });
+  }
+
+  componentDidMount() {
+    this.refresh()
+      .then(() => {
+        this.setState({});
+      })
   }
 
   async getParams(){
@@ -827,8 +842,29 @@ export default class SincronizeScreen extends React.Component {
         })
     })
   }
+
+  refresh() {
+    return NetInfo.getConnectionInfo()
+      .then(connection => {
+        return this.state.isWifiConnected = connection.type === "wifi";
+      })
+      .catch(err => {
+        this.setState({modalMessagge: "Error chequeando el estado del dipositivo"})
+      })
+  }
   
   render() {
+
+    let button =  this.state.isWifiConnected ? 
+                <Button onPress={() => this.syncAll()} block > 
+                  <Icon active name="cloud-upload" />
+                  <Text>Sincronizar Información</Text>
+                </Button> : 
+                <Button onPress={() => this.syncAll()} block disabled > 
+                  <Icon active name="cloud-upload" />
+                  <Text>Sincronizar Información</Text>
+                </Button>;
+
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Sincronización" />
@@ -836,15 +872,12 @@ export default class SincronizeScreen extends React.Component {
         <Grid style={{ alignItems: 'center' }}>
           <Row style={styles.row}>
             <Col style={{ alignItems: 'center' }}>
-            <Text style={{ paddingLeft:20, paddingRight: 20, textAlign: 'center' }}>Para utilizar esta función se recomienda estar conectado a una red WIFI. De lo contrario podría demorarse demasiado e incurrir en un consumo excesivo de datos.</Text>
+            <Text style={{ paddingLeft:20, paddingRight: 20, textAlign: 'center' }}>Para utilizar esta función es necesario estar conectado a una red WIFI.</Text>
             </Col>
           </Row>
           <Row style={styles.row}>
             <Col style={{ alignItems: 'center', paddingLeft: 20, paddingRight: 20 }}>
-              <Button onPress={() => this.syncAll()} block>
-              <Icon active name="cloud-upload" />
-              <Text>Sincronizar Información</Text>
-              </Button>
+              {button}
             </Col>
           </Row>
           <Row style={styles.row}>
@@ -859,7 +892,7 @@ export default class SincronizeScreen extends React.Component {
           </Row>
         </Grid>
         </Content>
-        <FooterNavBar navigation={this.props.navigation} />
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh()}/>
       </Container>
     );
   }

@@ -22,12 +22,15 @@ export default class ScheduleScreen extends React.Component {
   }
 
   componentDidMount() {
-    this.getActivities(null, null);
+    this.getActivities(null, null).
+      then(() => {
+        this.setState({});
+      })
   }
 
   getActivities(nears, dateFilter) {
-    
-    let sql = ` select a.id, a.planned_date, a.state, a.status, a.exec_date, a.percent,
+    return new Promise((resolve, reject) => {
+      let sql = ` select a.id, a.planned_date, a.state, a.status, a.exec_date, a.percent,
                 actt.description, c.id as contact_id, c.name, c.address, c.city, 
                 c.latitude, c.longitude 
                 from Activity a 
@@ -35,47 +38,52 @@ export default class ScheduleScreen extends React.Component {
                 inner join Contact c on (c.id = a.contact_id)
                 where a.status != '${AppConstans.ACTIVITY_COMPLETED}'`;
 
-    if(dateFilter) {
-      let endDate = new Date(dateFilter.getTime()+86399000); //le sumo 23 hs 59 mins y 59 segs
-      sql += ` and planned_date between '${dateFilter}' and '${endDate}'`
-    }
+      if(dateFilter) {
+        let endDate = new Date(dateFilter.getTime()+86399000); //le sumo 23 hs 59 mins y 59 segs
+        sql += ` and planned_date between '${dateFilter}' and '${endDate}'`
+      }
 
-    sql += ` order by planned_date asc`;
+      sql += ` order by planned_date asc`;
 
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        sql,
-        [],
-        async (_, { rows }) => {
-          var data = rows._array;
-          if(nears === true){
-            var myLocation = await getLocationAsync();
-            var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
-            var prox_range = await getConfiguration('PROXIMITY_RANGE');
-            data = rows._array.filter(item => {
-              var evLoc = {lat: item.latitude, lng: item.longitude};
-              return isClose(myLoc, evLoc, prox_range)
-            })
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          sql,
+          [],
+          async (_, { rows }) => {
+            var data = rows._array;
+            if(nears === true){
+              var myLocation = await getLocationAsync();
+              var myLoc = {lat: myLocation.coords.latitude, lng: myLocation.coords.longitude};
+              var prox_range = await getConfiguration('PROXIMITY_RANGE');
+              data = rows._array.filter(item => {
+                var evLoc = {lat: item.latitude, lng: item.longitude};
+                return isClose(myLoc, evLoc, prox_range)
+              })
+            }
+            var markers = [];       
+            data.forEach((item, index) => {
+              if(item.latitude != null && item.longitude != null)
+                markers.push({title: item.name, description: item.address+' - '+item.city, coords: { latitude: item.latitude, longitude: item.longitude}, key: index});
+            });
+            /* 
+              Elimino los repetidos para evitar problemas de key repetidas en el mapa
+              y evitar solapamientos en pines
+            */
+            this.removeDuplicated(markers, this.markerEquals);
+            /* this.setState ({
+              events: data,
+              markers: markers
+            }); */
+            this.state.events = data;
+            this.state.markers = markers;
+            resolve("Ok")
+          },
+          (_, err) => {
+            reject(`ERROR consultando DB: ${err}`)
           }
-          var markers = [];       
-          data.forEach(item => {
-            markers.push({title: item.name, description: item.address+' - '+item.city, coords: { latitude: item.latitude, longitude: item.longitude}});
-          });
-          /* 
-            Elimino los repetidos para evitar problemas de key repetidas en el mapa
-            y evitar solapamientos en pines
-          */
-          this.removeDuplicated(markers, this.markerEquals);
-          this.setState ({
-            events: data,
-            markers: markers
-          });
-        },
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      )
-    });
+        )
+      });
+    })
   }
 
   /* Dos marcadores son iguales si tienen la misma latitud y longitud */
@@ -86,7 +94,7 @@ export default class ScheduleScreen extends React.Component {
   removeDuplicated(array, areEquals) {
     for(i=0; i<(array.length - 1); i++) {
       for(j=i+1; j<array.length; j++) {
-        if(areEquals(array[i], array[j])){
+        if(this.markerEquals(array[i], array[j])){
           array.splice(j, 1);
           j--; // Retrocedo un casillero porque el arreglo se acaba de achicar
         }
@@ -104,22 +112,34 @@ export default class ScheduleScreen extends React.Component {
   }
 
   refresh() {
-    this.getActivities(null,null);
+    this.getActivities(null,null)
+      .catch(err => {
+        console.error("Error obteniendo datos para página de contactos")
+      })
   }
 
   toggleNears(){
     this.state.nears = !this.state.nears;
-    this.getActivities(this.state.nears, this.state.chosenDate);
+    this.getActivities(this.state.nears, this.state.chosenDate)
+      .then(() => {
+        this.setState({});
+      })
   }
 
   setDate(newDate) {
-    this.getActivities(this.state.nears, newDate);
     this.state.chosenDate = newDate;
+    this.getActivities(this.state.nears, newDate)
+      .then(() => {
+        this.setState({});
+      })   
   }
 
   clearDate(){
     this.state.chosenDate = null;
-    this.getActivities(this.state.nears, null);   
+    this.getActivities(this.state.nears, null)
+      .then(() => {
+        this.setState({});
+      }) 
   }
 
   getGoToParams(row){
@@ -269,7 +289,7 @@ export default class ScheduleScreen extends React.Component {
             )
           }    
         </Content>
-        <FooterNavBar navigation={this.props.navigation} />
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh()}/>
       </Container>
     );
   }  
