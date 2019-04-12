@@ -832,15 +832,15 @@ export default class SincronizeScreen extends React.Component {
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Sincronización" />
-        <Content style={{padding: 10}}>
+        <Content>
         <Grid style={{ alignItems: 'center' }}>
           <Row style={styles.row}>
             <Col style={{ alignItems: 'center' }}>
-            <Text>Para utilizar esta función se recomienda estar conectado a una red WIFI. De lo contrario podría demorarse demasiado e incurrir en un consumo excesivo de datos</Text>
+            <Text style={{ paddingLeft:20, paddingRight: 20, textAlign: 'center' }}>Para utilizar esta función se recomienda estar conectado a una red WIFI. De lo contrario podría demorarse demasiado e incurrir en un consumo excesivo de datos.</Text>
             </Col>
           </Row>
           <Row style={styles.row}>
-            <Col style={{ alignItems: 'center' }}>
+            <Col style={{ alignItems: 'center', paddingLeft: 20, paddingRight: 20 }}>
               <Button onPress={() => this.syncAll()} block>
               <Icon active name="cloud-upload" />
               <Text>Sincronizar Información</Text>
@@ -852,7 +852,7 @@ export default class SincronizeScreen extends React.Component {
             <Text>Última sincronización: {formatDateTo(global.context.user.lastSync, 'YYYY-MM-DD HH:mm:ss')}</Text>
             </Col>
           </Row>
-          <Row style={styles.row}>
+          <Row style={ styles.row }>
             <Col style={{ alignItems: 'center' }}>
             <Text style={styles.textResult}>{this.state.modalMessagge}</Text>
             </Col>
@@ -869,7 +869,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#94A6B5' },
   text: { margin: 6 },
-  row: { flexDirection: 'row', backgroundColor: '#FFF', height: 100 },
+  row: { flexDirection: 'row', backgroundColor: '#FFF', paddingTop: 20},
   rowResult: { flexDirection: 'row', backgroundColor: '#F08377', color: '#FFF', height: 60 },
   cellAction: { margin: 6, width: 100 },
   btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12, color: 'white'},
