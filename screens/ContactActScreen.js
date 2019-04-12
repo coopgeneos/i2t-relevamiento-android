@@ -96,8 +96,8 @@ export default class ContactActScreen extends React.Component {
     global.DB.transaction(tx => {
       tx.executeSql(
         `INSERT INTO Activity (activityType_id, activityType_uuid, contact_id, contact_uuid, name, description, priority, 
-          planned_date, exec_date, state, notes, percent, updated) 
-          values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?);`,
+          planned_date, exec_date, status, notes, percent, updated, state) 
+          values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?);`,
         [ activityType.id,
           activityType.uuid, 
           this.contact.id,
@@ -108,7 +108,8 @@ export default class ContactActScreen extends React.Component {
           now, 
           now,
           AppConstans.ACTIVITY_NEW,
-          now
+          now,
+          0
         ],
         (_, rows) => {
           let lastID = rows.insertId;
