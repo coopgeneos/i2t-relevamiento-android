@@ -48,7 +48,7 @@ export default class ContactActScreen extends React.Component {
           var tableData = [];
           this.state.data = rows._array;
           rows._array.forEach(item => {
-            tableData.push([item.description, item.id ])
+            tableData.push([item.short_name, item.id ])
           })
           this.setState ({
             tableHead: tableHead,

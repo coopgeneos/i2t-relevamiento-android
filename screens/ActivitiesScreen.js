@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
-         Icon, Form, Item, Label, Input, Left, Title, Body, Right } from 'native-base';
+         Icon, Form, Item, Label, Input, Left, Title, Body, Right, Textarea } from 'native-base';
 import { StyleSheet, View, TouchableOpacity, Alert, BackHandler, ToastAndroid} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 import { formatDatePrint } from '../utilities/utils';
@@ -35,7 +35,7 @@ export default class ActivitiesScreen extends React.Component {
     // Actividades nuevas / en proceso que den en el margen de tiempo del parametro dias hacia adelante
     global.DB.transaction(tx => {
       tx.executeSql(
-        ` select a.*, actt.description 
+        ` select a.*, actt.short_name 
           from Activity a 
           inner join ActivityType actt on (actt.id = a.activityType_id) 
           where a.contact_id = ? 
@@ -47,7 +47,7 @@ export default class ActivitiesScreen extends React.Component {
           var data = [];
           var visible_button = true;
           for(i=0; i<resp.length; i++) {
-            var aux = [resp[i].description, formatDatePrint(new Date(resp[i].planned_date)), 'A'];
+            var aux = [resp[i].short_name, formatDatePrint(new Date(resp[i].planned_date)), 'A'];
             data.push(aux)
             if (resp[i].state == AppConstans.ACTIVITY_NEW){
               visible_button = false;
@@ -194,22 +194,22 @@ export default class ActivitiesScreen extends React.Component {
         <HeaderNavBar navigation={this.props.navigation} title="Actividades" />
         <Content>
           
-          <Form>
-            <Item stackedLabel>
-              <Label>Contacto</Label>
-              <Input
+        <Form>
+          <Item stackedLabel>
+            <Label>Contacto</Label>
+            <Textarea rowSpan={2}  
                 value={this.contact.name}
                 disabled
-                style={{ width: '100%' }}
+                style={{ marginLeft: 10, fontSize: 16 }}
               />
-              <Label>Dirección</Label>
-              <Input
+            <Label>Dirección</Label>
+            <Textarea rowSpan={2} 
                 value={ this.contact.address + ' - ' + this.contact.city }
                 disabled
-                style={{ width: '100%' }}
+                style={{ marginLeft: 10, fontSize: 16 }}
               />
-            </Item>
-          </Form>
+          </Item>
+        </Form>
 
           {table}
 
@@ -223,12 +223,14 @@ export default class ActivitiesScreen extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 5, paddingTop: 20, backgroundColor: '#fff' },
   head: { height: 40, backgroundColor: '#778591' },
-  text: { margin: 6, fontSize: 14},
+  text: { margin: 6, fontSize: 16},
   text_head: { margin: 6, color: '#FFF',  fontSize: 18},
-  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 40 },
-  btn: { width: 58, height: 25, backgroundColor: '#F08377',  borderRadius: 2 },
+  row: { flexDirection: 'row', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#778591', height: 50 },
+  btn: { height: 25, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12},
   btn_cont: { flexDirection: 'row' },
-  btnText: { textAlign: 'center', color: '#fff' }
+  btnText: { textAlign: 'center', color: '#fff'},
+  row_data: {width: 250 },
+  row_btn: { width: 100 }
 });
