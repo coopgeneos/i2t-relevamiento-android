@@ -3,7 +3,7 @@ import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Textarea } from 'native-base';
 import { StyleSheet, View, TouchableOpacity, Alert, BackHandler, ToastAndroid} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
-import { formatDatePrint } from '../utilities/utils';
+import { formatDatePrint, getConfiguration } from '../utilities/utils';
 import AppConstans from '../constants/constants';
 
 import FooterNavBar from '../components/FooterNavBar';
@@ -28,42 +28,60 @@ export default class ActivitiesScreen extends React.Component {
 
   componentDidMount() {
     this.getActivities()
+      .then(() => {
+        this.setState({});
+      })
   }
 
   getActivities() {
-    // Ver como tomo la referencia a limite de tiempo hacia adelante como parámetro de esta consulta.
-    // Actividades nuevas / en proceso que den en el margen de tiempo del parametro dias hacia adelante
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        ` select a.*, actt.short_name 
-          from Activity a 
-          inner join ActivityType actt on (actt.id = a.activityType_id) 
-          where a.contact_id = ? 
-          and a.state != 1 
-        `,
-        [this.contact.id],
-        (_, { rows }) => {
-          var resp = rows._array;
-          var data = [];
-          var visible_button = true;
-          for(i=0; i<resp.length; i++) {
-            var aux = [resp[i].short_name, formatDatePrint(new Date(resp[i].planned_date)), 'A'];
-            data.push(aux)
-            if (resp[i].state == AppConstans.ACTIVITY_NEW){
-              visible_button = false;
-            }
-          }
-          this.setState ({
-            dataSource: resp,
-            tableData: data,
-            visible_button: visible_button
+    return new Promise((resolve, reject) => {
+      getConfiguration("HISTORY_SIZE")
+        .then(history_size => {
+          history_size = (history_size == null || history_size == 0) ? 10 : history_size;
+          global.DB.transaction(tx => {
+            tx.executeSql(
+              ` select a.*, actt.short_name 
+                from Activity a 
+                inner join ActivityType actt on (actt.id = a.activityType_id) 
+                where a.contact_id = ? 
+                and a.state != 1 
+                order by a.updated desc 
+                limit ?
+              `,
+              [this.contact.id, history_size],
+              (_, { rows }) => {
+                var resp = rows._array;
+                var data = [];
+                var visible_button = true;
+                for(i=0; i<resp.length; i++) {
+                  var aux = [resp[i].short_name, formatDatePrint(new Date(resp[i].planned_date)), 'A'];
+                  data.push(aux)
+                  if (resp[i].state == AppConstans.ACTIVITY_NEW){
+                    visible_button = false;
+                  }
+                }
+                /* this.setState ({
+                  dataSource: resp,
+                  tableData: data,
+                  visible_button: visible_button
+                }); */
+                this.state.dataSource = resp,
+                this.state.tableData = data,
+                this.state.visible_button = visible_button
+
+                resolve("Ok")
+              },
+              (_, err) => {
+                reject(`ERROR consultando DB: ${err}`)
+              }
+            )
           });
-        },
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      )
-    });
+        })
+        .catch(err => {
+          reject(err)
+        })
+    })
+    
   }
 
   onBackButtonPressAndroid = () => {
@@ -85,7 +103,10 @@ export default class ActivitiesScreen extends React.Component {
   }
 
   refresh() {
-    this.getActivities();
+    this.getActivities()
+      .catch(err => {
+        console.error("Error obteniendo datos para página de tareas del contacto")
+      })
   }
 
   goToSurvey(activity){
@@ -111,43 +132,49 @@ export default class ActivitiesScreen extends React.Component {
     const state = this.state;
 
     const element = (data, index) => {
-      if( this.state.dataSource[index].state === AppConstans.ACTIVITY_NEW ||
-          this.state.dataSource[index].state === AppConstans.ACTIVITY_IN_PROGRESS ||
-          this.state.dataSource[index].state === AppConstans.ACTIVITY_PENDING) {
+      if( this.state.dataSource[index].status === AppConstans.ACTIVITY_NEW ||
+          this.state.dataSource[index].status === AppConstans.ACTIVITY_IN_PROGRESS ||
+          this.state.dataSource[index].status === AppConstans.ACTIVITY_PENDING) {
         return (
           <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
             <View style={styles.btn_cont}>
               <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
                 <Icon name='edit'/>
               </Button>
-              <Button transparent>
+              <Button transparent onPress={() => this.goToSurvey(this.state.dataSource[index])}>
                 <Icon name={this.getIconBattery(index)}/>
               </Button>
             </View>
           </TouchableOpacity>
         )
-      } if(this.state.dataSource[index].state === AppConstans.ACTIVITY_COMPLETED) {
+      } if(this.state.dataSource[index].status === AppConstans.ACTIVITY_COMPLETED) {
         return (
           <TouchableOpacity onPress={() => SurveyScreen._alertIndex(index) }>
             <View style={styles.btn_cont}>
-              <Button transparent>
+              <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
+                <Icon name='edit'/>
+              </Button>
+              <Button transparent onPress={() => this.goToSurvey(this.state.dataSource[index])}>
                 <Icon name='check'/>
               </Button>
-              <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
-              <Icon name='search'/>
-              </Button>
+              {/*<Button transparent onPress={() => this.goToSurvey(this.state.dataSource[index])}>
+                <Icon name='search'/>
+              </Button>*/}
             </View>
           </TouchableOpacity>
         )
       } else {
         return (
           <View style={styles.btn_cont}>
+            <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
+                <Icon name='edit'/>
+              </Button>
             <Button transparent>
               <Icon name='close'/>
             </Button>
-            <Button transparent onPress={() => this.goToActivity(this.state.dataSource[index])}>
-            <Icon name='search'/>
-            </Button>
+            {/*<Button transparent onPress={() => this.goToSurvey(this.state.dataSource[index])}>
+              <Icon name='search'/>
+            </Button>*/}
           </View>
         )
       }     
@@ -167,7 +194,6 @@ export default class ActivitiesScreen extends React.Component {
                             <Cell key={cellIndex} 
                               data={cellIndex === 2 ? element(cellData, index) : cellData} 
                               textStyle={cellIndex === 2 ? styles.text_head : styles.text}
-                              onPress={() => this.goToSurvey(this.state.dataSource[index])}
                             />
                           ))
                         }

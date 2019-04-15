@@ -22,6 +22,7 @@ export default class ConfigurationScreen extends ValidationComponent {
       shipments_show: '',
       projection_agenda: '',
       consultant_num: '',
+      history_size: '',
       showToast: false,
       modalVisible: false,
       error_msg: '',
@@ -81,6 +82,9 @@ export default class ConfigurationScreen extends ValidationComponent {
                 case 'CONSULTANT_NUM':
                   this.setState({consultant_num:item.value,});
                   break;
+                case 'HISTORY_SIZE':
+                  this.setState({history_size:item.value,});
+                  break;
                 default:
                   console.info(`el fieldname ${fieldName} no existe!`);
               }
@@ -96,7 +100,8 @@ export default class ConfigurationScreen extends ValidationComponent {
               proximity_range: '',
               shipments_show: '',
               projection_agenda: '',
-              consultant_num: ''
+              consultant_num: '',
+              history_size:''
             });
           }
         }
@@ -136,6 +141,9 @@ export default class ConfigurationScreen extends ValidationComponent {
     if(!this.validate({consultant_num: {numbers: true, minlength:1, maxlength:2, required: true}})){ 
       this.state.error_msg += "Error en el campo número de asesor. Debe ser numérico y es obligatorio.\n";
     }
+    if(!this.validate({history_size: {numbers: true, maxlength:2, required: true}})){ 
+      this.state.error_msg += "Error en el campo tamaño de histórico. Debe ser numérico, máximo 2 dígitos y es obligatorio.\n";
+    }
 
     if(this.state.error_msg.length > 0) {
       
@@ -157,8 +165,10 @@ export default class ConfigurationScreen extends ValidationComponent {
     const { shipments_show } = this.state;
     const { projection_agenda } = this.state;
     const { consultant_num } = this.state;
+    const { history_size } = this.state;
     const campos = ['user_name','user_email','url_backend','user_backend',
-      'pass_backend','proximity_range','shipments_show','projection_agenda', 'consultant_num']
+      'pass_backend','proximity_range','shipments_show','projection_agenda', 'consultant_num',
+      'history_size']
     var errordb = false;
     var item_ = '';
     let user = {};
@@ -195,6 +205,9 @@ export default class ConfigurationScreen extends ValidationComponent {
             break;
           case 'consultant_num':
             item_ = consultant_num;
+            break;
+          case 'history_size':
+            item_ = history_size;
             break;
           default:
             console.error( 'el fieldname no existe!' );
@@ -346,7 +359,7 @@ export default class ConfigurationScreen extends ValidationComponent {
             />
           </Item>
           <Item stackedLabel>
-            <Label># Envíos a mostrar</Label>
+            <Label>Tamaño del paquete de envío</Label>
             <TextInput
               value={this.state.shipments_show}
               onChangeText={shipments_show => this.setState({ shipments_show })}
@@ -363,6 +376,16 @@ export default class ConfigurationScreen extends ValidationComponent {
               style={{width: '100%',  margin: 6}}
               keyboardType={'numeric'}
               placeholder="Ingrese la cantidad de dias"
+            />
+          </Item>
+          <Item stackedLabel>
+            <Label>Tamaño del histórico</Label>
+            <TextInput
+              value={this.state.history_size}
+              onChangeText={history_size => this.setState({ history_size })}
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'numeric'}
+              placeholder="Ingrese la cantidad de registros del historíco"
             />
           </Item>
         </Form>

@@ -90,7 +90,8 @@ export default class SincronizeScreen extends React.Component {
         }
 
         await executeSQL(`insert into Configuration (key, value, updated) values (?, ?, ?)`,['TOKEN', responseJson.dataset[0].jwt, formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')])
-        this.setState({token: responseJson.dataset[0].jwt});
+        //this.setState({token: responseJson.dataset[0].jwt});
+        this.state.token = responseJson.dataset[0].jwt;
         resolve(this.state.token);
       } catch (error) {
         reject(`ERROR obteniendo token: ${error}`)

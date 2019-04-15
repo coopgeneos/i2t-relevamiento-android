@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Content, Text, Button, Icon, CheckBox, List, ListItem, Thumbnail,
   Form, Item, Label, Left, Right, Spinner, Body, DatePicker} from 'native-base';
-import { getLocationAsync, isClose, getConfiguration, formatDate, formatDatePrint } from '../utilities/utils';
+import { getLocationAsync, isClose, getConfiguration, formatDate, formatDatePrint, showDB } from '../utilities/utils';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 import {StyleSheet, TouchableOpacity, View} from "react-native";
@@ -147,6 +147,7 @@ export default class ScheduleScreen extends React.Component {
       id: row.id,
       planned_date: row.planned_date,
       state: row.state,
+      status: row.status,
       exec_date: row.exec_date,
       percent: row.percent, 
       description: row.description, 
