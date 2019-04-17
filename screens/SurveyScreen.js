@@ -50,6 +50,7 @@ export default class SurveyScreen extends React.Component {
       buttonSaveEnable: false,
       checkbox1: false,
       completas: 0,
+      completas_norequired: 0,
       pendientes: 0,
       pendientes_norequired: 0
     };
@@ -261,11 +262,12 @@ export default class SurveyScreen extends React.Component {
 
   async loadResumen(data) {
 
-    this.state.completas = await this.getCompletas(data);
+    this.state.completas = await this.getCompletas(data, 1);
+    this.state.completas_norequired = await this.getCompletas(data, 0);
     this.state.pendientes = await this.getPendientes(data, 1);
     this.state.pendientes_norequired = await this.getPendientes(data, 0);
 
-    var mensaje = `Consignas Completas: ${this.state.completas}\nConsignas Pendientes Obligatorias: ${this.state.pendientes}\nConsignas Pendientes: ${this.state.pendientes_norequired}`;
+    var mensaje = `CONSIGNAS REQUERIDAS COMPLETAS: ${this.state.completas}\nCONSIGNAS REQUERIDAS PENDIENTES: ${this.state.pendientes}\nCONSIGNAS OPCIONALES COMPLETAS: ${this.state.completas_norequired}\nCONSIGNAS OPCIONALES PENDIENTES: ${this.state.pendientes_norequired}`;
 
     this.setState({
       mensaje: mensaje
@@ -289,7 +291,7 @@ export default class SurveyScreen extends React.Component {
   }
 
 
-  async getCompletas(data){
+  async getCompletas(data, required){
     var activity_id = data[0].activity_id;
     return new Promise(async function(resolve, reject) {
       global.DB.transaction(tx => {
@@ -298,9 +300,9 @@ export default class SurveyScreen extends React.Component {
             from Activity act
             inner join ItemActType iat on (iat.activityType_id = act.activityType_id)
             left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id)
-            where act.id = ? and a.id is not null
+            where act.id = ? and a.id is not null and iat.required = ? 
             group by act.id`,
-          [activity_id],
+          [activity_id, required],
           (_, { rows }) => {
             var cantidad = 0;
             if (rows.length > 0){
