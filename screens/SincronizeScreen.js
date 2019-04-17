@@ -124,9 +124,9 @@ export default class SincronizeScreen extends React.Component {
           },
           body: JSON.stringify(body),
         };
-        console.log(`=================================================== \n`)
-        console.log(`MESSAGE: url: ${url} \n ${JSON.stringify(msg)} \n`) 
-        console.log(`--------------------------------------------------- \n`)
+        console.log(`===================================================`)
+        console.log(`MESSAGE: url: ${url} \n ${JSON.stringify(msg)}`) 
+        console.log(`---------------------------------------------------`)
         console.log(`RESPONSE: ${JSON.stringify(responseJson)} \n`) */     
 
         /* 
@@ -152,6 +152,14 @@ export default class SincronizeScreen extends React.Component {
     })
   }
 
+  showDatasetResponse(table, dataset) {
+    console.log(`============== ${table} ===============`)
+    dataset.forEach((data, index) => {
+      console.log(`${index}: ${JSON.stringify(data)}`)
+    })
+    console.log(`================================================`)
+  }
+
   syncContacts(from){
     return new Promise(async (resolve, reject) => { 
       try {
@@ -161,7 +169,11 @@ export default class SincronizeScreen extends React.Component {
 
         ctsws = ctsws.dataset
       
-        // console.log(`---------------------------------------------\nCONTACTOS: \n ${JSON.stringify(ctsws)}`)
+        // this.showDatasetResponse("CONTACTS", ctsws);
+
+        if(ctsws.length == 0) {
+          return resolve(`0 contactos sincronizados`)
+        }
   
         global.DB.transaction(tx => {
           for(i=0; i<ctsws.length; i++){
@@ -205,7 +217,11 @@ export default class SincronizeScreen extends React.Component {
 
         ctsws = ctsws.dataset
       
-        // console.log(`---------------------------------------------\nCONTACTOS DEPURADOS: \n ${JSON.stringify(ctsws)}`)
+        // this.showDatasetResponse("DEBUG CONTACTS", ctsws);
+
+        if(ctsws.length == 0) {
+          return resolve(`0 contactos eliminados`)
+        }
   
         global.DB.transaction(tx => {
           for(i=0; i<ctsws.length; i++){
@@ -223,7 +239,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${ctsws.length} contactos sincronizados`)
+            resolve(`${ctsws.length} contactos eliminados`)
           }
         )     
       } catch (err) {
@@ -241,7 +257,11 @@ export default class SincronizeScreen extends React.Component {
 
         acts = acts.dataset;
 
-        // console.log(`---------------------------------------------\nACTIVITY TYPE: \n ${JSON.stringify(acts)}`)
+        // this.showDatasetResponse("ActivityType(Actividad)", acts);
+
+        if(acts.length == 0) {
+          return resolve(`0 tipo de actividades sincronizadas`)
+        }
   
         global.DB.transaction(tx => {
           for(i=0; i<acts.length; i++){
@@ -281,7 +301,11 @@ export default class SincronizeScreen extends React.Component {
           
         items = items.dataset;
         
-        // console.log(`---------------------------------------------\nITEM ACT TYPE: ${JSON.stringify(items)}`)
+        // this.showDatasetResponse("ItemActType(Consigna)", items);
+
+        if(items.length == 0) {
+          return resolve(`0 item de tipo de actividades sincronizadas`)
+        }
   
         global.DB.transaction(tx => {
             for(i=0; i<items.length; i++){
@@ -330,7 +354,11 @@ export default class SincronizeScreen extends React.Component {
           
         items = items.dataset;
         
-        // console.log(`---------------------------------------------\nLIST ITEMS: \n ${JSON.stringify(items)}`)
+        // this.showDatasetResponse("ListItemAct(Referencia)", items);
+
+        if(items.length == 0) {
+          return resolve(`0 ListItems de tipo de actividades sincronizados`)
+        }
   
         global.DB.transaction(tx => {
             for(i=0; i<items.length; i++){
@@ -374,7 +402,11 @@ export default class SincronizeScreen extends React.Component {
           .catch(err => {reject(err)})
         items = items.dataset;
         
-        // console.log(`---------------------------------------------\nACTIVITY: ${JSON.stringify(items)}`)
+        // this.showDatasetResponse("Activity(Tarea)", items);
+
+        if(items.length == 0) {
+          return resolve(`0 actividades sincronizadas`)
+        }
   
         global.DB.transaction(tx => {
             for(i=0; i<items.length; i++){
@@ -505,10 +537,11 @@ export default class SincronizeScreen extends React.Component {
           fecha_ult_mod: item.updated,
           fecha_planificacion: item.planned_date,
           fecha_ejecucion: item.exec_date,
-          estado_actividad: item.state,
-          estado: 0,
+          estado_actividad: item.status,
+          estado: item.state,
           id_contacto: item.contact_uuid,
-          id_actividad:item.activityType_uuid
+          id_actividad: item.activityType_uuid,
+          user_actividad: this.username
         }
         return obj;
       case "Answer":
@@ -527,7 +560,8 @@ export default class SincronizeScreen extends React.Component {
           url_imagen: null,
           id_contacto: item.contact_uuid,
           id_consigna: item.itemActType_uuid,
-          id_agenda: item.activity_uuid 
+          id_agenda: item.activity_uuid,
+          user_actividad: this.username
         }
         return obj;
       default:
@@ -541,9 +575,8 @@ export default class SincronizeScreen extends React.Component {
       case "Activity":
         return `select * from Activity where updated > ?`;
       case "Answer":
-        return `select a.*, t.type  
-                from Answer a 
-                inner join itemActType t on (t.id = a.itemActType_id) 
+        return `select a.*  
+                from Answer a  
                 where a.updated > ?`;
     }
   }

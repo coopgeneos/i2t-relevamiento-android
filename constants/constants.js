@@ -22,9 +22,10 @@ export default {
   ITEM_TYPE_TEXT: 'texto',
   ITEM_TYPE_CHOICE: 'sel_simpl',
   ITEM_TYPE_CHOICE_MULT: 'sel_mult',
-  ITEM_TYPE_NUMBER: 'number',
-  ITEM_TYPE_CONDITIONAL_IMAGE: 'conditional',
+  ITEM_TYPE_NUMBER: 'entero',
+  ITEM_TYPE_CONDITIONAL_IMAGE: 'imagen_condicional',
   ITEM_TYPE_CHARACTER: 'caracter',
+  ITEM_TYPE_DATE: 'fecha',
 
   WS_LOGIN: '/login/',
   WS_CONTACT_DOWNLOAD: '/api/proc/ExtraeContactos', 

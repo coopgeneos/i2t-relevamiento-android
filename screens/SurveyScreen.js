@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Container, Content, Text, Button, Spinner, CheckBox,
           Icon, Label, Left, Body, Right, Card, CardItem, IconNB,
-          ListItem, Radio, Segment, Textarea, Form, Item, Input} from 'native-base';
+          ListItem, Radio, Segment, Textarea, Form, Item, Input, DatePicker} from 'native-base';
 
 import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid } from 'react-native';
 import { ImagePicker, Permissions, FileSystem } from 'expo';
@@ -59,10 +59,14 @@ export default class SurveyScreen extends React.Component {
       BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
     );
 
+    this.setDate = this.setDate.bind(this);
+
   };
 
   toggleSwitch() {
-    this.state.checkbox1 = !this.state.checkbox1;
+    /* this.state.checkbox1 = !this.state.checkbox1;
+    this.loadCards(this.state.cardsData, false) */
+    this.state.answers[this.state.seg - 1].img_condition = this.state.answers[this.state.seg - 1].img_condition == 1 ? 0 : 1;
     this.loadCards(this.state.cardsData, false)
   }
 
@@ -79,7 +83,7 @@ export default class SurveyScreen extends React.Component {
       tx.executeSql(
         ` select iat.id as itemActType_id, iat.uuid as itemActType_uuid, 
           iat.activityType_id, at.uuid as activityType_uuid, 
-          iat.description, iat.type, 
+          iat.description, iat.type, iat.position, 
           act.id as activity_id, act.uuid as activity_uuid, 
           c.id as contact_id, c.uuid as contact_uuid,  
           a.id as answer_id, a.text_val, a.img_val, a.img_val_change, a.number_val, a.latitude, a.longitude, 
@@ -89,7 +93,8 @@ export default class SurveyScreen extends React.Component {
           inner join ItemActType iat on (iat.activityType_id = act.activityType_id) 
           inner join Contact c on (c.id = act.contact_id) 
           left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id) 
-          where act.id = ?
+          where act.id = ? 
+          order by iat.position
           --group by act.id, iat.id `,
         [this.activity.id],
         (_, { rows }) => {
@@ -137,6 +142,7 @@ export default class SurveyScreen extends React.Component {
     var card = null;
 
     for(i=0; i<data.length; i++) {
+      // console.log(`TARJETA: ${JSON.stringify(data[i])}`)
       var item = data[i];
       var activity_id = item.activity_id.toString();
       var itemActType_id = item.itemActType_id.toString();
@@ -173,7 +179,7 @@ export default class SurveyScreen extends React.Component {
           text_val: item.text_val,
           img_val: item.img_val,
           img_val_change: 0,
-          img_condition: item.img_condition,
+          img_condition: item.img_condition ? item.img_condition : 0,
           number_val: item.number_val,         
           latitude: item.latitude,
           longitude: item.longitude  
@@ -193,8 +199,12 @@ export default class SurveyScreen extends React.Component {
         card = this.buildImageCard(item.description, answers[i])
         
       } else if(item.type === AppConstans.ITEM_TYPE_NUMBER) {
-        this.setState({ number: item.number_val });
+        //this.setState({ number: item.number_val });
         card = this.buildNumberCard(item.description, answers[i])
+          
+      } else if(item.type === AppConstans.ITEM_TYPE_DATE) {
+        //this.setState({ number: item.number_val });
+        card = this.buildDateCard(item.description, answers[i])
           
       } else {
         this.setState({ notes: item.text_val });
@@ -202,7 +212,6 @@ export default class SurveyScreen extends React.Component {
       }
       cards.push(card);
     }
-
 
     this.setState({
       cards: cards,
@@ -409,7 +418,18 @@ export default class SurveyScreen extends React.Component {
     // console.log(`ANSWER: ${JSON.stringify(answer)}`)
 
     if (answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
-      answer.img_condition = this.state.checkbox1 ? 1 : 0;
+      if(answer.img_condition == 0) {
+        answer.img_val_change = 0;
+      } else if(answer.img_condition == 1 && answer.img_val == null) {
+        answer.img_condition = 0;
+        ToastAndroid.showWithGravityAndOffset(
+          'La imagen esta vacía. Se descarta la selección',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );
+      }
     }
 
     /*
@@ -418,7 +438,7 @@ export default class SurveyScreen extends React.Component {
     */
     if(answer.img_val || answer.text_val || answer.number_val || answer.id != null) {
       var base64 = null;
-      if(answer.img_val && answer.img_val_change){ //Solo se guarda si
+      if(answer.img_val && answer.img_val_change == 1){ //Solo se guarda si
         base64 = await FileSystem.readAsStringAsync(answer.img_val, {encoding: FileSystem.EncodingTypes.Base64})
           .catch(err => {
             console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
@@ -430,30 +450,42 @@ export default class SurveyScreen extends React.Component {
           throw new Error("Error obteniendo la posición del dispositivo")
         })
       
-      var sql = '';
+      let sql = '';
+      let text_val = answer.text_val ? `'${answer.text_val}'` : null;
       if(answer.id){
-        var upd_img = '';
-        if(answer.img_val_change){
+        let upd_img = '';
+        if(answer.img_val_change == 1){
           upd_img = `img_val = '${base64}', img_val_change = 1, `
-        }
-        sql = ` update Answer set ${upd_img} text_val = '${answer.text_val}', 
+        }       
+        sql = ` update Answer set ${upd_img} text_val = ${text_val}, 
                   number_val = ${answer.number_val}, 
                   updated = '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
-                  latitude = ${position.coords.latitude}, longitude = ${position.coords.longitude}  
+                  latitude = ${position.coords.latitude}, longitude = ${position.coords.longitude},
+                  type = '${answer.type}', img_condition = ${answer.img_condition} 
                 where id = ${answer.id}`;
       } else {
+        let fields = "";
+        let values_fields = "";
+        if(answer.img_val_change == 1){
+           fields = "img_val, img_val_change, ";
+           values_fields = `'${base64}', ${answer.img_val_change},`;
+        }
         sql = ` insert into Answer (activity_id, activity_uuid, 
                   itemActType_id, itemActType_uuid,
                   contact_id, contact_uuid, 
-                  text_val, img_val, img_val_change, number_val, updated, latitude, longitude) 
+                  text_val, ${fields} number_val, updated, latitude, longitude, 
+                  type, img_condition) 
                 values (${answer.activity_id}, '${answer.activity_uuid}',
                   ${answer.itemActType_id}, '${answer.itemActType_uuid}',
                   ${answer.contact_id}, '${answer.contact_uuid}', 
-                  '${answer.text_val}', '${base64}', ${answer.img_val_change}, ${answer.number_val}, 
+                  ${text_val}, ${values_fields} ${answer.number_val}, 
                   '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
-                  ${position.coords.latitude}, ${position.coords.longitude}
+                  ${position.coords.latitude}, ${position.coords.longitude}, '${answer.type}',
+                  ${answer.img_condition} 
                 )`;
       }
+
+      // console.log(`SQL= ${sql}`)
 
       global.DB.transaction(tx => {
         tx.executeSql(
@@ -561,12 +593,12 @@ export default class SurveyScreen extends React.Component {
             
             <View style={{ flexDirection: 'row', textAlign: 'left', paddingLeft: 0, marginBottom: 5 }}>
               <CheckBox style={{ backgroundColor: '#65727B', borderColor: '#65727B', borderRadius: 0 }} 
-                checked={this.state.checkbox1}
+                checked={answer.img_condition == 1}
                 onPress={() => this.toggleSwitch()}
               />
               <Text style={{marginLeft: 10}}> Ingresa Imagen</Text>
             </View>         
-            {this.state.checkbox1 ?               
+            {answer.img_condition == 1 ?               
               <View>
               <Text style={ style_status_answer_req } > {title} </Text>
               <CardItem>
@@ -613,7 +645,7 @@ export default class SurveyScreen extends React.Component {
                     placeholder="Ingrese valor" 
                     bordered keyboardType={'numeric'} 
                     style={{ width: 100 }} 
-                    defaultValue={answer.number_val}
+                    defaultValue={answer.number_val ? answer.number_val.toString() : "0"}
                     onChangeText={this.handleNumberChange.bind(this)}
                     disabled={this.state.buttonSaveEnable}
                   />
@@ -638,8 +670,7 @@ export default class SurveyScreen extends React.Component {
     this.setState({ answers: answers});
     this.loadCards(this.state.cardsData, false);
   }
-
-    
+  
   buildTextCard(title, answer) {
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
 
@@ -660,38 +691,95 @@ export default class SurveyScreen extends React.Component {
     }
   }
 
+  buildDateCard(title, answer) {
+    style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
+    let dateValue = answer.text_val ? formatDateTo(answer.text_val, 'DD/MM/YYYY') : "Fecha ..."
+    // console.log(`buildDateCard ${answer.text_val} ${dateValue}`)
+    return {
+      text: title,
+      info: <View>
+            <Text style={style_status_answer_req}> {title} </Text>
+            <Form>
+              <Item>
+                <DatePicker
+                  defaultDate={null}
+                  minimumDate={new Date(2018, 1, 1)}
+                  maximumDate={new Date(2050, 12, 31)}
+                  locale={"es"}
+                  timeZoneOffsetInMinutes={undefined}
+                  modalTransparent={false}
+                  animationType={"fade"}
+                  androidMode={"default"}
+                  placeHolderText={dateValue}
+                  textStyle={{ color: '#F08377' }}
+                  placeHolderTextStyle={{ color: '#CCC' }}
+                  onDateChange={this.setDate}
+                  disabled={false}
+                />
+                <Button onPress={() => {this.clearDate()}} transparent style={styles.btnTextHeader} >
+                  <Icon name='close' style={styles.btnIcon}/>
+                </Button>
+              </Item>
+            </Form>
+            </View>
+    }
+  }
+
+  setDate(newDate) {
+    this.state.answers[this.state.seg - 1].text_val = formatDateTo(newDate, 'YYYY/MM/DD HH:mm:ss');
+    this.loadCards(this.state.cardsData, false)
+  }
+
+  clearDate(){
+    this.state.answers[this.state.seg - 1].text_val = null;
+    this.loadCards(this.state.cardsData, false) 
+  }
+
   elementList(answer, reg) {
-    if(answer.type == "sel_simpl")
+    if(answer.type == AppConstans.ITEM_TYPE_CHOICE)
       return  <Radio
                 selected={answer.text_val == reg.value ? true : false }
                 onPress={() => {this.chooseOption(reg.value)}}
                 disabled={this.state.buttonSaveEnable}
               />;
     
-    if(answer.type == "sel_mult") {
+    if(answer.type == AppConstans.ITEM_TYPE_CHOICE_MULT) {
       return  <CheckBox 
-                checked={this.checkIfSelected(answer, value)} 
-                onPress={() => {this.selectCheckBox(reg.value)}}
+                checked={this.checkIfSelected(answer, reg.value)} 
+                onPress={() => {this.selectCheckBox(answer, reg.value)}}
               />;
     }
   }
 
   checkIfSelected(answer, value) {
-    return answer.text_val.includes(value);
+    if(!answer.text_val) {
+      return false
+    } else {
+      const sel_opts = answer.text_val.split(",");
+      const opt = sel_opts.find(option => {
+        return option === value
+      })
+      return opt != null; 
+    }
   }
 
   cutFromString(str, value) {
     str = str.substring(0, str.indexOf(value)) + 
-        str.substring(str.indexOf(value) + value.length, str.length);
+          str.substring(str.indexOf(value) + value.length + 1, str.length);
+    str = str.length == 0 ? null : str
     return str;
   }
 
-  selectCheckBox(answer, value) {
-    if(answer.text_val.includes(value)) {
-      answer.text_val = this.cutFromString(answer.text_val, value)
+  selectCheckBox(answer, value) {    
+    let new_v = "";
+    if(answer.text_val && answer.text_val.includes(value)) {
+      new_v = this.cutFromString(answer.text_val, value)
     } else {
-      answer.text_val = answer.text_val + ',' + value;
+      new_v = answer.text_val ? answer.text_val + ',' + value : value;
     }
+
+    this.state.answers[this.state.seg - 1].text_val = new_v;
+    this.loadCards(this.state.cardsData, false)
   }
 
   buildListCard(title, answer) {

@@ -119,6 +119,7 @@ stms.push(`
 		itemActType_uuid TEXT,
 		contact_id INTEGER,
 		contact_uuid TEXT,
+		type TEXT NOT NULL,
 		text_val TEXT,
 		img_val BLOB,
 		img_val_change INTEGER,
@@ -135,9 +136,11 @@ stms.push(`
 		FOREIGN KEY(contact_uuid) REFERENCES Contact(uuid)
 	);`);
 
-stms.push(`INSERT INTO User (id, email, name, username, password, lastSync, lastDownload, lastUpload, updated) 
-	values (1, 'user@notmail.com', 'not Identified', 'user', 'password', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '${new Date().toString()}');`);
+// stms.push(`INSERT INTO User (id, email, name, username, password, lastSync, lastDownload, lastUpload, updated) 
+// 	values (1, 'user@notmail.com', 'not Identified', 'user', 'password', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '${new Date().toString()}');`);
 
+stms.push(`INSERT INTO User (id, email, name, username, password, lastSync, lastDownload, lastUpload, updated) 
+	values (1, 'aenrico@unmail.com', 'Adrian Enrico', 'aenrico', '1q2w', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '2000/01/01 00:00:01', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_NAME', 'Adrian Enrico', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('USER_EMAIL', 'aenrico@unmail.com', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('URL_BACKEND', 'http://relevamiento.i2tsa.com.ar:3006', '${new Date().toString()}');`);
