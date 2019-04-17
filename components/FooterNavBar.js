@@ -47,15 +47,15 @@ export default class FooterNavBar extends React.Component {
             </Button>
             <Button vertical { ...{active: this.props.navigation.state.routeName == 'Contacts' || this.props.navigation.state.routeName == 'ContactAct' || this.props.navigation.state.routeName == 'Survey' ? true : false} }  onPress={() => this.goToContacts()}>
               <Icon name="address-book" />
-              <Text style= {{ fontSize: 9 }}>Contactos</Text>
+              <Text style= {{ fontSize: 9 }}>Cont.</Text>
             </Button>
             <Button vertical { ...{active: this.props.navigation.state.routeName == 'Configuration' ? true : false} }  onPress={() => this.goToConfiguration()}>
               <Icon active name="cog" />
-              <Text style= {{ fontSize: 9 }}>Config</Text>
+              <Text style= {{ fontSize: 9 }}>Config.</Text>
             </Button>
             <Button vertical { ...{active: this.props.navigation.state.routeName == 'Sincronize' ? true : false} }  onPress={() => this.goToSincronize()}>
               <Icon name="retweet" />
-              <Text style= {{ fontSize: 9 }}>Sinc</Text>
+              <Text style= {{ fontSize: 9 }}>Sinc.</Text>
             </Button>
           </FooterTab>
         </Footer>
