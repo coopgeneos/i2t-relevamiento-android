@@ -147,6 +147,7 @@ stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROXIMITY_RA
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('SHIPMENTS_SHOW', '30', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('PROJECTION_AGENDA', '15', '${new Date().toString()}');`);
 stms.push(`INSERT INTO Configuration (key, value, updated) values ('CONSULTANT_NUM', '23', '${new Date().toString()}');`);
+stms.push(`INSERT INTO Configuration (key, value, updated) values ('HISTORY_SIZE', 3, '${new Date().toString()}');`);
 
 // stms.push(`INSERT INTO Answer(updated) values ('3000/01/01 00:00:01')`);
 // stms.push(`UPDATE sqlite_sequence SET seq = 1000000 WHERE name = 'Answer'`);

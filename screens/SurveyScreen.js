@@ -83,7 +83,7 @@ export default class SurveyScreen extends React.Component {
           act.id as activity_id, act.uuid as activity_uuid, 
           c.id as contact_id, c.uuid as contact_uuid,  
           a.id as answer_id, a.text_val, a.img_val, a.img_val_change, a.number_val, a.latitude, a.longitude, 
-          act.state, iat.required 
+          act.state, act.status, iat.required
           from Activity act 
           inner join ActivityType at on (at.id = act.activityType_id) 
           inner join ItemActType iat on (iat.activityType_id = act.activityType_id) 
@@ -397,18 +397,16 @@ export default class SurveyScreen extends React.Component {
     }
   };
 
+  /* deleteImage() {
+    this.state.answers[this.state.seg - 1].img_val = null;
+    this.state.answers[this.state.seg - 1].img_val_change = 1;
+    this.loadCards(this.state.cardsData, false);
+  } */
+
   async saveAnswer() {    
     var answer = this.state.answers[this.state.seg - 1];
 
     // console.log(`ANSWER: ${JSON.stringify(answer)}`)
-    
-    /* if (answer.type === AppConstans.ITEM_TYPE_TEXT){
-      answer.text_val = answer.notes;
-    }
-
-    if (answer.type === AppConstans.ITEM_TYPE_NUMBER) {
-      answer.number_val = answer.number_val;
-    } */
 
     if (answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
       answer.img_condition = this.state.checkbox1 ? 1 : 0;
@@ -470,17 +468,27 @@ export default class SurveyScreen extends React.Component {
           ` update activity set percent = (
               select 
                 case 
-                  count(iat.id) when 0 then 0 else count(a.id)*1.0/count(iat.id)*1.0   
+                  (select count(iat.id) from ItemActType iat where iat.activityType_id = (
+                    select act.activityType_id from Activity act where act.id = ?
+                  ))*1.0   
+                  when 0 then 0 
+                  else (
+                    (select count(ans.id) from Answer ans where ans.activity_id = ?)*1.0 / 
+                    (select count(iat.id) from ItemActType iat where iat.activityType_id = (
+                      select act.activityType_id from Activity act where act.id = ?
+                    ))*1.0
+                  )       
                 end percent 
-              from ItemActType iat 
-              left join answer a on (a.itemActType_id = iat.id)
-              where iat.activityType_id = activity.activityType_id 
             ), status = ?, updated = ?   
             where id = ?;`,
           [ 
+            answer.activity_id,
+            answer.activity_id,
+            answer.activity_id,
             AppConstans.ACTIVITY_IN_PROGRESS,
             formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
-            answer.activity_id],
+            answer.activity_id
+          ],
           (_, { rows }) => {},
           (_, err) => {
             console.error(`ERROR consultando DB: ${err}`)
@@ -497,6 +505,16 @@ export default class SurveyScreen extends React.Component {
 
     this.loadData();
 
+  }
+
+  omitAnswer() {
+    if ((this.state.seg) === this.state.seg_max-1 && this.activity.status != AppConstans.ACTIVITY_COMPLETED){
+      this.loadResumen(this.state.cardsData);
+    }
+
+    this.setState(prevState => ({seg: prevState.seg + 1}))
+
+    //this.loadData();
   }
 
 
@@ -749,7 +767,7 @@ export default class SurveyScreen extends React.Component {
                 Dirección: { this.contact.address } - { this.contact.city }
               </Text>
               <Text note>
-                Estado: { this.activity.state }
+                Estado: { this.activity.status }
               </Text>
              
             </Item>
@@ -773,7 +791,7 @@ export default class SurveyScreen extends React.Component {
                       first
                       active={this.state.seg === this.state.seg_max ? false : true}
                       disabled={this.state.seg === this.state.seg_max ? true : false}
-                      onPress={() => this.setState(prevState => ({seg: prevState.seg + 1}))}
+                      onPress={() => this.omitAnswer()}
                     >
                       <Text>OMITIR</Text>
                     </Button>

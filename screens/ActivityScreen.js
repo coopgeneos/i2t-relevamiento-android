@@ -67,7 +67,7 @@ export default class ActivityScreen extends ValidationComponent {
       } else {
         global.DB.transaction(tx => {
           tx.executeSql(
-            ` update activity set state = ?, cancellation = ?, notes = ? , updated = ? where id = ?`,
+            ` update activity set status = ?, cancellation = ?, notes = ? , updated = ? where id = ?`,
             [ 
               AppConstans.ACTIVITY_CANCELED, 
               this.state.canceled ? this.state.cancellation : '', 
