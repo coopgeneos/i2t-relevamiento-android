@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Content, Text, Button, Icon } from 'native-base';
 import { getConfiguration, formatDateTo, executeSQL, showDB } from '../utilities/utils'
 import AppConstants from '../constants/constants';
-import { StyleSheet, Alert, Modal, NetInfo} from 'react-native';
+import { StyleSheet, Alert, Modal, NetInfo, TouchableOpacity} from 'react-native';
 import { Grid, Row, Col } from "react-native-easy-grid";
 import { FileSystem } from 'expo';
 
@@ -30,7 +30,8 @@ export default class SincronizeScreen extends React.Component {
     this.consultant_num = null;
     this.state = {
       modalMessagge: "",
-      isWifiConnected: false
+      isWifiConnected: false,
+      btnSync: false
     };
 
     const subscription = NetInfo.addEventListener('connectionChange', () => {
@@ -405,7 +406,7 @@ export default class SincronizeScreen extends React.Component {
         // this.showDatasetResponse("Activity(Tarea)", items);
 
         if(items.length == 0) {
-          return resolve(`0 actividades sincronizadas`)
+          return resolve(`0 agendas sincronizadas`)
         }
   
         global.DB.transaction(tx => {
@@ -440,7 +441,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${items.length} actividades sincronizadas`)
+            resolve(`${items.length} agendas sincronizadas`)
           }
         )
       } catch (err) {
@@ -460,7 +461,7 @@ export default class SincronizeScreen extends React.Component {
     /*
       1. Subir Activity
       2. Subir Answer
-      3. Subir Imagenes
+      3. Subir ImagenesAll
       4. Descargar Contact
       5. Depurar Contact
       6. Descargar ActivityType
@@ -469,6 +470,9 @@ export default class SincronizeScreen extends React.Component {
       9. Descargar Activity
     */
     this.state.modalMessagge = "Sincronizando...";
+    console.log("btnSync " + this.state.btnSync);
+    // this.state.btnSync = true;
+    this.setState({btnSync: true});
     try {
       /*
         Para la consulta SQL el formato de la fecha se usa tal cual esta almacenado
@@ -520,6 +524,9 @@ export default class SincronizeScreen extends React.Component {
     }
    
     this.setState({ modalMessagge: this.state.modalMessagge });
+    // this.state.btnSync = false;
+    this.setState({btnSync: false});
+    console.log("btnSync " + this.state.btnSync);
   }
 
   /************** UPLOAD DE RELEVAMIENTOS *******************/
@@ -890,7 +897,7 @@ export default class SincronizeScreen extends React.Component {
   render() {
 
     let button =  this.state.isWifiConnected ? 
-                <Button onPress={() => this.syncAll()} block > 
+                <Button onPress={() => this.syncAll()} block> 
                   <Icon active name="cloud-upload" />
                   <Text>Sincronizar Información</Text>
                 </Button> : 
@@ -911,7 +918,11 @@ export default class SincronizeScreen extends React.Component {
           </Row>
           <Row style={styles.row}>
             <Col style={{ alignItems: 'center', paddingLeft: 20, paddingRight: 20 }}>
-              {button}
+              {/* {button} */}
+              <TouchableOpacity onPress={() => this.syncAll()}  style={styles.btn} disabled={this.state.btnSync}>
+                <Icon active name="cloud-upload"  style={this.state.btnSync ? styles.btnInactive : styles.btnActive}/>
+                <Text style={this.state.btnSync ? styles.btnInactive : styles.btnActive}>Sincronizar Información</Text>
+              </TouchableOpacity>
             </Col>
           </Row>
           <Row style={styles.row}>
@@ -939,8 +950,10 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', backgroundColor: '#FFF', paddingTop: 20},
   rowResult: { flexDirection: 'row', backgroundColor: '#F08377', color: '#FFF', height: 60 },
   cellAction: { margin: 6, width: 100 },
-  btn: { height: 28, backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12, color: 'white'},
+  btn: { padding: 10, alignItems: 'center', backgroundColor: '#F08377',  borderRadius: 2, fontSize: 12, color: 'white'},
   btn_cont: { flexDirection: 'row'},
+  btnActive: { color: '#FFF'},
+  btnInactive: { color: '#CCC'},
   btn_card: { flexDirection: 'row', justifyContent: 'space-around' },
   btnText: { textAlign: 'center', color: '#fff' },
   textResult: {fontSize: 16}

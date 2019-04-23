@@ -924,7 +924,8 @@ export default class SurveyScreen extends React.Component {
           }}
         />
         
-        <FooterNavBar navigation={this.props.navigation} />
+        {/* Comentado para que no aparezca durante la carga del relevamiento 
+        <FooterNavBar navigation={this.props.navigation} /> */}
 
       </Container>
     );
