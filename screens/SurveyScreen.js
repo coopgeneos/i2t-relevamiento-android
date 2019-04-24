@@ -64,8 +64,6 @@ export default class SurveyScreen extends React.Component {
   };
 
   toggleSwitch() {
-    /* this.state.checkbox1 = !this.state.checkbox1;
-    this.loadCards(this.state.cardsData, false) */
     this.state.answers[this.state.seg - 1].img_condition = this.state.answers[this.state.seg - 1].img_condition == 1 ? 0 : 1;
     this.loadCards(this.state.cardsData, false)
   }
@@ -86,7 +84,7 @@ export default class SurveyScreen extends React.Component {
           iat.description, iat.type, iat.position, 
           act.id as activity_id, act.uuid as activity_uuid, 
           c.id as contact_id, c.uuid as contact_uuid,  
-          a.id as answer_id, a.text_val, a.img_val, a.img_val_change, a.number_val, a.latitude, a.longitude, 
+          a.id as answer_id, a.text_val, a.img_val, a.img_val_change, a.number_val, a.latitude, a.longitude, a.img_condition,  
           act.state, act.status, iat.required
           from Activity act 
           inner join ActivityType at on (at.id = act.activityType_id) 
@@ -159,12 +157,6 @@ export default class SurveyScreen extends React.Component {
             })
           item.img_val = `${AppConstants.TMP_FOLDER}/${name}.jpg`;
         }
-
-        /* if (item.required === '1'){
-          requerido = true
-        }else{
-          requerido = false
-        } */
         
         var answer = {
           id: item.answer_id, //Si answer_id viene en null, es porque nunca se respondió.
@@ -175,11 +167,11 @@ export default class SurveyScreen extends React.Component {
           contact_id: item.contact_id,
           contact_uuid: item.contact_uuid,
           type: item.type,
-          required: item.required === '1' ? true : false,
+          required: item.required === 1 ? true : false,
           text_val: item.text_val,
           img_val: item.img_val,
-          img_val_change: 0,
-          img_condition: item.img_condition ? item.img_condition : 0,
+          img_val_change: 0, // el cambio de imagen es 0 cada vez que se crea la tarjeta en memoria
+          img_condition: item.img_condition != null ? item.img_condition : 1,
           number_val: item.number_val,         
           latitude: item.latitude,
           longitude: item.longitude  
@@ -376,7 +368,19 @@ export default class SurveyScreen extends React.Component {
     }
     this.setState({ 
       permissionsCameraRoll: statusCameraRoll === 'granted', 
-      permissionsCamera: statusCamera === 'granted'});
+      permissionsCamera: statusCamera === 'granted'
+    });
+    
+    if(!statusCameraRoll || !statusCamera){
+      ToastAndroid.showWithGravityAndOffset(
+        'Alguno de los permisos a cámara falló',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+    }
+
     return (statusCameraRoll && statusCamera)
   }
 
@@ -417,10 +421,31 @@ export default class SurveyScreen extends React.Component {
 
     // console.log(`ANSWER: ${JSON.stringify(answer)}`)
 
+    /*
+      Si el campo númerico viene con valor "", lo traduzco en null
+    */
+    if(answer.type === AppConstans.ITEM_TYPE_NUMBER && answer.number_val) {
+      if (answer.number_val === "") {
+        answer.number_val = null;
+      } else if(answer.number_val.toString().includes(".")){
+        /*
+          Aqui puede que el usuario ingrese algo del tipo 123.2556.2556.2
+          Solo me quedo con la primer parte y armo un entero.
+        */
+        let parts = answer.number_val.split(".");
+        answer.number_val = Number(parts[0]);
+      }
+    }
+
+    /*
+      Si la imagen es condicional y el tilde esta sin activar, se descarte la imagen
+      Si el tilde está activo y no hay imagen, eso es un error
+    */
     if (answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
       if(answer.img_condition == 0) {
         answer.img_val_change = 0;
-      } else if(answer.img_condition == 1 && answer.img_val == null) {
+        answer.img_val = null;
+      } else if(/* answer.img_condition == 1 &&  */answer.img_val == null) {
         answer.img_condition = 0;
         ToastAndroid.showWithGravityAndOffset(
           'La imagen esta vacía. Se descarta la selección',
@@ -430,13 +455,18 @@ export default class SurveyScreen extends React.Component {
           50,
         );
       }
+    } else {
+      answer.img_condition = 0;
     }
 
     /*
-      Solo se crea una respuesta si la imagen o el texto vienen con algo.
-      Si la respuesta ya tiene id (ya existia de antes), se actualiza
+      Solo se crea una respuesta si la imagen, el texto o el numero vienen con algo.
+      Si la respuesta ya tiene id (ya existia de antes), se actualiza.
+      Si la respuesta es una imagen condicional, siempre se guarda.
     */
-    if(answer.img_val || answer.text_val || answer.number_val || answer.id != null) {
+    if( answer.img_val || answer.text_val || answer.number_val || answer.id != null || 
+        answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
+      // console.log(`GUARDANDO: ${JSON.stringify(answer)}`);
       var base64 = null;
       if(answer.img_val && answer.img_val_change == 1){ //Solo se guarda si
         base64 = await FileSystem.readAsStringAsync(answer.img_val, {encoding: FileSystem.EncodingTypes.Base64})
@@ -535,7 +565,7 @@ export default class SurveyScreen extends React.Component {
 
     this.setState(prevState => ({seg: prevState.seg + 1}))
 
-    this.loadData();
+    //this.loadData();
 
   }
 
@@ -586,7 +616,7 @@ export default class SurveyScreen extends React.Component {
 
   buildConditionalImageCard(title, answer) {
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-
+    
     return {
       text: title,
       info: <View>
@@ -645,7 +675,7 @@ export default class SurveyScreen extends React.Component {
                     placeholder="Ingrese valor" 
                     bordered keyboardType={'numeric'} 
                     style={{ width: 100 }} 
-                    defaultValue={answer.number_val ? answer.number_val.toString() : "0"}
+                    defaultValue={answer.number_val ? answer.number_val.toString() : ""}
                     onChangeText={this.handleNumberChange.bind(this)}
                     disabled={this.state.buttonSaveEnable}
                   />
@@ -738,15 +768,15 @@ export default class SurveyScreen extends React.Component {
   elementList(answer, reg) {
     if(answer.type == AppConstans.ITEM_TYPE_CHOICE)
       return  <Radio
-                selected={answer.text_val == reg.value ? true : false }
-                onPress={() => {this.chooseOption(reg.value)}}
+                selected={answer.text_val == reg.code ? true : false }
+                onPress={() => {this.chooseOption(reg.code)}}
                 disabled={this.state.buttonSaveEnable}
               />;
     
     if(answer.type == AppConstans.ITEM_TYPE_CHOICE_MULT) {
       return  <CheckBox 
-                checked={this.checkIfSelected(answer, reg.value)} 
-                onPress={() => {this.selectCheckBox(answer, reg.value)}}
+                checked={this.checkIfSelected(answer, reg.code)} 
+                onPress={() => {this.selectCheckBox(answer, reg.code)}}
               />;
     }
   }
@@ -783,7 +813,7 @@ export default class SurveyScreen extends React.Component {
   }
 
   buildListCard(title, answer) {
-    style_status_answer_req = { backgroundColor: '#65727B'};
+    style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
 
     return new Promise(async (resolve, reject) => {
       let listItems = [];

@@ -104,6 +104,9 @@ export default class ActivitiesScreen extends React.Component {
 
   refresh() {
     this.getActivities()
+      .then(() => {
+        this.setState({})
+      })
       .catch(err => {
         console.error("Error obteniendo datos para página de tareas del contacto")
       })
@@ -112,13 +115,13 @@ export default class ActivitiesScreen extends React.Component {
   goToSurvey(activity){
     if(activity.state !== AppConstans.ACTIVITY_CANCELED) {
       this.props.navigation.navigate('Survey',
-        {activity: activity, contact: this.contact, onGoBack: () => this.refresh()})
+        {activity: activity, contact: this.contact, onGoBack: this.refresh.bind(this)})
     }
   }
 
   goToActivity(activity){  
     this.props.navigation.navigate('Activity',
-      {activity: activity, contact: this.contact, onGoBack: () => this.refresh()})
+      {activity: activity, contact: this.contact, onGoBack: this.refresh.bind(this)})
     
   }
 

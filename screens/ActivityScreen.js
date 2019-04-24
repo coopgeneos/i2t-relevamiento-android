@@ -11,7 +11,7 @@ import ValidationComponent from 'react-native-form-validator';
 
 import { NavigationActions } from 'react-navigation'; // Version can be specified in package.json
 import AppConstans from '../constants/constants';
-import { formatDateTo } from '../utilities/utils'
+import { formatDateTo, executeSQL } from '../utilities/utils'
 
 export default class ActivityScreen extends ValidationComponent {
   constructor(props) {
@@ -42,11 +42,11 @@ export default class ActivityScreen extends ValidationComponent {
         (_, { rows }) => {
           this.activity = rows._array[0];
           this.setState({
-            canceled: this.activity.state == AppConstans.ACTIVITY_CANCELED ? true : false, 
+            canceled: this.activity.status == AppConstans.ACTIVITY_CANCELED ? true : false, 
             cancellation: this.activity.cancellation, 
             notes: this.activity.notes,
             name: this.activity.description,
-            disabled: this.activity.state == AppConstans.ACTIVITY_CANCELED ? true : false
+            disabled: this.activity.status == AppConstans.ACTIVITY_CANCELED ? true : false
           });
         },
         (_, err) => {
@@ -58,70 +58,46 @@ export default class ActivityScreen extends ValidationComponent {
 
   
   saveActivity(){
-
     if(this.state.canceled) {
       if(this.state.cancellation === "" || !this.state.cancellation) {
         this.state.error_msg += "Completar motivo de cancelación.\n";
         this.setModalVisible(true);
         return;
-      } else {
-        global.DB.transaction(tx => {
-          tx.executeSql(
-            ` update activity set status = ?, cancellation = ?, notes = ? , updated = ? where id = ?`,
-            [ 
-              AppConstans.ACTIVITY_CANCELED, 
-              this.state.canceled ? this.state.cancellation : '', 
-              this.state.notes,
-              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'), 
-              this.activity.id
-            ],
-            (_, { rows }) => {},
-            (_, err) => {
-              console.error(`ERROR consultando DB: ${err}`)
-            }
-          )
-        });
-        ToastAndroid.showWithGravityAndOffset(
+      }
+    }
+
+    let status = this.state.canceled ? AppConstans.ACTIVITY_CANCELED : this.activity.status;
+
+    executeSQL("update activity set status = ?, cancellation = ?, notes = ? , updated = ? where id = ?", 
+              [ status, 
+                this.state.canceled ? this.state.cancellation : '', 
+                this.state.notes,
+                formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'), 
+                this.activity.id])
+      .then(() => {
+        return ToastAndroid.showWithGravityAndOffset(
           'Los datos se actualizaron correctamente.',
           ToastAndroid.SHORT,
           ToastAndroid.BOTTOM,
           25,
-          50,
+          50
         );
-        this.activity.canceled = this.state.canceled;
-      }
+      })
+      .then(() => {
+        return this.goBack()
+      })
+      .catch(err => {
+        ToastAndroid.showWithGravityAndOffset(
+          'Ocurrió un error al guardar los cambios.',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50
+        );
+      })
+  }
 
-    } else {
-      global.DB.transaction(tx => {
-        tx.executeSql(
-          ` update activity set cancellation = ?, notes = ?, updated = ? where id = ?`,
-          [  
-            this.state.canceled ? this.state.cancellation : '', 
-            this.state.notes, 
-            formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
-            this.activity.id
-          ],
-          (_, { rows }) => {},
-          (_, err) => {
-            console.error(`ERROR consultando DB: ${err}`)
-          }
-        )
-      });
-      ToastAndroid.showWithGravityAndOffset(
-        'Los datos se actualizaron correctamente.',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
-      this.activity.canceled = this.state.canceled;
-    }
-
-    
-    /* 
-      Para volver en la pila de navegación hay que invocar a onGoBack antes de volver con goBack 
-      Notar que en ActivititesScreen al llamar a esta pagina pase el paramtro onGoBack
-    */
+  goBack() {
     this.props.navigation.state.params.onGoBack();
     this.props.navigation.goBack()
   }

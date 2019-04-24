@@ -31,12 +31,14 @@ export default class ScheduleScreen extends React.Component {
   getActivities(nears, dateFilter) {
     return new Promise((resolve, reject) => {
       let sql = ` select a.id, a.planned_date, a.state, a.status, a.exec_date, a.percent,
-                actt.description, c.id as contact_id, c.name, c.address, c.city, 
-                c.latitude, c.longitude 
-                from Activity a 
-                inner join ActivityType actt on (actt.id = a.activityType_id)
-                inner join Contact c on (c.id = a.contact_id)
-                where a.status != '${AppConstans.ACTIVITY_COMPLETED}'`;
+                  actt.description, c.id as contact_id, c.name, c.address, c.city, 
+                  c.latitude, c.longitude 
+                  from Activity a 
+                  inner join ActivityType actt on (actt.id = a.activityType_id)
+                  inner join Contact c on (c.id = a.contact_id)
+                  where a.status != '${AppConstans.ACTIVITY_COMPLETED}' 
+                  and a.state != 1
+                `;
 
       if(dateFilter) {
         let endDate = new Date(dateFilter.getTime()+86399000); //le sumo 23 hs 59 mins y 59 segs
@@ -111,8 +113,15 @@ export default class ScheduleScreen extends React.Component {
     if(percent <= 1) return 'battery-4';
   }
 
+  /*
+    Para poder hacer setState en una funcion de refresh, al pasarla como parametro
+    en la navegacion, se debe pasar bindeada
+  */
   refresh() {
     this.getActivities(null,null)
+      .then(() => {
+        this.setState({})
+      })
       .catch(err => {
         console.error("Error obteniendo datos para página de contactos")
       })
@@ -163,19 +172,27 @@ export default class ScheduleScreen extends React.Component {
     return {activity: activity, contact: contact}
   }
 
+  /* 
+    IMPORTANTE!!!!!!!
+
+    A la hora de manejar la navegación y mandar un parametro del estilo onGoBack y poder hacer un 
+    setState() dentro de dicho método, es necesario usar bind()
+
+    leer: https://github.com/react-navigation/react-navigation/issues/922#issuecomment-344752635
+  */
   goToActivities(row){
     let params = this.getGoToParams(row);
-    this.props.navigation.navigate('Activities',{contact: params.contact, onGoBack: () => this.refresh()})
+    this.props.navigation.navigate('Activities',{contact: params.contact, onGoBack: this.refresh.bind(this)})
   }
 
   goToActivity(row){
     let params = this.getGoToParams(row);
-    this.props.navigation.navigate('Activity',{activity: params.activity, contact: params.contact, onGoBack: () => this.refresh()})
+    this.props.navigation.navigate('Activity',{activity: params.activity, contact: params.contact, onGoBack: this.refresh.bind(this)})
   }
 
   goToSurvey(row){
     let params = this.getGoToParams(row);
-    this.props.navigation.navigate('Survey',{activity: params.activity, contact: params.contact, onGoBack: () => this.refresh()})
+    this.props.navigation.navigate('Survey',{activity: params.activity, contact: params.contact, onGoBack: this.refresh.bind(this)})
   }
   
   render() {
@@ -290,7 +307,7 @@ export default class ScheduleScreen extends React.Component {
             )
           }    
         </Content>
-        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh()}/>
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh.bind(this)}/>
       </Container>
     );
   }  

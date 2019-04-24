@@ -125,7 +125,7 @@ export default class ContactActScreen extends React.Component {
   goToSurvey(activity_id, activity_state, activity_desc){
     executeSQL('select * from activity where id = ?', [activity_id])
       .then(result => {
-        this.props.navigation.navigate('Survey', {activity: result[0], contact: this.contact, onGoBack: () => this.refresh()})
+        this.props.navigation.navigate('Survey', {activity: result[0], contact: this.contact, onGoBack: this.refresh.bind(this)})
       })
       .catch(err => {
         console.error(err)

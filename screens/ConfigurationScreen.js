@@ -113,36 +113,35 @@ export default class ConfigurationScreen extends ValidationComponent {
   setParameters = () => {
     this.state.error_msg = '';
 
-    if(!this.validate({user_name: {minlength:3, maxlength:50, required: true}})){ 
-      this.state.error_msg += "Error en Nombre y Apellido debe contener entre 3 y 50 caracteres y es de carga obligatoria.\n";
+    if(!this.validate({user_name: {/* minlength:3, maxlength:100, */ required: true}})){ 
+      this.state.error_msg += "Error en Nombre y Apellido es de carga obligatoria.\n";
     }
-    if(!this.validate({ user_backend: {minlength:3, maxlength:8, required: true} })){ 
-      this.state.error_msg += "Error en Usuario Backend debe contener entre 3 y 8 caracteres y es de carga obligatoria.\n";
+    if(!this.validate({user_backend: {/* minlength:3, maxlength:15, */ required: true}})){ 
+      this.state.error_msg += "Error en Usuario Backend es de carga obligatoria.\n";
     }
-    /* Esta verificación se quita para que I2T pueda testear la primer version de WS */
-    /* if(!this.validate({ pass_backend: {minlength:6, maxlength:8, required: true} })){ 
-      this.state.error_msg += "Error en Password Backend debe contener entre 6 y 8 caracteres y es de carga obligatoria.\n";
-    } */
-    if(!this.validate({ url_backend: {required: true} })){ 
-      this.state.error_msg += "Error en URL, el campo es de carga obligatoria.\n";
+    if(!this.validate({pass_backend: {/* minlength:6, maxlength:8, */ required: true}})){ 
+      this.state.error_msg += "Error en Password Backend es de carga obligatoria.\n";
+    } 
+    if(!this.validate({url_backend: {required: true}})){ 
+      this.state.error_msg += "Error en URL, el campo URL es de carga obligatoria.\n";
     }
-    if(!this.validate({ user_email: {email: true, required: true} })){ 
+    if(!this.validate({user_email: {email: true, required: true}})){ 
       this.state.error_msg += "Error en el formato del email. El campo es de carga obligatoria.\n";
     }
-    if(!this.validate({ proximity_range: {numbers: true} })){ 
-      this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+    if(!this.validate({proximity_range: {numbers: true, required: true}}) || this.state.proximity_range <= 0){
+      this.state.error_msg += "Error en el campo Distancia cercanos. Debe ser numérico y mayor a 0.\n";
     }
-    if(!this.validate({range_days: {numbers: true}})){ 
-      this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+    if(!this.validate({range_days: {numbers: true, required: true}}) || this.state.range_days <= 0){
+      this.state.error_msg += "Error en el campo Proyección de agenda. Debe ser numérico y mayor a 0.\n";      
     }    
-    if(!this.validate({shipments_show: {numbers: true}})){ 
-      this.state.error_msg += "Error en el campo. Debe ser numérico y obligatorio.\n";
+    if(!this.validate({shipments_show: {numbers: true, required: true}}) || this.state.shipments_show <= 0){
+      this.state.error_msg += "Error en el campo Tamaño del paquete. Debe ser numérico y mayor a 0.\n";
     }
-    if(!this.validate({consultant_num: {numbers: true, minlength:1, maxlength:2, required: true}})){ 
-      this.state.error_msg += "Error en el campo número de asesor. Debe ser numérico y es obligatorio.\n";
+    if(!this.validate({consultant_num: {numbers: true, required: true}}) || this.state.consultant_num <= 0){
+      this.state.error_msg += "Error en el campo número de asesor. Debe ser numérico y mayor a 0.\n";
     }
-    if(!this.validate({history_size: {numbers: true, maxlength:2, required: true}})){ 
-      this.state.error_msg += "Error en el campo tamaño de histórico. Debe ser numérico, máximo 2 dígitos y es obligatorio.\n";
+    if(!this.validate({history_size: {numbers: true, required: true}}) || this.state.history_size <= 0){ 
+      this.state.error_msg += "Error en el campo tamaño de histórico. Debe ser numérico y mayor a 0.\n";
     }
 
     if(this.state.error_msg.length > 0) {
@@ -349,23 +348,13 @@ export default class ConfigurationScreen extends ValidationComponent {
             />
           </Item>
           <Item stackedLabel>
-            <Label>Distancia a Cercanos</Label>
+            <Label>Distancia a Cercanos (en metros)</Label>
             <TextInput
               value={this.state.proximity_range}
               onChangeText={proximity_range => this.setState({ proximity_range })}
               style={{width: '100%',  margin: 6}}
               keyboardType={'numeric'}
               placeholder="Ingrese la distancia de cercanos (en metros)"
-            />
-          </Item>
-          <Item stackedLabel>
-            <Label>Tamaño del paquete de envío</Label>
-            <TextInput
-              value={this.state.shipments_show}
-              onChangeText={shipments_show => this.setState({ shipments_show })}
-              style={{width: '100%',  margin: 6}}
-              keyboardType={'numeric'}
-              placeholder="Ingrese el tamaño del paquete de envío"
             />
           </Item>
           <Item stackedLabel>
@@ -376,6 +365,16 @@ export default class ConfigurationScreen extends ValidationComponent {
               style={{width: '100%',  margin: 6}}
               keyboardType={'numeric'}
               placeholder="Ingrese la cantidad de dias"
+            />
+          </Item>
+          <Item stackedLabel>
+            <Label>Tamaño del paquete de envío</Label>
+            <TextInput
+              value={this.state.shipments_show}
+              onChangeText={shipments_show => this.setState({ shipments_show })}
+              style={{width: '100%',  margin: 6}}
+              keyboardType={'numeric'}
+              placeholder="Ingrese el tamaño del paquete de envío"
             />
           </Item>
           <Item stackedLabel>

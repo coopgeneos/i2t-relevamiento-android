@@ -37,6 +37,7 @@ export default class SincronizeScreen extends React.Component {
     const subscription = NetInfo.addEventListener('connectionChange', () => {
       NetInfo.getConnectionInfo()
         .then(connection => {
+          console.log(`El WIFI esta conectado ? ${connection.type === "wifi"}`)
           this.setState({isWifiConnected: connection.type === "wifi"})
         });
     });
@@ -173,7 +174,7 @@ export default class SincronizeScreen extends React.Component {
         // this.showDatasetResponse("CONTACTS", ctsws);
 
         if(ctsws.length == 0) {
-          return resolve(`0 contactos sincronizados`)
+          return resolve(ctsws.length)
         }
   
         global.DB.transaction(tx => {
@@ -200,7 +201,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${ctsws.length} contactos sincronizados`)
+            resolve(ctsws.length)
           }
         )     
       } catch (err) {
@@ -221,7 +222,7 @@ export default class SincronizeScreen extends React.Component {
         // this.showDatasetResponse("DEBUG CONTACTS", ctsws);
 
         if(ctsws.length == 0) {
-          return resolve(`0 contactos eliminados`)
+          return resolve(ctsws.length)
         }
   
         global.DB.transaction(tx => {
@@ -240,7 +241,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${ctsws.length} contactos eliminados`)
+            resolve(ctsws.length)
           }
         )     
       } catch (err) {
@@ -261,7 +262,7 @@ export default class SincronizeScreen extends React.Component {
         // this.showDatasetResponse("ActivityType(Actividad)", acts);
 
         if(acts.length == 0) {
-          return resolve(`0 tipo de actividades sincronizadas`)
+          return resolve(acts.length)
         }
   
         global.DB.transaction(tx => {
@@ -284,7 +285,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${acts.length} tipo de actividades sincronizadas`)
+            resolve(acts.length)
           }
         )
       } catch (err) {
@@ -305,7 +306,7 @@ export default class SincronizeScreen extends React.Component {
         // this.showDatasetResponse("ItemActType(Consigna)", items);
 
         if(items.length == 0) {
-          return resolve(`0 item de tipo de actividades sincronizadas`)
+          return resolve(items.length)
         }
   
         global.DB.transaction(tx => {
@@ -317,7 +318,7 @@ export default class SincronizeScreen extends React.Component {
                   items[i].id_actividad, 
                   items[i].id_actividad,
                   items[i].name, 
-                  items[i].con_tipodato == 'rel_simple' ? 'lista' : items[i].con_tipodato, 
+                  items[i].con_tipodato, 
                   items[i].con_requerido,
                   items[i].con_tablaref,
                   items[i].rca_orden,
@@ -336,7 +337,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${items.length} item de tipo de actividades sincronizadas`)
+            resolve(items.length)
           }
         )
       } catch (err) {
@@ -358,26 +359,23 @@ export default class SincronizeScreen extends React.Component {
         // this.showDatasetResponse("ListItemAct(Referencia)", items);
 
         if(items.length == 0) {
-          return resolve(`0 ListItems de tipo de actividades sincronizados`)
+          return resolve(items.length)
         }
   
         global.DB.transaction(tx => {
-            for(i=0; i<items.length; i++){
-              let listValues = items[i].ref_valor.split(",");
-              for(j=0; j<listValues.length; j++) {
-                tx.executeSql(
-                  ` insert or replace into ListItemAct (uuid, reference, value, account_id, state, position, updated)  
-                    values (?, ?, ?, ?, ?, ?, ?);`,
-                  [ items[i].id_referencias, items[i].ref_tablaref, listValues[j], 
-                    items[i].account_id_c, items[i].ref_estado, items[i].ref_orden, 
-                    formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
-                  ],
-                  (_, rows) => {},
-                  (_, err) => {
-                    //console.error(`ERROR en una de las sentencias de sincronizacion de ItemActType ${err}`)
-                    throw new Error(`ERROR en una de las sentencias ${err}`)
-                  })
-              }
+            for(let i=0; i<items.length; i++){           
+              tx.executeSql(
+                ` insert or replace into ListItemAct (uuid, reference, code, value, account_id, state, position, updated)  
+                  values (?, ?, ?, ?, ?, ?, ?, ?);`,
+                [ items[i].id_referencias, items[i].ref_tablaref, items[i].ref_codigo, items[i].ref_valor, 
+                  items[i].account_id_c, items[i].ref_estado, items[i].ref_orden, 
+                  formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
+                ],
+                (_, rows) => {},
+                (_, err) => {
+                  //console.error(`ERROR en una de las sentencias de sincronizacion de ItemActType ${err}`)
+                  throw new Error(`ERROR en una de las sentencias ${err}`)
+                })
             }
           },
           err => {
@@ -385,7 +383,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${items.length} ListItems de tipo de actividades sincronizados`)
+            resolve(items.length)
           }
         )
       } catch (err) {
@@ -406,7 +404,7 @@ export default class SincronizeScreen extends React.Component {
         // this.showDatasetResponse("Activity(Tarea)", items);
 
         if(items.length == 0) {
-          return resolve(`0 agendas sincronizadas`)
+          return resolve(items.length)
         }
   
         global.DB.transaction(tx => {
@@ -441,7 +439,7 @@ export default class SincronizeScreen extends React.Component {
             throw new Error(`ERROR en una de las transacción ${err}`)
           },
           () => {
-            resolve(`${items.length} agendas sincronizadas`)
+            resolve(items.length)
           }
         )
       } catch (err) {
@@ -470,8 +468,6 @@ export default class SincronizeScreen extends React.Component {
       9. Descargar Activity
     */
     this.state.modalMessagge = "Sincronizando...";
-    console.log("btnSync " + this.state.btnSync);
-    // this.state.btnSync = true;
     this.setState({btnSync: true});
     try {
       /*
@@ -483,7 +479,7 @@ export default class SincronizeScreen extends React.Component {
       // 1. Subir Activity
       await this.upload("Activity", from)
         .then(msg => {
-          this.state.modalMessagge = `Subidas ${msg} tareas\n`;
+          this.state.modalMessagge = `Subidas ${msg} agendas\n`;
         })
       // 2. Subir Answer
       await this.upload("Answer", from)
@@ -501,17 +497,17 @@ export default class SincronizeScreen extends React.Component {
       if(from == null) throw new Error("Error en la fecha de última subida de datos")
       
       // 4. Descargar Contact
-      await this.syncContacts(from).then(msg => this.state.modalMessagge += msg + "\n");
+      await this.syncContacts(from).then(msg => this.state.modalMessagge += `Se sincronizaron ${msg} contactos\n`);
       // 5. Depurar Contact
-      await this.debugContacts(from);
+      await this.debugContacts(from).then(msg => this.state.modalMessagge += `Se depuraron ${msg} contactos\n`);
       // 6. Descargar ActivityType
-      await this.syncActivityType(from);
+      await this.syncActivityType(from).then(msg => this.state.modalMessagge += `Se sincronizaron ${msg} actividades\n`);
       // 7. Descargar ItemActType   
-      await this.syncItemActType(from);
+      await this.syncItemActType(from).then(msg => this.state.modalMessagge += `Se sincronizaron ${msg} consignas\n`);
       // 8. Descargar ListItmActType
-      await this.syncListItemAct(from);
+      await this.syncListItemAct(from).then(msg => this.state.modalMessagge += `Se sincronizaron ${msg} referencias\n`);
       // 9. Descargar Activity
-      await this.syncActivity(from).then(msg => this.state.modalMessagge += msg + "\n");
+      await this.syncActivity(from).then(msg => this.state.modalMessagge += `Se sincronizaron ${msg} agendas\n`);
       
       /* Actualizo la fecha de última descarga */
       let nld = formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss');
@@ -523,10 +519,8 @@ export default class SincronizeScreen extends React.Component {
       this.state.modalMessagge = `Error durante la sincronización. Vuelva a intentar \n ${err}`;
     }
    
-    this.setState({ modalMessagge: this.state.modalMessagge });
-    // this.state.btnSync = false;
-    this.setState({btnSync: false});
-    console.log("btnSync " + this.state.btnSync);
+    this.setState({ modalMessagge: this.state.modalMessagge, btnSync: false });
+    // this.setState({btnSync: false});
   }
 
   /************** UPLOAD DE RELEVAMIENTOS *******************/
@@ -552,17 +546,14 @@ export default class SincronizeScreen extends React.Component {
         }
         return obj;
       case "Answer":
-
-        // TODO: Hacer lo de sel_mult
-
         obj = {
           id_movil: this.encodeID(item.id),
           id: item.uuid,
           fecha_ult_mod: item.updated,
           latitud: item.latitude,
           longitud: item.longitude,
-          caracter: item.type == "sel_simpl" ? item.text_val : null,
-          texto: item.type == "sel_simpl" ? null : item.text_val,
+          caracter: (item.type == AppConstants.ITEM_TYPE_CHOICE || item.type == AppConstants.ITEM_TYPE_CHOICE_MULT) ? item.text_val : null,
+          texto: (item.type == AppConstants.ITEM_TYPE_CHOICE || item.type == AppConstants.ITEM_TYPE_CHOICE_MULT) ? null : item.text_val,
           numero: item.number_val,
           url_imagen: null,
           id_contacto: item.contact_uuid,
@@ -577,14 +568,12 @@ export default class SincronizeScreen extends React.Component {
     return obj;  
   }
 
-  getSQLStatement(table) {
+  getSelectionStatement(table) {
     switch(table){
       case "Activity":
         return `select * from Activity where updated > ?`;
       case "Answer":
-        return `select a.*  
-                from Answer a  
-                where a.updated > ?`;
+        return `select * from Answer where updated > ?`;
     }
   }
 
@@ -645,22 +634,46 @@ export default class SincronizeScreen extends React.Component {
     })
   }
 
+  getSQLAndParams(table, uuid) {
+    /*
+      Los ID que devuelve en WS son con con el formato ID_LOCAL:ID_REMOTO
+    */
+    let ids = uuid.split(":")
+    let id = this.decodeID(Number(ids[0]));
+    uuid = ids[1];
+
+    // console.log(`getSQLAndParams ${uuid} ${id} = ${ids}`)
+
+    if(table === "Activity") {
+      let trx1 = {sql: "update Activity set uuid = ? where id = ?", params: [uuid, id]}
+      let trx2 = {sql: "update Answer set activity_uuid = ? where activity_id = ?", params: [uuid, id]}
+      return [trx1, trx2];
+    }
+     
+    if(table === "Answer") {
+      return [{sql: "update Answer set uuid = ? where id = ?", params: [uuid, id]}]
+    }
+  }
+
   updateUUIDs(table, uuids) {
     return new Promise(async (resolve, reject) => {
-        global.DB.transaction(tx => {
+      global.DB.transaction(tx => {
           //Lo hago -1 porque desde el WS me mandan algo que termina en coma y espacio
-          for(i=0; i<uuids.length -1; i++){ 
-            let id = Number(uuids[i].substring(0, uuids[i].indexOf(":")));
-            id = this.decodeID(id);
-
-            tx.executeSql(
-              ` update ${table} set uuid = ? where id = ?`,
-              [uuids[i], id],
-              (_, rows) => {},
-              (_, err) => {
-                throw new Error(`Fallo en una sentencia de la transacción. ${table} : ${id}`);
-              }
-            )
+          for(let i=0; i<uuids.length -1; i++){
+            
+            let trxs = this.getSQLAndParams(table, uuids[i]);
+            // console.log(`updateUUIDs ${table} ${JSON.stringify(trxs)}`)
+            
+            trxs.forEach(trx => {
+              tx.executeSql(
+                trx.sql,
+                trx.params,
+                (_, rows) => {},
+                (_, err) => {
+                  throw new Error(`Fallo en una sentencia de la transacción. ${table} : ${uuids[i]}`);
+                }
+              )
+            })
           }
         },
         err => {
@@ -702,7 +715,7 @@ export default class SincronizeScreen extends React.Component {
     */
     return new Promise(async (resolve, reject) => {
       // 1. Busco en la base todos los objectos a sincronizar
-      executeSQL(this.getSQLStatement(table), [from])
+      executeSQL(this.getSelectionStatement(table), [from])
         .then(async (items) => {
 
           if(items.length == 0) {
@@ -896,16 +909,6 @@ export default class SincronizeScreen extends React.Component {
   
   render() {
 
-    let button =  this.state.isWifiConnected ? 
-                <Button onPress={() => this.syncAll()} block> 
-                  <Icon active name="cloud-upload" />
-                  <Text>Sincronizar Información</Text>
-                </Button> : 
-                <Button onPress={() => this.syncAll()} block disabled > 
-                  <Icon active name="cloud-upload" />
-                  <Text>Sincronizar Información</Text>
-                </Button>;
-
     return (
       <Container>
         <HeaderNavBar navigation={this.props.navigation}  title="Sincronización" />
@@ -918,10 +921,9 @@ export default class SincronizeScreen extends React.Component {
           </Row>
           <Row style={styles.row}>
             <Col style={{ alignItems: 'center', paddingLeft: 20, paddingRight: 20 }}>
-              {/* {button} */}
-              <TouchableOpacity onPress={() => this.syncAll()}  style={styles.btn} disabled={this.state.btnSync}>
-                <Icon active name="cloud-upload"  style={this.state.btnSync ? styles.btnInactive : styles.btnActive}/>
-                <Text style={this.state.btnSync ? styles.btnInactive : styles.btnActive}>Sincronizar Información</Text>
+              <TouchableOpacity onPress={() => this.syncAll()}  style={styles.btn} disabled={this.state.btnSync || !this.state.isWifiConnected}>
+                <Icon active name="cloud-upload"  style={this.state.btnSync || !this.state.isWifiConnected ? styles.btnInactive : styles.btnActive}/>
+                <Text style={this.state.btnSync || !this.state.isWifiConnected ? styles.btnInactive : styles.btnActive}>Sincronizar Información</Text>
               </TouchableOpacity>
             </Col>
           </Row>
