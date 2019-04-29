@@ -3,7 +3,7 @@ import { Container, Header, Content, Footer, FooterTab, Text,
   Button, Icon, CheckBox, List, ListItem, Form, Item, Label,
   Input, Spinner, Body, Left, Title, Right, Thumbnail } from 'native-base';
 import { getLocationAsync, isClose, getConfiguration } from '../utilities/utils';
-import { StyleSheet, Image, View, TouchableOpacity, Alert, ListView, ScrollView} from 'react-native';
+import { StyleSheet, TextInput, BackHandler} from 'react-native';
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -11,31 +11,64 @@ import HeaderNavBar from '../components/HeaderNavBar';
 const img_sample = require("../assets/icon.png");
 
 export default class ContactsScreen extends React.Component {
+
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
     this.state = {
       contacts: [],
       name: global.context.user.name,
       nears: false,
-      markers: null
+      markers: null,
+      user_search: null
     };
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  onBackButtonPressAndroid = () => {
+    this.goBack()
+    return true;
+  };
+
+  goBack() {
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
+    this.props.navigation.goBack()
   }
 
   componentDidMount() {
-    this.getContacts(null)
+    this.getContacts(null, null)
       .then(() => {
         this.setState({});
       })
+    
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
 
-  getContacts(nears, ) {
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
+
+  getContacts(nears, name) {
     return new Promise((resolve, reject) => {
+      let sql = `select * from Contact where state != 1 order by name;`
+
+      if(name) {
+        sql = `select * from Contact where state != 1 and name like '%${name}%' order by name;`
+      } 
+
       global.DB.transaction(tx => {
         tx.executeSql(
-          ` select * 
-            from Contact 
-            where state != 1 
-            order by name;`,
+          sql,
           [],
           async (_, { rows }) => {
             var data = rows._array;
@@ -93,22 +126,35 @@ export default class ContactsScreen extends React.Component {
 
   toggleNears(){
     this.state.nears = !this.state.nears;
-    this.getContacts(this.state.nears)
+    this.getContacts(this.state.nears, null)
       .then(() => {
         this.setState({});
       })
   }
 
   onPressRow(contact){ 
-    this.props.navigation.navigate('ContactAct')
+    this.props.navigation.navigate('ContactAct', {onGoBack: this.refresh.bind(this)})
   }
 
   goToContactActivities(contact){
-    this.props.navigation.navigate('ContactAct', {contact: contact.contact, onGoBack: () => this.refresh()})
+    this.props.navigation.navigate('ContactAct', {contact: contact.contact, onGoBack: this.refresh.bind(this)})
   }
 
   refresh(){
-    this.getContacts(null)
+    this.getContacts(null, null)
+      .then(() => {
+        this.setState({});
+      })
+      .catch(err => {
+        console.error("Error obteniendo datos para página de contactos")
+      })
+  }
+
+  filterByName(name) {
+    this.getContacts(null, name)
+      .then(() => {
+        this.setState({});
+      })
       .catch(err => {
         console.error("Error obteniendo datos para página de contactos")
       })
@@ -146,7 +192,13 @@ export default class ContactsScreen extends React.Component {
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>
                 <Label>Nombre</Label>
-                <Text>{this.state.name}</Text>           
+                <TextInput
+                  value={this.state.user_search}
+                  onChangeText={(user_search) => this.filterByName(user_search)}
+                  style={{width: '60%', marginTop: 0}}
+                  keyboardType={'default'}
+                  placeholder="Ingrese nombre"
+                />           
               </Item>
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '50%'}}>               
                 <Label>Cercanos</Label>
@@ -181,7 +233,7 @@ export default class ContactsScreen extends React.Component {
               </ListItem>}
             />
         </Content>
-        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh()}/>
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh.bind(this)}/>
       </Container>
     );
   }

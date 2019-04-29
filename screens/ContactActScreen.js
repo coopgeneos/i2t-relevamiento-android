@@ -30,7 +30,19 @@ export default class ContactActScreen extends React.Component {
   }
 
   componentDidMount() {
-    this.getActivities();
+    this.getActivities()
+      .then(() => {
+        this.setState({});
+      })
+      .catch(err => {
+        ToastAndroid.showWithGravityAndOffset(
+          'Hubo un error al obtener las actividades',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50
+        );
+      })
     
     this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
       BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
@@ -38,27 +50,28 @@ export default class ContactActScreen extends React.Component {
   }
 
   getActivities(){
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        ` select * 
-          from ActivityType ate ;`,
-        [],
-        (_, { rows }) => {
-          var tableHead = ['Actividad', ''];
-          var tableData = [];
-          this.state.data = rows._array;
-          rows._array.forEach(item => {
-            tableData.push([item.short_name, item.id ])
-          })
-          this.setState ({
-            tableHead: tableHead,
-            tableData: tableData
-          });
-        },
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      )
+    return new Promise((resolve, reject) => {
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` select * 
+            from ActivityType ate ;`,
+          [],
+          (_, { rows }) => {
+            var tableHead = ['Actividad', ''];
+            var tableData = [];
+            this.state.data = rows._array;
+            rows._array.forEach(item => {
+              tableData.push([item.short_name, item.id ])
+            })
+            this.state.tableHead = tableHead;
+            this.state.tableData = tableData;
+            resolve("Ok")
+          },
+          (_, err) => {
+            console.error(`ERROR consultando DB: ${err}`)
+          }
+        )
+      })
     });
   }
 
@@ -72,8 +85,10 @@ export default class ContactActScreen extends React.Component {
     return true;
   };
 
-  goBack(){
-    this.props.navigation.state.params.onGoBack();
+  goBack() {
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
     this.props.navigation.goBack()
   }
 
@@ -82,7 +97,19 @@ export default class ContactActScreen extends React.Component {
   }
 
   refresh(){
-    this.getActivities();
+    this.getActivities()
+      .then(() => {
+        this.setState({});
+      })
+      .catch(err => {
+        ToastAndroid.showWithGravityAndOffset(
+          'Hubo un error al obtener las actividades',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50
+        );
+      })
   }
    
   /*
@@ -195,7 +222,7 @@ export default class ContactActScreen extends React.Component {
           {table}
 
         </Content>
-        <FooterNavBar navigation={this.props.navigation} />
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh.bind(this)}/>
       </Container>
     );
   }  

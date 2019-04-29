@@ -10,6 +10,10 @@ import { formatDateTo } from '../utilities/utils';
 
 
 export default class ConfigurationScreen extends ValidationComponent {
+
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -40,6 +44,15 @@ export default class ConfigurationScreen extends ValidationComponent {
 
   componentDidMount() {
     this.getParameters();
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
   }
 
   getParameters = () => {

@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Content, Text, Button, Icon } from 'native-base';
 import { getConfiguration, formatDateTo, executeSQL, showDB } from '../utilities/utils'
 import AppConstants from '../constants/constants';
-import { StyleSheet, Alert, Modal, NetInfo, TouchableOpacity} from 'react-native';
+import { StyleSheet, Alert, Modal, NetInfo, TouchableOpacity, BackHandler} from 'react-native';
 import { Grid, Row, Col } from "react-native-easy-grid";
 import { FileSystem } from 'expo';
 
@@ -22,6 +22,10 @@ Answer          Relevamiento
 */
 
 export default class SincronizeScreen extends React.Component {
+
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
     this.url = null;
@@ -41,6 +45,22 @@ export default class SincronizeScreen extends React.Component {
           this.setState({isWifiConnected: connection.type === "wifi"})
         });
     });
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  onBackButtonPressAndroid = () => {
+    this.goBack()
+    return true;
+  };
+
+  goBack() {
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
+    this.props.navigation.goBack()
   }
 
   componentDidMount() {
@@ -48,6 +68,15 @@ export default class SincronizeScreen extends React.Component {
       .then(() => {
         this.setState({});
       })
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
   }
 
   async getParams(){
@@ -71,12 +100,12 @@ export default class SincronizeScreen extends React.Component {
         if(this.state.token){
           return resolve(this.state.token);
         }
-  
+        
         this.state.token = await getConfiguration('TOKEN');
         if(this.state.token != null){
           return resolve(this.state.token);
         }
-
+        
         let response = await fetch(this.url + AppConstants.WS_LOGIN, {
           method: 'POST',
           headers: {
@@ -86,7 +115,7 @@ export default class SincronizeScreen extends React.Component {
           body: JSON.stringify({ usuario: this.username, pass: this.password}),
         });
         let responseJson = await response.json();
-        
+      
         if(responseJson.returnset[0].RCode != 1) {
           return reject(`El par usuario y contraseña no es correcto`)
         }
@@ -138,7 +167,7 @@ export default class SincronizeScreen extends React.Component {
           console.info('\x1b[47m\x1b[30mSe vención el token. Se obtendrá uno nuevo\x1b[0m\x1b[40m');
           delete this.state.token;
           await executeSQL('delete from Configuration where key = ?', ["TOKEN"])
-          return this.getFromWS(url, body) //invoco nuevamente el metodo, ahora con el nuevo token
+          return resolve(await this.getFromWS(url, body)) //invoco nuevamente el metodo, ahora con el nuevo token
         }
 
         if(responseJson.returnset[0].RCode && responseJson.returnset[0].RCode != 1) {
@@ -148,7 +177,6 @@ export default class SincronizeScreen extends React.Component {
 
         return resolve(responseJson);
       } catch (error) {
-        console.log(`Error en getFromWS ${error}`)
         reject(error)
       }
     })
@@ -168,7 +196,7 @@ export default class SincronizeScreen extends React.Component {
         var ctsws = await this.getFromWS(
           this.url+AppConstants.WS_CONTACT_DOWNLOAD,
           {usuario: this.username, FechaDesde: from, Otros: ''});
-
+          
         ctsws = ctsws.dataset
       
         // this.showDatasetResponse("CONTACTS", ctsws);
@@ -520,7 +548,8 @@ export default class SincronizeScreen extends React.Component {
     }
    
     this.setState({ modalMessagge: this.state.modalMessagge, btnSync: false });
-    // this.setState({btnSync: false});
+    
+    // showDB(["Activity","ActivityType","ItemActType"])
   }
 
   /************** UPLOAD DE RELEVAMIENTOS *******************/
@@ -552,8 +581,8 @@ export default class SincronizeScreen extends React.Component {
           fecha_ult_mod: item.updated,
           latitud: item.latitude,
           longitud: item.longitude,
-          caracter: (item.type == AppConstants.ITEM_TYPE_CHOICE || item.type == AppConstants.ITEM_TYPE_CHOICE_MULT) ? item.text_val : null,
-          texto: (item.type == AppConstants.ITEM_TYPE_CHOICE || item.type == AppConstants.ITEM_TYPE_CHOICE_MULT) ? null : item.text_val,
+          caracter: null,
+          texto: item.text_val,
           numero: item.number_val,
           url_imagen: null,
           id_contacto: item.contact_uuid,
@@ -561,9 +590,25 @@ export default class SincronizeScreen extends React.Component {
           id_agenda: item.activity_uuid,
           user_actividad: this.username
         }
+
+        /*
+          El campo caracter tiene un manejo especial, dado que se utiliza para enviar las
+          respuestas de multiples choice y otras.
+          El campo texto solo debe ser enviado cuando la respuesta es del tipo ITEM_TYPE_TEXT
+          y viene con algo.
+        */
+        if(item.type === AppConstants.ITEM_TYPE_CONDITIONAL_IMAGE) {
+          obj.caracter = item.img_condition == 1 ? "SI" : "NO";
+          obj.texto = null;
+        }
+        if(item.type != AppConstants.ITEM_TYPE_TEXT && item.text_val) {
+          obj.caracter = item.text_val;
+          obj.texto = null
+        }
+
         return obj;
       default:
-        console.log("No debería haber default!");    
+        console.log("No debería haber default! en createObjectBody");    
     }
     return obj;  
   }
@@ -900,7 +945,7 @@ export default class SincronizeScreen extends React.Component {
   refresh() {
     return NetInfo.getConnectionInfo()
       .then(connection => {
-        return this.state.isWifiConnected = connection.type === "wifi";
+        return this.setState({isWifiConnected: connection.type === "wifi"});
       })
       .catch(err => {
         this.setState({modalMessagge: "Error chequeando el estado del dipositivo"})
@@ -939,7 +984,7 @@ export default class SincronizeScreen extends React.Component {
           </Row>
         </Grid>
         </Content>
-        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh()}/>
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh.bind(this)}/>
       </Container>
     );
   }

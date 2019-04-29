@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, BackHandler } from 'react-native'
 import { FileSystem, MapView, Constants } from 'expo'
 import { Button } from 'react-native-elements'
 import AppConstans from '../constants/constants'
@@ -7,6 +7,10 @@ import DownloadSettings from '../components/DownloadSettings'
 import {formatFolderMap, formatUrlMap} from '../utilities/utils'
 
 export default class MapScreen extends React.Component {
+
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
 
@@ -23,11 +27,32 @@ export default class MapScreen extends React.Component {
       },
       markers: this.props.navigation.getParam('markers', null)
     }
+
+    this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
+      BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
   
   componentDidMount() {
-    
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
+
+  onBackButtonPressAndroid = () => {
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
+
+    this.props.navigation.goBack()
+    
+    return true;
+  };
 
   clearTiles = async () => {
     try {

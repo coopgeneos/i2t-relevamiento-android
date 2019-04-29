@@ -122,7 +122,7 @@ export default class HomeScreen extends React.Component {
 
   goToConfiguration() {
     this.setConfigurationLoaded(false);
-    this.props.navigation.navigate('Configuration', {onGoBack: () => this.refresh()});
+    this.props.navigation.navigate('Configuration', {onGoBack: this.refresh.bind(this)});
   }
 
   render() {
@@ -207,14 +207,14 @@ export default class HomeScreen extends React.Component {
           <Row  style={{ height: 120 }}>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() => this.props.navigation.navigate('Schedule', {onGoBack: () => this.refresh()})}
+              onPress={() => this.props.navigation.navigate('Schedule', {onGoBack: this.refresh.bind(this)})}
             >
               <Icon name='list-alt' style={{fontSize: 60, color: 'white'}}/>
             </Button>
             </Col>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() => this.props.navigation.navigate('Contacts', {user: this.state.user, onGoBack: () => this.refresh()})}
+              onPress={() => this.props.navigation.navigate('Contacts', {user: this.state.user, onGoBack: this.refresh.bind(this)})}
             >
               <Icon name='address-book' style={{fontSize: 60, color: 'white'}}/>
             </Button>
@@ -230,7 +230,7 @@ export default class HomeScreen extends React.Component {
             </Col>
             <Col>
             <Button transparent block style={{flex: 1}} 
-              onPress={() => this.props.navigation.navigate('Sincronize',{onGoBack: () => this.refresh()})}
+              onPress={() => this.props.navigation.navigate('Sincronize',{onGoBack: this.refresh.bind(this)})}
             >
               <Icon name='retweet' style={{fontSize: 60, color: 'white'}}/>
             </Button>

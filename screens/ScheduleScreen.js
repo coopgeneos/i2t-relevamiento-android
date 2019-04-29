@@ -1,17 +1,21 @@
 import React from 'react';
 import { Container, Content, Text, Button, Icon, CheckBox, List, ListItem, Thumbnail,
   Form, Item, Label, Left, Right, Spinner, Body, DatePicker} from 'native-base';
-import { getLocationAsync, isClose, getConfiguration, formatDate, formatDatePrint, showDB } from '../utilities/utils';
+import { getLocationAsync, isClose, getConfiguration, formatDateTo, formatDatePrint, showDB } from '../utilities/utils';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
-import {StyleSheet, TouchableOpacity, View} from "react-native";
+import {StyleSheet, TouchableOpacity, View, BackHandler, DatePickerAndroid } from "react-native";
 import AppConstans from '../constants/constants';
 
 const img_sample = require("../assets/icon.png");
 
 export default class ScheduleScreen extends React.Component {
-  constructor() {
-    super();
+
+  _didFocusSubscription;
+  _willBlurSubscription;
+
+  constructor(props) {
+    super(props);
     this.state = {
       nears: false,
       events: null,
@@ -19,6 +23,22 @@ export default class ScheduleScreen extends React.Component {
       markers: [],
     };
     this.setDate = this.setDate.bind(this);
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  onBackButtonPressAndroid = () => {
+    this.goBack()
+    return true;
+  };
+
+  goBack() {
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
+    this.props.navigation.goBack()
   }
 
   componentDidMount() {
@@ -26,6 +46,15 @@ export default class ScheduleScreen extends React.Component {
       then(() => {
         this.setState({});
       })
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+      BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
   }
 
   getActivities(nears, dateFilter) {
@@ -42,7 +71,8 @@ export default class ScheduleScreen extends React.Component {
 
       if(dateFilter) {
         let endDate = new Date(dateFilter.getTime()+86399000); //le sumo 23 hs 59 mins y 59 segs
-        sql += ` and planned_date between '${dateFilter}' and '${endDate}'`
+        endDate = formatDateTo(endDate, 'YYYY/MM/DD HH:mm:ss');
+        sql += ` and planned_date between '${formatDateTo(dateFilter, 'YYYY/MM/DD HH:mm:ss')}' and '${endDate}'`
       }
 
       sql += ` order by planned_date asc`;
@@ -135,6 +165,27 @@ export default class ScheduleScreen extends React.Component {
       })
   }
 
+  async openAndroidDatePicker() {
+    try {
+      const newDate = await DatePickerAndroid.open({
+        date: this.state.chosenDate
+          ? this.state.chosenDate
+          : new Date(),
+        minDate: new Date(2018, 1, 1),
+        maxDate: new Date(2050, 18, 31),
+        mode: this.props.androidMode
+      });
+      const { action, year, month, day } = newDate;
+      if (action === "dateSetAction") {
+        let selectedDate = new Date(year, month, day);
+        this.state.chosenDate = selectedDate;
+        this.setDate(selectedDate)
+      }
+    } catch ({ code, message }) {
+      console.warn("Cannot open date picker", message);
+    }
+  }
+
   setDate(newDate) {
     this.state.chosenDate = newDate;
     this.getActivities(this.state.nears, newDate)
@@ -206,21 +257,14 @@ export default class ScheduleScreen extends React.Component {
             
               <Item style={{flexDirection: 'row', justifyContent: 'flex-start', width: '60%'}}>
                 <Label style={{ marginTop: 9 }}>Fecha</Label>
-                <DatePicker
-                  defaultDate={null}
-                  minimumDate={new Date(2018, 1, 1)}
-                  maximumDate={new Date(2050, 12, 31)}
-                  locale={"es"}
-                  timeZoneOffsetInMinutes={undefined}
-                  modalTransparent={false}
-                  animationType={"fade"}
-                  androidMode={"default"}
-                  placeHolderText="Fecha ..."
-                  textStyle={{ color: '#F08377' }}
-                  placeHolderTextStyle={{ color: '#CCC' }}
-                  onDateChange={this.setDate}
-                  disabled={false}
-                />
+                <Text
+                  onPress={this.openAndroidDatePicker.bind(this)}
+                  style={{ marginTop: 10, marginRight:12, color: '#F08377' }}
+                >
+                  {this.state.chosenDate
+                    ? formatDateTo(this.state.chosenDate, 'DD/MM/YYYY')
+                    : "Seleccione..."}
+                </Text>
                 <Button  onPress={() => {this.clearDate()}}  transparent style={styles.btnTextHeader} onPress={() => { this.clearDate() }}>
                   <Icon name='close'  style={styles.btnIcon}/>
                 </Button>

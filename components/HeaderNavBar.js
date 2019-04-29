@@ -19,9 +19,9 @@ export default class HeaderNavBar extends React.Component {
   }
 
   goHome(){ 
-    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+    /* if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
       this.props.navigation.state.params.onGoBack();
-    }
+    } */
 
     /* Envío como parámetro un objeto vacío, para que al cargar la página llame al render() */
     this.props.navigation.navigate('Home', {})
@@ -31,7 +31,7 @@ export default class HeaderNavBar extends React.Component {
   render() {
     var map = this.props.map;
     if(map){
-      map = <Button transparent onPress={() => this.props.navigation.navigate('Map', {markers: this.props.markers})}   style={{fontSize: 50}}>
+      map = <Button transparent onPress={() => this.props.navigation.navigate('Map', {markers: this.props.markers})} style={{fontSize: 50}}>
               <Icon name='map-marker'/>
             </Button>
     }

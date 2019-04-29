@@ -10,6 +10,10 @@ import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 
 export default class ActivitiesScreen extends React.Component {
+
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
 
@@ -31,6 +35,15 @@ export default class ActivitiesScreen extends React.Component {
       .then(() => {
         this.setState({});
       })
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+    BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
+  }
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
   }
 
   getActivities() {
@@ -125,8 +138,10 @@ export default class ActivitiesScreen extends React.Component {
     
   }
 
-  goBack(){
-    this.props.navigation.state.params.onGoBack();
+  goBack() {
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
     this.props.navigation.goBack()
   }
 
@@ -244,7 +259,7 @@ export default class ActivitiesScreen extends React.Component {
 
         </Content>
 
-        <FooterNavBar navigation={this.props.navigation} />
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh.bind(this)}/>
 
       </Container>
     );

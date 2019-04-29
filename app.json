@@ -5,7 +5,6 @@
     "privacy": "public",
     "sdkVersion": "32.0.0",
     "platforms": [
-      "ios",
       "android"
     ],
     "version": "1.0.0",
@@ -22,13 +21,12 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true
-    },
     "description": "",
     "android": {
       "package": "com.geneos.idost.relevamiento",
       "permissions": [
+        "READ_EXTERNAL_STORAGE", 
+        "WRITE_EXTERNAL_STORAGE",
         "CAMERA",
         "ACCESS_FINE_LOCATION"
       ]

@@ -8,7 +8,7 @@ export default class FooterNavBar extends React.Component {
     super(props);
   }
 
-  goToActivities(){
+  goToSchedule(){
     /* if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
       this.props.navigation.state.params.onGoBack();
     } */
@@ -41,7 +41,7 @@ export default class FooterNavBar extends React.Component {
     return (
         <Footer>
           <FooterTab>
-            <Button vertical { ...{active: this.props.navigation.state.routeName == 'Activities' || this.props.navigation.state.routeName == 'Activity' || this.props.navigation.state.routeName == 'Schedule' ? true : false} } onPress={() => this.goToActivities()}>
+            <Button vertical { ...{active: this.props.navigation.state.routeName == 'Activities' || this.props.navigation.state.routeName == 'Activity' || this.props.navigation.state.routeName == 'Schedule' ? true : false} } onPress={() => this.goToSchedule()}>
               <Icon name="tasks" />
               <Text style= {{ fontSize: 9 }}>Agenda</Text>
             </Button>

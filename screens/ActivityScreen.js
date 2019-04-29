@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Header, Content, Footer, FooterTab, Text, Button, Spinner,
          Icon, Form, Item, Label, Input, Left, Title, Body, Right, Card, CardItem, CheckBox, Textarea } from 'native-base';
 
-import { StyleSheet, View, ToastAndroid, Modal } from "react-native"
+import { StyleSheet, View, ToastAndroid, Modal, BackHandler } from "react-native"
 
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -14,6 +14,10 @@ import AppConstans from '../constants/constants';
 import { formatDateTo, executeSQL } from '../utilities/utils'
 
 export default class ActivityScreen extends ValidationComponent {
+
+  _didFocusSubscription;
+  _willBlurSubscription;
+
   constructor(props) {
     super(props);
     
@@ -29,34 +33,67 @@ export default class ActivityScreen extends ValidationComponent {
       error_msg: '',
       modalVisible: false,
     };
+
+    this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
+      BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
 
+  onBackButtonPressAndroid = () => {
+    this.goBack();
+    return true;
+  };
 
   componentDidMount() {
-    global.DB.transaction(tx => {
-      tx.executeSql(
-        ` select * 
-          from activity  
-          where id = ?`,
-        [this.activity.id],
-        (_, { rows }) => {
-          this.activity = rows._array[0];
-          this.setState({
-            canceled: this.activity.status == AppConstans.ACTIVITY_CANCELED ? true : false, 
-            cancellation: this.activity.cancellation, 
-            notes: this.activity.notes,
-            name: this.activity.description,
-            disabled: this.activity.status == AppConstans.ACTIVITY_CANCELED ? true : false
-          });
-        },
-        (_, err) => {
-          console.error(`ERROR consultando DB: ${err}`)
-        }
-      )
-    });
+    this.getActivity()
+      .then(() => {
+        this.setState({});
+      })
+      .catch((err) => {
+        ToastAndroid.showWithGravityAndOffset(
+          'Hubo un error al obtener la tarea',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50
+        );
+      })
+
+    this._willBlurSubscription = this.props.navigation.addListener('willBlur', payload =>
+    BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressAndroid)
+    );
   }
 
-  
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
+
+  getActivity() {
+    return new Promise((resolve, reject) => {
+      global.DB.transaction(tx => {
+        tx.executeSql(
+          ` select * 
+            from activity  
+            where id = ?`,
+          [this.activity.id],
+          (_, { rows }) => {
+            this.activity = rows._array[0];
+            this.state.canceled = this.activity.status == AppConstans.ACTIVITY_CANCELED ? true : false, 
+            this.state.cancellation = this.activity.cancellation, 
+            this.state.notes = this.activity.notes,
+            this.state.name = this.activity.description,
+            this.state.disabled = this.activity.status == AppConstans.ACTIVITY_CANCELED ? true : false;
+            resolve("Ok")
+          },
+          (_, err) => {
+            reject(`ERROR consultando DB: ${err}`)
+          }
+        )
+      })
+    })
+  }
+ 
   saveActivity(){
     if(this.state.canceled) {
       if(this.state.cancellation === "" || !this.state.cancellation) {
@@ -98,7 +135,9 @@ export default class ActivityScreen extends ValidationComponent {
   }
 
   goBack() {
-    this.props.navigation.state.params.onGoBack();
+    if(this.props.navigation.state.params && this.props.navigation.state.params.onGoBack){
+      this.props.navigation.state.params.onGoBack();
+    }
     this.props.navigation.goBack()
   }
 
@@ -109,6 +148,22 @@ export default class ActivityScreen extends ValidationComponent {
   setModalVisible(visible) {
     this.setState({modalVisible: visible});
   };
+
+  refresh() {
+    this.getActivity()
+      .then(() => {
+        this.setState({});
+      })
+      .catch((err) => {
+        ToastAndroid.showWithGravityAndOffset(
+          'Hubo un error al obtener la tarea',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50
+        );
+      })
+  }
 
   render() {
     let cancelArea;
@@ -192,7 +247,7 @@ export default class ActivityScreen extends ValidationComponent {
         
         </Content>
         
-        <FooterNavBar navigation={this.props.navigation} />
+        <FooterNavBar navigation={this.props.navigation} onGoBack={this.refresh.bind(this)}/>
       </Container>
     );
   }

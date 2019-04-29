@@ -4,7 +4,7 @@ import { Container, Content, Text, Button, Spinner, CheckBox,
           Icon, Label, Left, Body, Right, Card, CardItem, IconNB,
           ListItem, Radio, Segment, Textarea, Form, Item, Input, DatePicker} from 'native-base';
 
-import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid } from 'react-native';
+import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid, DatePickerAndroid } from 'react-native';
 import { ImagePicker, Permissions, FileSystem } from 'expo';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
@@ -346,67 +346,69 @@ export default class SurveyScreen extends React.Component {
     })
   }
 
-
   static _alertIndex(index) {
     Alert.alert(`This is row ${index + 1}`);
   }
 
   async grantPermissions() {
-    var statusCameraRoll = null;
-    var statusCamera = null;
-    if(!this.state.permissionsCameraRoll){
-      statusCameraRoll = await Permissions.askAsync(Permissions.CAMERA_ROLL)
-        .catch(err => {
-          console.log(`PERMISSION ERROR: ${err}`)
-        })
-    }
-    if(!this.state.permissionsCamera){
-      statusCamera = await Permissions.askAsync(Permissions.CAMERA)
-        .catch(err => {
-          console.log(`PERMISSION ERROR: ${err}`)
-        })
-    }
-    this.setState({ 
-      permissionsCameraRoll: statusCameraRoll === 'granted', 
-      permissionsCamera: statusCamera === 'granted'
-    });
-    
-    if(!statusCameraRoll || !statusCamera){
-      ToastAndroid.showWithGravityAndOffset(
-        'Alguno de los permisos a cámara falló',
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
-    }
+    try {
+      let statusCameraRoll = null;
+      let statusCamera = null;
 
-    return (statusCameraRoll && statusCamera)
+      if(!this.state.permissionsCameraRoll){
+        statusCameraRoll = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+        this.state.permissionsCameraRoll = statusCameraRoll.status === 'granted';
+      }
+
+      if(!this.state.permissionsCamera){
+        statusCamera = await Permissions.askAsync(Permissions.CAMERA)
+        this.state.permissionsCamera = statusCamera.status === 'granted';
+      }
+
+      return (this.state.permissionsCameraRoll && this.state.permissionsCamera)
+    } catch(error) {
+      throw error
+    }
   }
 
   async pickImage(takePhoto) {
-    if(this.grantPermissions()){
-      let result = null;
-      if(takePhoto){
-        result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-        base64: true,
-        quality: 0.2,
-        });
-      } else {
-        result = await ImagePicker.launchImageLibraryAsync({
+    try {
+      let permissions = await this.grantPermissions();
+      if(permissions){
+        let result = null;
+        if(takePhoto){
+          result = await ImagePicker.launchCameraAsync({
           allowsEditing: true,
           aspect: [4, 3],
           base64: true,
           quality: 0.2,
-        });
+          });
+        } else {
+          result = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            aspect: [4, 3],
+            base64: true,
+            quality: 0.2,
+          });
+        }
+        if (!result.cancelled) {
+          this.state.answers[this.state.seg - 1].img_val = result.uri;
+          this.state.answers[this.state.seg - 1].img_val_change = 1;
+          this.loadCards(this.state.cardsData, false);
+        }
+      } else { 
+        this.state.permissionsCameraRoll = false;
+        this.state.permissionsCamera = false;   
+        ToastAndroid.showWithGravityAndOffset(
+          'Alguno de los permisos de cámara falló',
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );  
       }
-      if (!result.cancelled) {
-        this.state.answers[this.state.seg - 1].img_val = result.uri;
-        this.state.answers[this.state.seg - 1].img_val_change = 1;
-        this.loadCards(this.state.cardsData, false);
-      }
+    } catch(error) {
+      throw error;
     }
   };
 
@@ -416,157 +418,165 @@ export default class SurveyScreen extends React.Component {
     this.loadCards(this.state.cardsData, false);
   } */
 
-  async saveAnswer() {    
-    var answer = this.state.answers[this.state.seg - 1];
+  async saveAnswer() {
+    try{
+      let answer = this.state.answers[this.state.seg - 1];
 
-    // console.log(`ANSWER: ${JSON.stringify(answer)}`)
+      // console.log(`ANSWER: ${JSON.stringify(answer)}`)
 
-    /*
-      Si el campo númerico viene con valor "", lo traduzco en null
-    */
-    if(answer.type === AppConstans.ITEM_TYPE_NUMBER && answer.number_val) {
-      if (answer.number_val === "") {
-        answer.number_val = null;
-      } else if(answer.number_val.toString().includes(".")){
-        /*
-          Aqui puede que el usuario ingrese algo del tipo 123.2556.2556.2
-          Solo me quedo con la primer parte y armo un entero.
-        */
-        let parts = answer.number_val.split(".");
-        answer.number_val = Number(parts[0]);
-      }
-    }
-
-    /*
-      Si la imagen es condicional y el tilde esta sin activar, se descarte la imagen
-      Si el tilde está activo y no hay imagen, eso es un error
-    */
-    if (answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
-      if(answer.img_condition == 0) {
-        answer.img_val_change = 0;
-        answer.img_val = null;
-      } else if(/* answer.img_condition == 1 &&  */answer.img_val == null) {
-        answer.img_condition = 0;
-        ToastAndroid.showWithGravityAndOffset(
-          'La imagen esta vacía. Se descarta la selección',
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-          25,
-          50,
-        );
-      }
-    } else {
-      answer.img_condition = 0;
-    }
-
-    /*
-      Solo se crea una respuesta si la imagen, el texto o el numero vienen con algo.
-      Si la respuesta ya tiene id (ya existia de antes), se actualiza.
-      Si la respuesta es una imagen condicional, siempre se guarda.
-    */
-    if( answer.img_val || answer.text_val || answer.number_val || answer.id != null || 
-        answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
-      // console.log(`GUARDANDO: ${JSON.stringify(answer)}`);
-      var base64 = null;
-      if(answer.img_val && answer.img_val_change == 1){ //Solo se guarda si
-        base64 = await FileSystem.readAsStringAsync(answer.img_val, {encoding: FileSystem.EncodingTypes.Base64})
-          .catch(err => {
-            console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
-          })
-      }
-
-      let position = await getLocationAsync()
-        .catch(err => {
-          throw new Error("Error obteniendo la posición del dispositivo")
-        })
-      
-      let sql = '';
-      let text_val = answer.text_val ? `'${answer.text_val}'` : null;
-      if(answer.id){
-        let upd_img = '';
-        if(answer.img_val_change == 1){
-          upd_img = `img_val = '${base64}', img_val_change = 1, `
-        }       
-        sql = ` update Answer set ${upd_img} text_val = ${text_val}, 
-                  number_val = ${answer.number_val}, 
-                  updated = '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
-                  latitude = ${position.coords.latitude}, longitude = ${position.coords.longitude},
-                  type = '${answer.type}', img_condition = ${answer.img_condition} 
-                where id = ${answer.id}`;
-      } else {
-        let fields = "";
-        let values_fields = "";
-        if(answer.img_val_change == 1){
-           fields = "img_val, img_val_change, ";
-           values_fields = `'${base64}', ${answer.img_val_change},`;
+      /*
+        Si el campo númerico viene con valor "", lo traduzco en null
+      */
+      if(answer.type === AppConstans.ITEM_TYPE_NUMBER && answer.number_val) {
+        if (answer.number_val === "") {
+          answer.number_val = null;
+        } else if(answer.number_val.toString().includes(".")){
+          /*
+            Aqui puede que el usuario ingrese algo del tipo 123.2556.2556.2
+            Solo me quedo con la primer parte y armo un entero.
+          */
+          let parts = answer.number_val.split(".");
+          answer.number_val = Number(parts[0]);
         }
-        sql = ` insert into Answer (activity_id, activity_uuid, 
-                  itemActType_id, itemActType_uuid,
-                  contact_id, contact_uuid, 
-                  text_val, ${fields} number_val, updated, latitude, longitude, 
-                  type, img_condition) 
-                values (${answer.activity_id}, '${answer.activity_uuid}',
-                  ${answer.itemActType_id}, '${answer.itemActType_uuid}',
-                  ${answer.contact_id}, '${answer.contact_uuid}', 
-                  ${text_val}, ${values_fields} ${answer.number_val}, 
-                  '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
-                  ${position.coords.latitude}, ${position.coords.longitude}, '${answer.type}',
-                  ${answer.img_condition} 
-                )`;
       }
 
-      // console.log(`SQL= ${sql}`)
+      /*
+        Si la imagen es condicional y el tilde esta sin activar, se descarte la imagen
+        Si el tilde está activo y no hay imagen, eso es un error
+      */
+      if (answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
+        if(answer.img_condition == 0) {
+          answer.img_val_change = 0;
+          answer.img_val = null;
+        } else if(/* answer.img_condition == 1 &&  */answer.img_val == null) {
+          answer.img_condition = 0;
+          ToastAndroid.showWithGravityAndOffset(
+            'La imagen esta vacía. Se descarta la selección',
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM,
+            25,
+            50,
+          );
+        }
+      } else {
+        answer.img_condition = 0;
+      }
 
-      global.DB.transaction(tx => {
-        tx.executeSql(
-          sql,
-          [],
-          (_, { rows }) => {},
-          (_, err) => {
-            console.error(`ERROR consultando DB: ${err}`)
+      /*
+        Solo se crea una respuesta si la imagen, el texto o el numero vienen con algo.
+        Si la respuesta ya tiene id (ya existia de antes), se actualiza.
+        Si la respuesta es una imagen condicional, siempre se guarda.
+      */
+      if( answer.img_val || answer.text_val || answer.number_val || answer.id != null || 
+          answer.type === AppConstans.ITEM_TYPE_CONDITIONAL_IMAGE) {
+        // console.log(`GUARDANDO: ${JSON.stringify(answer)}`);
+        let base64 = null;
+        if(answer.img_val && answer.img_val_change == 1){ //Solo se guarda si
+          base64 = await FileSystem.readAsStringAsync(answer.img_val, {encoding: FileSystem.EncodingTypes.Base64})
+            .catch(err => {
+              console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
+            })
+        }
+        let position = await getLocationAsync()
+          .catch(err => {
+            throw new Error("Error obteniendo la posición del dispositivo")
+          })
+        
+        let sql = '';
+        let text_val = answer.text_val ? `'${answer.text_val}'` : null;
+        if(answer.id){
+          let upd_img = '';
+          if(answer.img_val_change == 1){
+            upd_img = `img_val = '${base64}', img_val_change = 1, `
+          }       
+          sql = ` update Answer set ${upd_img} text_val = ${text_val}, 
+                    number_val = ${answer.number_val}, 
+                    updated = '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
+                    latitude = ${position.coords.latitude}, longitude = ${position.coords.longitude},
+                    type = '${answer.type}', img_condition = ${answer.img_condition} 
+                  where id = ${answer.id}`;
+        } else {
+          let fields = "";
+          let values_fields = "";
+          if(answer.img_val_change == 1){
+            fields = "img_val, img_val_change, ";
+            values_fields = `'${base64}', ${answer.img_val_change},`;
           }
-        );
-        tx.executeSql(
-          ` update activity set percent = (
-              select 
-                case 
-                  (select count(iat.id) from ItemActType iat where iat.activityType_id = (
-                    select act.activityType_id from Activity act where act.id = ?
-                  ))*1.0   
-                  when 0 then 0 
-                  else (
-                    (select count(ans.id) from Answer ans where ans.activity_id = ?)*1.0 / 
+          sql = ` insert into Answer (activity_id, activity_uuid, 
+                    itemActType_id, itemActType_uuid,
+                    contact_id, contact_uuid, 
+                    text_val, ${fields} number_val, updated, latitude, longitude, 
+                    type, img_condition) 
+                  values (${answer.activity_id}, '${answer.activity_uuid}',
+                    ${answer.itemActType_id}, '${answer.itemActType_uuid}',
+                    ${answer.contact_id}, '${answer.contact_uuid}', 
+                    ${text_val}, ${values_fields} ${answer.number_val}, 
+                    '${formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')}',
+                    ${position.coords.latitude}, ${position.coords.longitude}, '${answer.type}',
+                    ${answer.img_condition} 
+                  )`;
+        }
+
+        // console.log(`SQL= ${sql}`)
+
+        global.DB.transaction(tx => {
+          tx.executeSql(
+            sql,
+            [],
+            (_, { rows }) => {},
+            (_, err) => {
+              console.error(`ERROR consultando DB: ${err}`)
+            }
+          );
+          tx.executeSql(
+            ` update activity set percent = (
+                select 
+                  case 
                     (select count(iat.id) from ItemActType iat where iat.activityType_id = (
                       select act.activityType_id from Activity act where act.id = ?
-                    ))*1.0
-                  )       
-                end percent 
-            ), status = ?, updated = ?   
-            where id = ?;`,
-          [ 
-            answer.activity_id,
-            answer.activity_id,
-            answer.activity_id,
-            AppConstans.ACTIVITY_IN_PROGRESS,
-            formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
-            answer.activity_id
-          ],
-          (_, { rows }) => {},
-          (_, err) => {
-            console.error(`ERROR consultando DB: ${err}`)
-          }
-        );
-      });
-    }
-   
-    if ((this.state.seg) === this.state.seg_max-1){
-      this.loadResumen(this.state.cardsData);
-    }
+                    ))*1.0   
+                    when 0 then 0 
+                    else (
+                      (select count(ans.id) from Answer ans where ans.activity_id = ?)*1.0 / 
+                      (select count(iat.id) from ItemActType iat where iat.activityType_id = (
+                        select act.activityType_id from Activity act where act.id = ?
+                      ))*1.0
+                    )       
+                  end percent 
+              ), status = ?, updated = ?   
+              where id = ?;`,
+            [ 
+              answer.activity_id,
+              answer.activity_id,
+              answer.activity_id,
+              AppConstans.ACTIVITY_IN_PROGRESS,
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
+              answer.activity_id
+            ],
+            (_, { rows }) => {},
+            (_, err) => {
+              console.error(`ERROR consultando DB: ${err}`)
+            }
+          );
+        });
+      }
+    
+      if ((this.state.seg) === this.state.seg_max-1){
+        this.loadResumen(this.state.cardsData);
+      }
 
-    this.setState(prevState => ({seg: prevState.seg + 1}))
+      this.setState(prevState => ({seg: prevState.seg + 1}))
 
-    //this.loadData();
-
+      //this.loadData();
+    } catch(error) {
+      ToastAndroid.showWithGravityAndOffset(
+        'No se pudieron guardar los cambios',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+    }   
   }
 
   omitAnswer() {
@@ -731,7 +741,7 @@ export default class SurveyScreen extends React.Component {
             <Text style={style_status_answer_req}> {title} </Text>
             <Form>
               <Item>
-                <DatePicker
+                {/* <DatePicker
                   defaultDate={null}
                   minimumDate={new Date(2018, 1, 1)}
                   maximumDate={new Date(2050, 12, 31)}
@@ -745,13 +755,42 @@ export default class SurveyScreen extends React.Component {
                   placeHolderTextStyle={{ color: '#CCC' }}
                   onDateChange={this.setDate}
                   disabled={false}
-                />
+                /> */}
+                <Text
+                  onPress={this.openAndroidDatePicker.bind(this)}
+                  style={{ marginTop: 10, marginRight:12, color: '#F08377' }}
+                >
+                  {answer.text_val
+                    ? formatDateTo(answer.text_val, 'DD/MM/YYYY')
+                    : "Seleccione..."}
+                </Text>
                 <Button onPress={() => {this.clearDate()}} transparent style={styles.btnTextHeader} >
                   <Icon name='close' style={styles.btnIcon}/>
                 </Button>
               </Item>
             </Form>
             </View>
+    }
+  }
+
+  async openAndroidDatePicker() {
+    try {
+      const newDate = await DatePickerAndroid.open({
+        date: this.state.answers[this.state.seg - 1].text_val
+          ? this.state.answers[this.state.seg - 1].text_val
+          : new Date(),
+        minDate: new Date(2018, 1, 1),
+        maxDate: new Date(2050, 18, 31),
+        mode: this.props.androidMode
+      });
+      const { action, year, month, day } = newDate;
+      if (action === "dateSetAction") {
+        let selectedDate = new Date(year, month, day);
+        this.state.answers[this.state.seg - 1].text_val = selectedDate;
+        this.setDate(selectedDate)
+      }
+    } catch ({ code, message }) {
+      console.warn("Cannot open date picker", message);
     }
   }
 
