@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Content, Text, Button, Icon } from 'native-base';
-import { getConfiguration, formatDateTo, executeSQL, showDB } from '../utilities/utils'
+import { getConfiguration, formatDateTo, executeSQL, showDB, executeSQLUPSERT } from '../utilities/utils'
 import AppConstants from '../constants/constants';
 import { StyleSheet, Alert, Modal, NetInfo, TouchableOpacity, BackHandler} from 'react-native';
 import { Grid, Row, Col } from "react-native-easy-grid";
@@ -82,11 +82,12 @@ export default class SincronizeScreen extends React.Component {
   async getParams(){
     return new Promise(async (resolve, reject) => {
       try {
-        this.url = this.url == null ? await getConfiguration('URL_BACKEND') : this.url;
-        this.username = this.username == null ? await getConfiguration('USER_BACKEND') : this.username;
-        this.password = this.password == null ? await getConfiguration('PASS_BACKEND') : this.password;
-        this.consultant_num = this.consultant_num == null ? Number(await getConfiguration('CONSULTANT_NUM')) : this.consultant_num;
-        this.shipments_size = this.shipments_size == null ? Number(await getConfiguration('SHIPMENTS_SHOW')) : this.shipments_size;
+        this.url = await getConfiguration('URL_BACKEND');
+        this.username = await getConfiguration('USER_BACKEND');
+        this.password = await getConfiguration('PASS_BACKEND');
+        this.consultant_num = Number(await getConfiguration('CONSULTANT_NUM'));
+        this.shipments_size = Number(await getConfiguration('SHIPMENTS_SHOW'));
+        console.log("Parametros de consulta: ", this.url, this.username, this.password, this.consultant_num, this.shipments_size)
         resolve("OK")
       } catch (error) {
         reject(`Error obteniendo parámetros`)
@@ -105,7 +106,7 @@ export default class SincronizeScreen extends React.Component {
         if(this.state.token != null){
           return resolve(this.state.token);
         }
-        
+        // console.log("Credenciales para login: ",this.username, this.password)
         let response = await fetch(this.url + AppConstants.WS_LOGIN, {
           method: 'POST',
           headers: {
@@ -170,7 +171,7 @@ export default class SincronizeScreen extends React.Component {
           return resolve(await this.getFromWS(url, body)) //invoco nuevamente el metodo, ahora con el nuevo token
         }
 
-        if(responseJson.returnset[0].RCode && responseJson.returnset[0].RCode != 1) {
+        if(responseJson.returnset[0].RCode == null || responseJson.returnset[0].RCode == undefined || responseJson.returnset[0].RCode != 0) {
           console.info(`Falló la consulta al WS. Devolvió ${JSON.stringify(responseJson)}`)
           return reject(`Falló la consulta al WS`)
         }
@@ -204,34 +205,45 @@ export default class SincronizeScreen extends React.Component {
         if(ctsws.length == 0) {
           return resolve(ctsws.length)
         }
-  
-        global.DB.transaction(tx => {
-          for(i=0; i<ctsws.length; i++){
-           tx.executeSql(
-              ` insert or replace into Contact(uuid, user_id, name, description, address, city, zipCode, phone, email, latitude, longitude, updated, state)  
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [ ctsws[i].id_contacto, global.context.user.id, ctsws[i].nombre, ctsws[i].description, 
-                ctsws[i].primary_address_street, ctsws[i].primary_address_city, 
-                ctsws[i].primary_address_postalcode, ctsws[i].phone_mobile, 
-                ctsws[i].email_c, ctsws[i].jjwg_maps_lat_c, ctsws[i].jjwg_maps_lng_c,
-                formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
-                ctsws[i].estado
-              ],
-              (_, rows) => {},
-              (_, err) => {
-              //console.error(`ERROR en una de las sentencias de sincronizacion de contactos ${err}`)
-              throw new Error(`ERROR en una de las sentencias ${err}`)
-            })
-          }
-          },
-          err => {
-            //console.error(`ERROR en la transaccion ${err}`)
-            throw new Error(`ERROR en una de las transacción ${err}`)
-          },
-          () => {
-            resolve(ctsws.length)
-          }
-        )     
+        
+        let count = 0;
+        for(i=0; i<ctsws.length; i++){
+          executeSQLUPSERT(
+            ` insert into Contact(uuid, user_id, name, description, address, city, zipCode, phone, email, latitude, longitude, updated, state)  
+              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [ 
+              ctsws[i].id_contacto, global.context.user.id, ctsws[i].nombre, ctsws[i].description, 
+              ctsws[i].primary_address_street, ctsws[i].primary_address_city, 
+              ctsws[i].primary_address_postalcode, ctsws[i].phone_mobile, 
+              ctsws[i].email_c, ctsws[i].jjwg_maps_lat_c, ctsws[i].jjwg_maps_lng_c,
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
+              ctsws[i].estado
+            ],
+            ` update Contact set user_id = ?, name = ?, description = ?, address = ?, city = ?, 
+                zipCode = ?, phone = ?, email = ?, latitude = ?, longitude = ?, state = ? 
+              where uuid = ?`,
+            [ 
+              global.context.user.id, 
+              ctsws[i].nombre, 
+              ctsws[i].description, 
+              ctsws[i].primary_address_street, 
+              ctsws[i].primary_address_city, 
+              ctsws[i].primary_address_postalcode, 
+              ctsws[i].phone_mobile, 
+              ctsws[i].email_c, 
+              ctsws[i].jjwg_maps_lat_c, 
+              ctsws[i].jjwg_maps_lng_c,
+              ctsws[i].estado,
+              ctsws[i].id_contacto
+            ]
+          )
+          .then(() => {
+            count += 1;
+            if(count == ctsws.length) {
+              resolve(ctsws.length)
+            }
+          })
+        }     
       } catch (err) {
         reject(err)
       }
@@ -292,30 +304,35 @@ export default class SincronizeScreen extends React.Component {
         if(acts.length == 0) {
           return resolve(acts.length)
         }
+
+        let count = 0;
+        for(i=0; i<acts.length; i++){
+          executeSQLUPSERT(
+            ` insert into ActivityType (uuid, description, short_name, state, updated) values (?, ?, ?, ?, ?)`,
+            [ 
+              acts[i].id_actividad, 
+              acts[i].name, 
+              acts[i].act_abreviatura, 
+              (acts[i].act_estado == 1 || acts[i].act_activo == 0) ? 1 : 0, //estado = 1 = borrado -- activo = 0 = inactivo
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
+            ],
+            ` update ActivityType set description = ?, short_name = ?, state = ? 
+              where uuid = ?`,
+            [ 
+              acts[i].name, 
+              acts[i].act_abreviatura, 
+              (acts[i].act_estado == 1 || acts[i].act_activo == 0) ? 1 : 0, //estado = 1 = borrado -- activo = 0 = inactivo
+              acts[i].id_actividad
+            ]
+          )
+          .then(() => {
+            count += 1;
+            if(count == acts.length) {
+              resolve(acts.length)
+            }
+          })
+        }
   
-        global.DB.transaction(tx => {
-          for(i=0; i<acts.length; i++){
-            tx.executeSql(
-              ` insert or replace into ActivityType (uuid, description, short_name, state, updated) values (?, ?, ?, ?, ?)`,
-              [ acts[i].id_actividad, acts[i].name, acts[i].act_abreviatura, 
-                acts[i].act_estado,
-                formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
-              ],
-              (_, rows) => {},
-              (_, err) => {
-              //console.error(`ERROR en una de las sentencias de sincronizacion de ActivityType ${err}`)
-              throw new Error(`ERROR en una de las sentencias de sincronizacion. ${err}`)
-            })
-          }
-          },
-          err => {
-            //console.error(`ERROR en la transaccion ${err}`)
-            throw new Error(`ERROR en una de las transacción ${err}`)
-          },
-          () => {
-            resolve(acts.length)
-          }
-        )
       } catch (err) {
         reject(err)
       }
@@ -336,38 +353,48 @@ export default class SincronizeScreen extends React.Component {
         if(items.length == 0) {
           return resolve(items.length)
         }
-  
-        global.DB.transaction(tx => {
-            for(i=0; i<items.length; i++){
-              tx.executeSql(
-                ` insert or replace into ItemActType (uuid, activityType_id, activityType_uuid, description, type, required, reference, position, state, updated) 
-                  values (?, (select at.id from ActivityType at where at.uuid = ?),?, ?, ?, ?, ?, ?, ?, ?);`,
-                [ items[i].id_consigna, 
-                  items[i].id_actividad, 
-                  items[i].id_actividad,
-                  items[i].name, 
-                  items[i].con_tipodato, 
-                  items[i].con_requerido,
-                  items[i].con_tablaref,
-                  items[i].rca_orden,
-                  items[i].con_estado,
-                  formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
-                ],
-                (_, rows) => {},
-                (_, err) => {
-                  //console.error(`ERROR en una de las sentencias de sincronizacion de ItemActType ${err}`)
-                  throw new Error(`ERROR en una de las sentencias ${err}`)
-                })
+
+        let count = 0;
+        for(i=0; i<items.length; i++){
+          executeSQLUPSERT(
+            ` insert into ItemActType (uuid, activityType_id, activityType_uuid, description, type, required, reference, position, state, updated) 
+              values (?, (select at.id from ActivityType at where at.uuid = ?),?, ?, ?, ?, ?, ?, ?, ?);`,
+            [ 
+              items[i].id_consigna, 
+              items[i].id_actividad, 
+              items[i].id_actividad,
+              items[i].name, 
+              items[i].con_tipodato, 
+              items[i].con_requerido,
+              items[i].con_tablaref,
+              items[i].rca_orden,
+              (items[i].con_estado == 1 || items[i].con_activo == 0) ? 1 : 0, //estado = 1 = borrado -- activo = 0 = inactivo
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
+            ],
+            ` update ItemActType set activityType_id = (select at.id from ActivityType at where at.uuid = ?), 
+                activityType_uuid = ?, description = ?, 
+                type = ?, required = ?, reference = ?, position = ?, state = ? 
+              where uuid = ?`,
+            [ 
+              items[i].id_actividad, 
+              items[i].id_actividad,
+              items[i].name, 
+              items[i].con_tipodato, 
+              items[i].con_requerido,
+              items[i].con_tablaref,
+              items[i].rca_orden,
+              (items[i].con_estado == 1 || items[i].con_activo == 0) ? 1 : 0, //estado = 1 = borrado -- activo = 0 = inactivo
+              items[i].id_consigna
+            ]
+          )
+          .then(() => {
+            count += 1;
+            if(count == items.length) {
+              resolve(items.length)
             }
-          },
-          err => {
-            //console.error(`ERROR en la transaccion ${err}`)
-            throw new Error(`ERROR en una de las transacción ${err}`)
-          },
-          () => {
-            resolve(items.length)
-          }
-        )
+          })
+        }
+
       } catch (err) {
         reject(err)
       }
@@ -389,31 +416,39 @@ export default class SincronizeScreen extends React.Component {
         if(items.length == 0) {
           return resolve(items.length)
         }
-  
-        global.DB.transaction(tx => {
-            for(let i=0; i<items.length; i++){           
-              tx.executeSql(
-                ` insert or replace into ListItemAct (uuid, reference, code, value, account_id, state, position, updated)  
-                  values (?, ?, ?, ?, ?, ?, ?, ?);`,
-                [ items[i].id_referencias, items[i].ref_tablaref, items[i].ref_codigo, items[i].ref_valor, 
-                  items[i].account_id_c, items[i].ref_estado, items[i].ref_orden, 
-                  formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
-                ],
-                (_, rows) => {},
-                (_, err) => {
-                  //console.error(`ERROR en una de las sentencias de sincronizacion de ItemActType ${err}`)
-                  throw new Error(`ERROR en una de las sentencias ${err}`)
-                })
+
+        let count = 0;
+        for(i=0; i<items.length; i++){
+          executeSQLUPSERT(
+            ` insert into ListItemAct (uuid, reference, code, value, account_id, state, position, updated)  
+              values (?, ?, ?, ?, ?, ?, ?, ?);`,
+            [ 
+              items[i].id_referencias, items[i].ref_tablaref, items[i].ref_codigo, items[i].ref_valor, 
+              items[i].account_id_c, 
+              (items[i].ref_estado == 1 || items[i].ref_activo == 0) ? 1 : 0, 
+              items[i].ref_orden, 
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss')
+            ],
+            ` update ListItemAct set reference = ?, code = ?, value = ?, account_id = ?, 
+                state = ?, position = ?, updated = ? 
+              where uuid = ?`,
+            [ 
+              items[i].ref_tablaref, items[i].ref_codigo, items[i].ref_valor, 
+              items[i].account_id_c, 
+              (items[i].ref_estado == 1 || items[i].ref_activo == 0) ? 1 : 0, 
+              items[i].ref_orden, 
+              formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
+              items[i].id_referencias, 
+            ]
+          )
+          .then(() => {
+            count += 1;
+            if(count == items.length) {
+              resolve(items.length)
             }
-          },
-          err => {
-            //console.error(`ERROR en la transaccion ${err}`)
-            throw new Error(`ERROR en una de las transacción ${err}`)
-          },
-          () => {
-            resolve(items.length)
-          }
-        )
+          })
+        }
+  
       } catch (err) {
         reject(err)
       }
@@ -434,42 +469,56 @@ export default class SincronizeScreen extends React.Component {
         if(items.length == 0) {
           return resolve(items.length)
         }
-  
-        global.DB.transaction(tx => {
-            for(i=0; i<items.length; i++){
-              tx.executeSql(
-                ` insert or replace into Activity (uuid, contact_uuid, name, description, activityType_uuid, status, percent, priority, planned_date, exec_date, contact_id, activityType_id, updated, state) 
-                  values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (select c.id from Contact c where c.uuid = ?), (select a.id from ActivityType a where a.uuid = ?), ?, ?);`,
-                [ items[i].id_tarea, 
-                  items[i].contact_id,
-                  items[i].name,  
-                  items[i].description, 
-                  items[i].rel_actividades_id_c, 
-                  items[i].status, 
-                  0, 
-                  items[i].priority, 
-                  formatDateTo(this.fixDate(items[i].planificacion), 'YYYY/MM/DD HH:mm:ss'), 
-                  formatDateTo(this.fixDate(items[i].ejecucion), 'YYYY/MM/DD HH:mm:ss'), 
-                  items[i].contact_id,
-                  items[i].rel_actividades_id_c,
-                  '2000/01/01 00:00:01',
-                  items[i].estado
-                ],
-                (_, rows) => {},
-                (_, err) => {
-                  //console.error(`ERROR en una de las sentencias de sincronizacion de Activity ${err}`)
-                  throw new Error(`ERROR en una de las sentencias ${err}`)
-                })
+
+        let count = 0;
+        for(i=0; i<items.length; i++){
+          executeSQLUPSERT(
+            ` insert into Activity (uuid, contact_uuid, name, description, activityType_uuid, status, percent, priority, planned_date, exec_date, contact_id, activityType_id, updated, state) 
+              values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (select c.id from Contact c where c.uuid = ?), (select a.id from ActivityType a where a.uuid = ?), ?, ?);`,
+            [ 
+              items[i].id_tarea, 
+              items[i].contact_id,
+              items[i].name,  
+              items[i].description, 
+              items[i].rel_actividades_id_c, 
+              items[i].status, 
+              0, 
+              items[i].priority, 
+              formatDateTo(this.fixDate(items[i].planificacion), 'YYYY/MM/DD HH:mm:ss'), 
+              formatDateTo(this.fixDate(items[i].ejecucion), 'YYYY/MM/DD HH:mm:ss'), 
+              items[i].contact_id,
+              items[i].rel_actividades_id_c,
+              '2000/01/01 00:00:01',
+              items[i].estado
+            ],
+            ` update Activity set contact_uuid = ?, name = ?, description = ?, activityType_uuid = ?, 
+                status = ?, priority = ?, planned_date = ?, exec_date = ?, 
+                contact_id = (select c.id from Contact c where c.uuid = ?), 
+                activityType_uuid = (select a.id from ActivityType a where a.uuid = ?), state = ? 
+              where uuid = ?`,
+            [
+              items[i].contact_id,
+              items[i].name,  
+              items[i].description, 
+              items[i].rel_actividades_id_c, 
+              items[i].status, 
+              items[i].priority, 
+              formatDateTo(this.fixDate(items[i].planificacion), 'YYYY/MM/DD HH:mm:ss'), 
+              formatDateTo(this.fixDate(items[i].ejecucion), 'YYYY/MM/DD HH:mm:ss'), 
+              items[i].contact_id,
+              items[i].rel_actividades_id_c,
+              items[i].estado,
+              items[i].id_tarea
+            ]
+          )
+          .then(() => {
+            count += 1;
+            if(count == items.length) {
+              resolve(items.length)
             }
-          },
-          err => {
-            //console.error(`ERROR en la transaccion ${err}`)
-            throw new Error(`ERROR en una de las transacción ${err}`)
-          },
-          () => {
-            resolve(items.length)
-          }
-        )
+          })
+        } 
+
       } catch (err) {
         reject(err)
       }     
@@ -515,9 +564,12 @@ export default class SincronizeScreen extends React.Component {
           this.state.modalMessagge += `Subidos ${msg} relevamientos\n`;
         })
       // 3. Subir Imagenes
-      await this.uploadImage(from)
+      await this.uploadImage()
         .then(msg => {
-          this.state.modalMessagge += `Subidas ${msg} imágenes\n`;
+          this.state.modalMessagge += `Subidas ${msg.ok} imágenes\n`;
+          if(msg.error > 0) {
+            this.state.modalMessagge += `Fallaron ${msg.error} imágenes al subir\n`;
+          }
         })
 
       /* El campo FechaDesde usa el formato YYYY-MM-DD HH:mm:ss*/
@@ -549,7 +601,7 @@ export default class SincronizeScreen extends React.Component {
    
     this.setState({ modalMessagge: this.state.modalMessagge, btnSync: false });
     
-    // showDB(["Activity","ActivityType","ItemActType"])
+    // showDB(["Activity", "Answer"])
   }
 
   /************** UPLOAD DE RELEVAMIENTOS *******************/
@@ -669,12 +721,15 @@ export default class SincronizeScreen extends React.Component {
       this.getFromWS(url, {json_in: JSON.stringify(data)})
         .then(uuids => {
           /*
-            RCode con valor distinto de 1, significa que el WS falló
+            RCode con valor distinto de 0, significa que el WS falló
           */
-          if(uuids.returnset[0].RCode != 1){
+          if(uuids.returnset[0].RCode != 0){
             return reject(uuids.returnset[0].RTxt)
           }
           resolve(uuids)
+        })
+        .catch(err => {
+          reject(err)
         })
     })
   }
@@ -687,7 +742,7 @@ export default class SincronizeScreen extends React.Component {
     let id = this.decodeID(Number(ids[0]));
     uuid = ids[1];
 
-    // console.log(`getSQLAndParams ${uuid} ${id} = ${ids}`)
+    // console.log(`getSQLAndParams -> Table: ${table} ID:${id} UUID: ${uuid} = ${ids}`)
 
     if(table === "Activity") {
       let trx1 = {sql: "update Activity set uuid = ? where id = ?", params: [uuid, id]}
@@ -735,6 +790,9 @@ export default class SincronizeScreen extends React.Component {
     return new Promise(async (resolve, reject) => {
       try{
         let uuids = await this.uploadToServer(url, data);
+
+        // console.log(`uploadAndUpdate Table: ${table}, UUIDS: ${JSON.stringify(uuids)}`)
+
         /*
           En el campo returnset[0].RTxt tiene que venir un String con los uuid separados por coma
         */
@@ -834,107 +892,104 @@ export default class SincronizeScreen extends React.Component {
             'x-access-token': token,
           },
           body: formData
-        })
-          
+        })  
         let responseJson = await response.json();
 
-        // console.log(`RESPONSE JSON: ${JSON.stringify(responseJson)}`)       
+        /* let msg = {
+          method: 'POST',
+          headers: {
+            "Content-Type": "multipart/form-data",
+            'x-access-token': token,
+          },
+          body: JSON.stringify(formData),
+        };
+        console.log(`===================================================`)
+        console.log(`MESSAGE: url: ${url} \n ${JSON.stringify(msg)}`) 
+        console.log(`---------------------------------------------------`)
+        console.log(`RESPONSE: ${JSON.stringify(responseJson)} \n`) */      
 
         /* 
-          Si el token esta vencido, consigo otro.
+          Si el WS devuelve un Object con el campo returnset, significa que
+          hubo un error. Puede que sea que el token esta vencido.
         */
-        if(responseJson.returnset && responseJson.returnset[0].RTxt === "Token inválido") {
-          console.info('\x1b[47m\x1b[30mSe vención el token. Se obtendrá uno nuevo\x1b[0m\x1b[40m');
-          delete this.state.token;
-          await executeSQL('delete from Configuration where key = ?', ["TOKEN"])
-          return uploadImageToServer(url, answer) //invoco nuevamente el metodo, ahora con el nuevo token
+        if(responseJson.returnset){
+          if(responseJson.returnset[0].RTxt === "Token inválido") {
+            console.info('\x1b[47m\x1b[30mSe vención el token. Se obtendrá uno nuevo\x1b[0m\x1b[40m');
+            delete this.state.token;
+            await executeSQL('delete from Configuration where key = ?', ["TOKEN"])
+            return uploadImageToServer(url, answer) //invoco nuevamente el metodo, ahora con el nuevo token
+          } else {
+            return reject("No se pudo subir la imagen")
+          }
         }
-
-        if(responseJson.returnset && responseJson.returnset[0].RCode && responseJson.returnset[0].RCode != 1) {
-          console.info(`Falló la consulta al WS subiendo imagen. Devolvió ${JSON.stringify(responseJson)}`)
-          return reject(`Falló la consulta al WS`)
-        }
-
+        
         return resolve(responseJson);
 
       } catch (error) {
-        console.error('Error:', error);
+        console.log('Error:', error);
         reject(error)
       }    
     })
   }
 
-  async uploadImage(from) {
+  async uploadSingleImage(answer) {
+    /* 
+      1. Subo las imagenes y obtengo el path interno
+      2. Asigno el relevamiento a la imagen y obtengo la URL de la imagen 
+      3. Actualizo el campo img_url del relevamiento y la marco como sincronizada
+
+      Si alguna de estas partes falla, todo el paso a paso debería hacerse nuevamente.
+    */
+
+    // 1. Subo las imagenes y obtengo el path interno
+    return this.uploadImageToServer(answer)
+      .then(localPath => {
+        // 2. Asigno el relevamiento a la imagen y obtengo la URL de la imagen
+        let url = this.url + AppConstants.WS_IMAGE_LINKING;
+        let body = {id_movil: this.encodeID(answer.id), url_imagen: localPath};
+        return this.getFromWS(url, body);
+      })
+      .then(urlPath => {
+        urlPath = urlPath.returnset[0].RTxt
+        // 3. Actualizo el campo img_url del relevamiento y la marco como sincronizada
+        return executeSQL(`update Answer set img_url = ?, img_val_change = ? where id = ?`, [urlPath, 0, answer.id])
+      })
+      .catch(err => {
+        throw new Error(err)
+      })
+  }
+
+  async uploadImage() {
     return new Promise(async (resolve, reject) => {
       /* 
         1. Obtengo los relevamientos con imagenes para subir
-        2. Subo las imagenes y obtengo el path interno
-        3. Asigno el relevamiento a la imagen y obtengo la URL de la imagen 
-        4. Actualizo el campo img_url del relevamiento y la marco como sincronizada
+        2. Subo las imágenes de a una y controlo que se suba correctamente
       */
-
-      let surveys = [];
-      let imgLinks = [];
 
       // 1. Obtengo los relevamientos con imagenes para subir
       executeSQL(`select id, img_val, activity_id, itemActType_id from Answer where img_val_change = 1`, [])
         .then(async (answers) => {
+          let count = {ok: 0, error: 0}
+
           if(answers.length == 0) {
-            return resolve(0)
+            return resolve(count)
           }
-          surveys = answers;
-          return answers;
-        })
-        .then(answers => {
-          // 2. Subo las imagenes y obtengo el path interno
-          let promises = answers.map((answer) => {
-            return this.uploadImageToServer(answer)
+          // 2. Subo las imágenes de a una y controlo que se suba correctamente
+          answers.forEach((answer, index) => {
+            this.uploadSingleImage(answer)
+              .then(() => {
+                count.ok += 1;
+              })
+              .catch(() => {
+                count.error += 1;               
+              })
+              .finally(() => {
+                if((count.ok + count.error) == answers.length) {
+                  resolve(count)
+                }
+              })
           })
-          return Promise.all(promises)
-        })
-        .then(paths => {
-          // 3. Asigno el relevamiento a la imagen y obtengo la URL de la imagen 
-          let url = this.url + AppConstants.WS_IMAGE_LINKING;
-
-          // console.log(`PATHS ${JSON.stringify(paths)}`)
-
-          let bodies = paths.map((path, index) => {
-            return {id_movil: this.encodeID(surveys[index].id), url_imagen: path}
-          });
-
-          imgLinks = bodies;
-
-          let promises = bodies.map(body => {
-            return this.getFromWS(url, body)
-          });
-
-          return Promise.all(promises)
-        })
-        .then(urls => {
-          // 4. Actualizo el campo img_url del relevamiento y la marco como sincronizada
-          global.DB.transaction(tx => {
-              for(i=0; i<urls.length; i++){ 
-                let id = this.decodeID(imgLinks[i].id_movil);
-
-                tx.executeSql(
-                  ` update Answer set img_url = ?, img_val_change = ? where id = ?`,
-                  [urls[i], 0, id],
-                  (_, rows) => {},
-                  (_, err) => {
-                    throw new Error(`Fallo en una sentencia de la transacción. Answer : ${id}`);
-                  }
-                )
-              }
-
-            },
-            err => {
-              //console.error(`ERROR en la transaccion de uploadAll${err}`)
-              throw new Error(`ERROR en una de las transacción ${err}`)
-            },
-            () => {
-              resolve(surveys.length)
-            }
-          ) 
+        
         })
         .catch(err => {
           reject(err)

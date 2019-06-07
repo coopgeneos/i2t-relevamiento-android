@@ -142,6 +142,40 @@ export function executeSQL(sql, params){
   })
 }
 
+export function executeSQLUPSERT(insertSQL, insertParams, updateSQL, updateParams){
+  return new Promise(async function(resolve, reject) {
+    let error_msg = ""
+    global.DB.transaction(
+      tx => {
+        tx.executeSql(
+          insertSQL,
+          insertParams,
+          (_, { rows }) => {
+            resolve(rows._array);
+          },
+          (_tx, err) => {
+            if(err.toString().includes("code 2067")){
+              console.log("Fallo al insertar y se va actualizar el registro", err)
+              _tx.executeSql(
+                updateSQL,
+                updateParams,
+                (_, { rows }) => {
+                  resolve(rows._array)
+                },
+                (_, err) => {
+                  console.log("Fallo el UPSERT: Fallo al actualizar", err)
+                  reject(err)
+                }
+              )
+            }
+          }
+        )
+      }
+    );
+  })
+}
+
+
 export async function getLocationAsync(){
   return new Promise(async function(resolve, reject) {
     try {

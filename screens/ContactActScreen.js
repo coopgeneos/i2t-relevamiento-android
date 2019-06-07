@@ -7,7 +7,7 @@ import { StyleSheet, View, Alert, BackHandler} from 'react-native';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
-import { formatDateTo, executeSQL } from '../utilities/utils';
+import { formatDateTo, executeSQL, showDB } from '../utilities/utils';
 import AppConstans from '../constants/constants';
 
 export default class ContactActScreen extends React.Component {
@@ -54,7 +54,8 @@ export default class ContactActScreen extends React.Component {
       global.DB.transaction(tx => {
         tx.executeSql(
           ` select * 
-            from ActivityType ate ;`,
+            from ActivityType ate 
+            where ate.state = 0;`,
           [],
           (_, { rows }) => {
             var tableHead = ['Actividad', ''];
@@ -129,7 +130,7 @@ export default class ContactActScreen extends React.Component {
           activityType.uuid, 
           this.contact.id,
           this.contact.uuid, 
-          activityType.description+' en '+this.contact.name,
+          activityType.short_name+' en '+this.contact.name,
           activityType.description, 
           AppConstans.ACTIVITY_PRIORITY_LOW, 
           now, 

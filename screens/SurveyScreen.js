@@ -91,16 +91,18 @@ export default class SurveyScreen extends React.Component {
           inner join ItemActType iat on (iat.activityType_id = act.activityType_id) 
           inner join Contact c on (c.id = act.contact_id) 
           left join Answer a on (act.id = a.activity_id and iat.id = a.itemActType_id) 
-          where act.id = ? 
-          order by iat.position
+          where act.id = ? and iat.state = 0 
+          order by iat.position 
           --group by act.id, iat.id `,
         [this.activity.id],
         (_, { rows }) => {
+          this.state.cardsData = rows._array;
+          this.state.seg_max = rows._array.length + 1;
           this.loadCards(rows._array, true)
-          this.setState ({
+          /* this.setState ({
             cardsData: rows._array,
             seg_max: rows._array.length + 1
-          });
+          }); */
         },
         (_, err) => {
           console.error(`ERROR consultando DB: ${err}`)
@@ -125,7 +127,7 @@ export default class SurveyScreen extends React.Component {
     var answers = this.state.answers;
     
     //si la activity esta cerrada, desactivo el button de grabar
-    if (data[0].status === AppConstans.ACTIVITY_COMPLETED){
+    if (data.length > 0 && data[0].status === AppConstans.ACTIVITY_COMPLETED){
       this.setState ({
         buttonSaveEnable: true
       });
@@ -144,11 +146,10 @@ export default class SurveyScreen extends React.Component {
       var item = data[i];
       var activity_id = item.activity_id.toString();
       var itemActType_id = item.itemActType_id.toString();
-      var requerido = null;
-            
+      var requerido = null;      
                   
       if(firstTime){
-        if(item.img_val){
+        if(item.img_val){       
           var name = '';
           name = 'temp_' + activity_id + '_' + itemActType_id;
           FileSystem.writeAsStringAsync(`${AppConstants.TMP_FOLDER}/${name}.jpg`, item.img_val, {encoding: FileSystem.EncodingTypes.Base64})
@@ -174,11 +175,13 @@ export default class SurveyScreen extends React.Component {
           img_condition: item.img_condition != null ? item.img_condition : 1,
           number_val: item.number_val,         
           latitude: item.latitude,
-          longitude: item.longitude  
+          longitude: item.longitude,
+          initial_value: item.text_val 
         }
         answers.push(answer);
 
       }
+
       if(item.type === AppConstans.ITEM_TYPE_CHOICE || item.type === AppConstans.ITEM_TYPE_CHOICE_MULT) {
         card = await this.buildListCard(item.description, answers[i])
           .catch(err => {
@@ -199,7 +202,7 @@ export default class SurveyScreen extends React.Component {
         card = this.buildDateCard(item.description, answers[i])
           
       } else {
-        this.setState({ notes: item.text_val });
+        //this.setState({ notes: item.text_val });
         card = this.buildTextCard(item.description, answers[i])      
       }
       cards.push(card);
@@ -210,8 +213,9 @@ export default class SurveyScreen extends React.Component {
       answers: answers
     });
 
-  }
+    // console.log("loadCards \n", cards, answer)
 
+  }
 
   showAlert = () => {
     this.setState({
@@ -477,13 +481,14 @@ export default class SurveyScreen extends React.Component {
               console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
             })
         }
+
         let position = await getLocationAsync()
           .catch(err => {
             throw new Error("Error obteniendo la posición del dispositivo")
           })
-        
+
         let sql = '';
-        let text_val = answer.text_val ? `'${answer.text_val}'` : null;
+        let text_val = (answer.text_val && answer.text_val != "") ? `'${answer.text_val}'` : null;
         if(answer.id){
           let upd_img = '';
           if(answer.img_val_change == 1){
@@ -523,9 +528,13 @@ export default class SurveyScreen extends React.Component {
           tx.executeSql(
             sql,
             [],
-            (_, { rows }) => {},
+            (_, { rows }) => {
+              this.state.seg += 1;
+              this.loadData()
+            },
             (_, err) => {
               console.error(`ERROR consultando DB: ${err}`)
+              throw new Error("Error guardando la respuesta en la base")
             }
           );
           tx.executeSql(
@@ -553,21 +562,23 @@ export default class SurveyScreen extends React.Component {
               formatDateTo(new Date(), 'YYYY/MM/DD HH:mm:ss'),
               answer.activity_id
             ],
-            (_, { rows }) => {},
+            (_, { rows }) => {
+              // showDB(["Activity","Answer"])
+            },
             (_, err) => {
               console.error(`ERROR consultando DB: ${err}`)
+              throw new Error("Error actualizando la actividad")
             }
           );
         });
+      } else {
+        this.setState(prevState => ({seg: prevState.seg + 1}))
       }
     
       if ((this.state.seg) === this.state.seg_max-1){
         this.loadResumen(this.state.cardsData);
       }
-
-      this.setState(prevState => ({seg: prevState.seg + 1}))
-
-      //this.loadData();
+      
     } catch(error) {
       ToastAndroid.showWithGravityAndOffset(
         'No se pudieron guardar los cambios',
@@ -584,9 +595,10 @@ export default class SurveyScreen extends React.Component {
       this.loadResumen(this.state.cardsData);
     }
 
-    this.setState(prevState => ({seg: prevState.seg + 1}))
+    //this.setState(prevState => ({seg: prevState.seg + 1}))
+    this.state.seg += 1;
 
-    //this.loadData();
+    this.loadData();
   }
 
 
@@ -698,10 +710,8 @@ export default class SurveyScreen extends React.Component {
 
   
   handleChange(event) {
-    var answers = this.state.answers;
-    answers[this.state.seg - 1].text_val = event;
-    this.setState({ answers: answers});
-    this.loadCards(this.state.cardsData, false);
+    this.state.answers[this.state.seg - 1].text_val = event;
+    //this.loadCards(this.state.cardsData, false);
   }  
 
   handleNumberChange(event){
@@ -713,7 +723,7 @@ export default class SurveyScreen extends React.Component {
   
   buildTextCard(title, answer) {
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-
+    // console.log("buildTextCard", answer)
     return {
       text: title,
       info: <View>
@@ -860,7 +870,8 @@ export default class SurveyScreen extends React.Component {
         tx.executeSql(
           ` select * 
             from ListItemAct 
-            where reference = (select reference from ItemActType where id = ?)`,
+            where reference = (select reference from ItemActType where id = ?)
+            and state = 0`,
           [answer.itemActType_id],
           (_, { rows }) => {
             var r = rows._array;
@@ -939,7 +950,12 @@ export default class SurveyScreen extends React.Component {
                     <Button
                       last
                       active={this.state.seg === 1 ? false : true}
-                      onPress={() => this.setState(prevState => ({seg: prevState.seg - 1}))}
+                      onPress={() => {
+                          //this.setState(prevState => ({seg: prevState.seg - 1}));
+                          this.state.seg -= 1;
+                          this.loadData();
+                        }
+                      }
                       disabled={this.state.seg === 1 ? true : false}
                     >
                       <Icon name="arrow-circle-left" />

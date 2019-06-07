@@ -222,7 +222,7 @@ export default class ContactsScreen extends React.Component {
                     {data.address} - {data.city} - {data.zipCode}
                   </Text>
                   <Text numberOfLines={1} note>
-                    {data.event}
+                    {data.description}
                   </Text>
                 </Body>
                 <Right>
