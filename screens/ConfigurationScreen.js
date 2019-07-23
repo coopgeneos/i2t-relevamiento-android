@@ -1,12 +1,15 @@
 import React from 'react';
 import { Container, Content, Text, Button, Form, Item, Label } from 'native-base';
-import {StyleSheet, TextInput, ToastAndroid, Modal, View, BackHandler} from 'react-native';
+import {StyleSheet, TextInput, ToastAndroid, Modal, View, BackHandler } from 'react-native';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
+import AwesomeAlert from 'react-native-awesome-alerts';
 
 import ValidationComponent from 'react-native-form-validator';
-import { formatDateTo } from '../utilities/utils';
-
+import { formatDateTo, getConfiguration } from '../utilities/utils';
+import { sendPostTo } from '../utilities/ws_utils';
+import AppConstants from '../constants/constants';
+import { executeSQL, encodeID, decodeID, showDB, exportDB } from '../utilities/sql_utils';
 
 
 export default class ConfigurationScreen extends ValidationComponent {
@@ -30,6 +33,8 @@ export default class ConfigurationScreen extends ValidationComponent {
       showToast: false,
       modalVisible: false,
       error_msg: '',
+      showAlert: false,
+      mensaje: '¿Esta seguro que desea depurar la aplicación? \n Si continúa se perderá la información no sincronizada.'
     };
 
   this._didFocusSubscription = props.navigation.addListener('didFocus', payload =>
@@ -274,6 +279,96 @@ export default class ConfigurationScreen extends ValidationComponent {
     this.props.navigation.goBack()
   }
 
+  async depurar() {
+    try {
+      // Consulto al WS los ultimos IDs
+      let url = await getConfiguration('URL_BACKEND');
+      let username = await getConfiguration('USER_BACKEND');
+      url += AppConstants.WS_LAST_IDS;
+      let body = {
+        usuario: username,
+        FechaDesde: "",
+        Otros: ""
+      }
+      let response = await sendPostTo(url, body);
+
+      console.log("Dpuracion", JSON.stringify(response))
+      
+      // Borro todos lo registros no sincronizados
+      let from = global.context.user.lastSync;
+      await executeSQL("delete from Answer where updated > ?",[from]);
+      await executeSQL("delete from Activity where updated > ?",[from]);
+
+      // Seteo el seq en la secuencia
+      let last_task = response.dataset[0].ult_task;
+      let last_answer = response.dataset[0].ult_rel;
+      await this.updateSequence('Activity', last_task + 1);
+      await this.updateSequence('Answer', last_answer + 1);
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async updateSequence(name, value) {
+    try {
+      let rows = await executeSQL("select seq from sqlite_sequence where name = ?", [name]);
+      if(rows && rows.length > 0) {
+        await executeSQL("update sqlite_sequence set seq=? where name = ?;", [value, name]);
+      } else {
+        await executeSQL("insert into sqlite_sequence(name,seq) values (?, ?)", [name, value]);
+      }
+    } catch(error) {
+      throw error;
+    }
+  }
+
+  showAlert() {
+    this.setState({
+      showAlert: true
+    });
+  };
+
+  hideAlert() {
+    this.setState({
+      showAlert: false
+    });
+  };
+
+  async ConfirmAlert() {
+    try {
+      await this.depurar();
+
+      ToastAndroid.showWithGravityAndOffset(
+        'Se depuró correctamente.',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+
+      this.hideAlert();
+
+    } catch(error) {
+      console.log("Error durante la depuracion", error);
+      ToastAndroid.showWithGravityAndOffset(
+        `Hubo un error durante la depuración.
+        ${error}`,
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+    }
+  };
+
+  isUserDebug() {
+    return this.state.user_backend == 'i2tdebug';
+  }
+
+  async extraerDB() {
+    exportDB();
+  }
+
   render() {
     const { navigation } = this.props;
 
@@ -401,13 +496,44 @@ export default class ConfigurationScreen extends ValidationComponent {
             />
           </Item>
         </Form>
-        <Button block style={{ margin: 15, marginTop: 50, marginBottom: 80 }}
+        <Button block style={{ margin: 15, marginTop: 50, marginBottom: 10 }}
                 onPress={()=>{this.setParameters()}}>
           <Text>Guardar</Text>
         </Button>
-
+        <Button block style={{ margin: 15, marginTop: 10, marginBottom: 10 }}
+                onPress={()=>{this.showAlert()}} disabled={this.state.showAlert}>
+          <Text>Depurar</Text>
+        </Button>
+        
+        { 
+          this.isUserDebug() ?  <Button block style={{ margin: 15, marginTop: 10, marginBottom: 10 }} 
+                                  onPress={()=>{this.extraerDB()}}>
+                                  <Text>Descargar base</Text>
+                                </Button> : null
+        }
 
         </Content>
+
+        <AwesomeAlert
+          show={this.state.showAlert}
+          showProgress={false}
+          title="Atención!"
+          message={this.state.mensaje}
+          closeOnTouchOutside={true}
+          closeOnHardwareBackPress={false}
+          showCancelButton={true}
+          showConfirmButton={true}
+          cancelText="Cancelar"
+          confirmText="Confirmar"
+          confirmButtonColor="#DD6B55"
+          onCancelPressed={() => {
+            this.hideAlert();
+          }}
+          onConfirmPressed={() => {
+            this.ConfirmAlert();
+          }}
+        />
+
         {/*<FooterNavBar navigation={this.props.navigation} />*/}
       </Container>
     );

@@ -37,6 +37,6 @@ export default {
   WS_ACTIVITY_UPLOAD: '/api/proc/tasksINS',
   WS_ANSWER_UPLOAD: '/api/proc/relevamientoINS',
   WS_IMAGE_UPLOAD: '/api/imagenes/attachments',
-  WS_IMAGE_LINKING: '/api/proc/actualizarURLImagenUPD'
-  
+  WS_IMAGE_LINKING: '/api/proc/actualizarURLImagenUPD',
+  WS_LAST_IDS: '/api/proc/ExtraeNumeradores'
 }

@@ -5,7 +5,7 @@ import { Container, Content, Text, Button, Spinner, CheckBox,
           ListItem, Radio, Segment, Textarea, Form, Item, Input, DatePicker} from 'native-base';
 
 import {StyleSheet, Image, View, Alert, BackHandler, ToastAndroid, DatePickerAndroid } from 'react-native';
-import { ImagePicker, Permissions, FileSystem } from 'expo';
+import { ImagePicker, Permissions, FileSystem, MediaLibrary } from 'expo';
 import FooterNavBar from '../components/FooterNavBar';
 import HeaderNavBar from '../components/HeaderNavBar';
 import AppConstants from '../constants/constants'
@@ -99,10 +99,6 @@ export default class SurveyScreen extends React.Component {
           this.state.cardsData = rows._array;
           this.state.seg_max = rows._array.length + 1;
           this.loadCards(rows._array, true)
-          /* this.setState ({
-            cardsData: rows._array,
-            seg_max: rows._array.length + 1
-          }); */
         },
         (_, err) => {
           console.error(`ERROR consultando DB: ${err}`)
@@ -128,9 +124,7 @@ export default class SurveyScreen extends React.Component {
     
     //si la activity esta cerrada, desactivo el button de grabar
     if (data.length > 0 && data[0].status === AppConstans.ACTIVITY_COMPLETED){
-      this.setState ({
-        buttonSaveEnable: true
-      });
+      this.state.buttonSaveEnable = true;
     }   
         
     /*Si es la primera vez que entro (cuando creo la vista), 
@@ -194,15 +188,12 @@ export default class SurveyScreen extends React.Component {
         card = this.buildImageCard(item.description, answers[i])
         
       } else if(item.type === AppConstans.ITEM_TYPE_NUMBER) {
-        //this.setState({ number: item.number_val });
         card = this.buildNumberCard(item.description, answers[i])
           
       } else if(item.type === AppConstans.ITEM_TYPE_DATE) {
-        //this.setState({ number: item.number_val });
         card = this.buildDateCard(item.description, answers[i])
           
       } else {
-        //this.setState({ notes: item.text_val });
         card = this.buildTextCard(item.description, answers[i])      
       }
       cards.push(card);
@@ -212,9 +203,6 @@ export default class SurveyScreen extends React.Component {
       cards: cards,
       answers: answers
     });
-
-    // console.log("loadCards \n", cards, answer)
-
   }
 
   showAlert = () => {
@@ -274,10 +262,8 @@ export default class SurveyScreen extends React.Component {
 
     var mensaje = `CONSIGNAS REQUERIDAS COMPLETAS: ${this.state.completas}\nCONSIGNAS REQUERIDAS PENDIENTES: ${this.state.pendientes}\nCONSIGNAS OPCIONALES COMPLETAS: ${this.state.completas_norequired}\nCONSIGNAS OPCIONALES PENDIENTES: ${this.state.pendientes_norequired}`;
 
-    this.setState({
-      mensaje: mensaje
-    });
-
+    this.state.mensaje = mensaje;
+  
     /* if (this.state.pendientes === 0){
       this.setState({
         showButtonConfirm: true
@@ -289,10 +275,9 @@ export default class SurveyScreen extends React.Component {
     } */
 
     //Siempre muestro el boton para poder poner la actividad en estado pendiente
-    this.setState({ showButtonConfirm: true }); 
+    this.state.showButtonConfirm = true; 
 
     this.showAlert();
-    //this.loadData();
   }
 
 
@@ -375,6 +360,23 @@ export default class SurveyScreen extends React.Component {
     }
   }
 
+  async saveToAlbum(uri) {
+    try {
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      let album = await MediaLibrary.getAlbumAsync("Relevamiento")
+      // Si no existe el album lo creo
+      if(album == null) {
+        album = await MediaLibrary.createAlbumAsync("Relevamiento", asset, true)
+      } else {
+        // Si ya existía, solo guardo la imagen en el album
+        const assets = [asset];
+        MediaLibrary.addAssetsToAlbumAsync(assets, album, true)
+      }
+    } catch(error) {
+      console.log("Error creando album", error)
+    }
+  }
+
   async pickImage(takePhoto) {
     try {
       let permissions = await this.grantPermissions();
@@ -426,7 +428,7 @@ export default class SurveyScreen extends React.Component {
     try{
       let answer = this.state.answers[this.state.seg - 1];
 
-      // console.log(`ANSWER: ${JSON.stringify(answer)}`)
+      console.log(`ANSWER: ${JSON.stringify(answer)}`)
 
       /*
         Si el campo númerico viene con valor "", lo traduzco en null
@@ -466,6 +468,11 @@ export default class SurveyScreen extends React.Component {
         answer.img_condition = 0;
       }
 
+      if ((answer.type === AppConstans.ITEM_TYPE_CHARACTER || answer.type === AppConstans.ITEM_TYPE_TEXT) 
+        && this.detectSQLInjections(answer.text_val)) {
+        throw 'El texto ingresado no puede contener \',%,",--,;';
+      }
+
       /*
         Solo se crea una respuesta si la imagen, el texto o el numero vienen con algo.
         Si la respuesta ya tiene id (ya existia de antes), se actualiza.
@@ -480,6 +487,9 @@ export default class SurveyScreen extends React.Component {
             .catch(err => {
               console.log(`ERROR LEYENDO COMO BASE 64: ${err}`);
             })
+
+            //Guardo la imagen en el album
+            this.saveToAlbum(answer.img_val);
         }
 
         let position = await getLocationAsync()
@@ -581,7 +591,7 @@ export default class SurveyScreen extends React.Component {
       
     } catch(error) {
       ToastAndroid.showWithGravityAndOffset(
-        'No se pudieron guardar los cambios',
+        'No se pudieron guardar los cambios, ' + error,
         ToastAndroid.SHORT,
         ToastAndroid.BOTTOM,
         25,
@@ -595,12 +605,29 @@ export default class SurveyScreen extends React.Component {
       this.loadResumen(this.state.cardsData);
     }
 
-    //this.setState(prevState => ({seg: prevState.seg + 1}))
     this.state.seg += 1;
 
-    this.loadData();
+    // Hago loadCards para evitar ele error si se da muchas veces seguidas omitir
+    this.loadCards(this.state.cardsData, false);
   }
 
+  detectSQLInjections(text) {
+    let dangerous = [
+      /[;'%"]/,
+      /drop table/i,
+      /alter table/i,
+      /insert into/i,
+      /--/,
+    ];
+
+    let found = dangerous.find(filter => {
+      return text.match(filter) != null;
+    });
+
+    if(found)
+      return true;
+    return false;
+  }
 
   buildImageCard(title, answer) {
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
@@ -650,33 +677,34 @@ export default class SurveyScreen extends React.Component {
               />
               <Text style={{marginLeft: 10}}> Ingresa Imagen</Text>
             </View>         
-            {answer.img_condition == 1 ?               
+                          
               <View>
-              <Text style={ style_status_answer_req } > {title} </Text>
-              <CardItem>
-                <Left>
-                  <Image style={{width: 150, height: 150}} 
-                    source={{ uri: answer.img_val ? answer.img_val : AppConstants.PHOTO_DEFAULT }} />
-                </Left>
-                <Body></Body>
-                <Right>
-                  <Button 
-                    transparent 
-                    onPress={() => this.pickImage(true)}
-                    disabled={this.state.buttonSaveEnable}
-                  >
-                    <Icon name='camera' style={{fontSize: 26, color:'#F08377'}}/>
-                  </Button>
-                  <Button 
-                    transparent 
-                    onPress={() => {this.pickImage(false)}}
-                    disabled={this.state.buttonSaveEnable}
-                  >
-                    <Icon name='folder' style={{fontSize: 26, color:'#F08377'}}/>
-                  </Button>
-                </Right>
-              </CardItem>
-              </View> : null}
+                <Text style={ style_status_answer_req } > {title} </Text>
+                {answer.img_condition == 1 ? 
+                <CardItem>
+                  <Left>
+                    <Image style={{width: 150, height: 150}} 
+                      source={{ uri: answer.img_val ? answer.img_val : AppConstants.PHOTO_DEFAULT }} />
+                  </Left>
+                  <Body></Body>
+                  <Right>
+                    <Button 
+                      transparent 
+                      onPress={() => this.pickImage(true)}
+                      disabled={this.state.buttonSaveEnable}
+                    >
+                      <Icon name='camera' style={{fontSize: 26, color:'#F08377'}}/>
+                    </Button>
+                    <Button 
+                      transparent 
+                      onPress={() => {this.pickImage(false)}}
+                      disabled={this.state.buttonSaveEnable}
+                    >
+                      <Icon name='folder' style={{fontSize: 26, color:'#F08377'}}/>
+                    </Button>
+                  </Right>
+                </CardItem> : null}
+              </View> 
 
 
             </View>
@@ -717,7 +745,7 @@ export default class SurveyScreen extends React.Component {
   handleNumberChange(event){
     var answers = this.state.answers;
     answers[this.state.seg - 1].number_val = event;
-    this.setState({ answers: answers});
+    this.state.answers = answers;
     this.loadCards(this.state.cardsData, false);
   }
   
@@ -863,7 +891,6 @@ export default class SurveyScreen extends React.Component {
 
   buildListCard(title, answer) {
     style_status_answer_req = { height: 30, fontSize: 18, textAlign: 'auto', backgroundColor: '#65727B', color: '#FFF', paddingLeft: 15, borderLeftWidth: 1 };
-
     return new Promise(async (resolve, reject) => {
       let listItems = [];
       global.DB.transaction(tx => {
@@ -951,7 +978,6 @@ export default class SurveyScreen extends React.Component {
                       last
                       active={this.state.seg === 1 ? false : true}
                       onPress={() => {
-                          //this.setState(prevState => ({seg: prevState.seg - 1}));
                           this.state.seg -= 1;
                           this.loadData();
                         }

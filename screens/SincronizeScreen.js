@@ -106,7 +106,7 @@ export default class SincronizeScreen extends React.Component {
         if(this.state.token != null){
           return resolve(this.state.token);
         }
-        // console.log("Credenciales para login: ",this.username, this.password)
+        // console.log("Credenciales para login: ",this.url + AppConstants.WS_LOGIN, this.username, this.password)
         let response = await fetch(this.url + AppConstants.WS_LOGIN, {
           method: 'POST',
           headers: {
@@ -116,7 +116,7 @@ export default class SincronizeScreen extends React.Component {
           body: JSON.stringify({ usuario: this.username, pass: this.password}),
         });
         let responseJson = await response.json();
-      
+        // console.log("Login Response:", responseJson)
         if(responseJson.returnset[0].RCode != 1) {
           return reject(`El par usuario y contraseña no es correcto`)
         }

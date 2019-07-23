@@ -60,10 +60,10 @@ export default class ContactsScreen extends React.Component {
 
   getContacts(nears, name) {
     return new Promise((resolve, reject) => {
-      let sql = `select * from Contact where state != 1 order by name;`
+      let sql = `select * from Contact where state != 1 order by name limit 25;`
 
       if(name) {
-        sql = `select * from Contact where state != 1 and name like '%${name}%' order by name;`
+        sql = `select * from Contact where state != 1 and name like '%${name}%' order by name limit 25;`
       } 
 
       global.DB.transaction(tx => {
@@ -218,10 +218,10 @@ export default class ContactsScreen extends React.Component {
                   <Text>
                     {data.name}
                   </Text>
-                  <Text numberOfLines={2} note>
+                  <Text numberOfLines={1} note>
                     {data.address} - {data.city} - {data.zipCode}
                   </Text>
-                  <Text numberOfLines={1} note>
+                  <Text numberOfLines={5} note>
                     {data.description}
                   </Text>
                 </Body>

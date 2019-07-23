@@ -4,6 +4,8 @@ import { Container, Header, Content, Icon, Text, Button, Item,
 import {formatDate, formatDatePrint, getLocationAsync, getConfiguration} from '../utilities/utils';
 import { Grid, Row, Col } from "react-native-easy-grid";
 import { Image } from 'react-native';
+import Constants from 'expo-constants';
+import { showDB } from  '../utilities/sql_utils'
 
 import { TouchableHighlight, Modal, View, PermissionsAndroid, Platform } from 'react-native';
 
@@ -148,6 +150,15 @@ export default class HomeScreen extends React.Component {
                             Pendientes de Sincronización 
                           </Text>
                           <Text note>[{this.state.user.pendingSyncs}] Relevamientos</Text>
+                        </Body>
+                      </Left>
+                    </CardItem>
+                    <CardItem>
+                      <Left>
+                        <Icon active name="info" style={{ color: '#65727B', width: '5%'}} />
+                        <Body>
+                          <Text>Version</Text>
+                          <Text note>{Constants.manifest.version}</Text>
                         </Body>
                       </Left>
                     </CardItem>

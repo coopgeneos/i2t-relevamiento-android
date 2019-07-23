@@ -65,8 +65,8 @@ export default class ScheduleScreen extends React.Component {
                   from Activity a 
                   inner join ActivityType actt on (actt.id = a.activityType_id)
                   inner join Contact c on (c.id = a.contact_id)
-                  where a.status != '${AppConstans.ACTIVITY_COMPLETED}' 
-                  and a.state != 1
+                  where a.state != 1 
+                  and a.status NOT IN ('${AppConstans.ACTIVITY_CANCELED}', '${AppConstans.ACTIVITY_COMPLETED}')
                 `;
 
       if(dateFilter) {
