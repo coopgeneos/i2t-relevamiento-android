@@ -428,7 +428,7 @@ export default class SurveyScreen extends React.Component {
     try{
       let answer = this.state.answers[this.state.seg - 1];
 
-      console.log(`ANSWER: ${JSON.stringify(answer)}`)
+      // console.log(`ANSWER: ${JSON.stringify(answer)}`)
 
       /*
         Si el campo númerico viene con valor "", lo traduzco en null
@@ -612,6 +612,9 @@ export default class SurveyScreen extends React.Component {
   }
 
   detectSQLInjections(text) {
+    if(!text)
+      return false;
+
     let dangerous = [
       /[;'%"]/,
       /drop table/i,

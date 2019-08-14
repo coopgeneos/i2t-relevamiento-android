@@ -1,5 +1,5 @@
 import { CameraRoll } from 'react-native';
-import { MediaLibrary } from 'expo';
+import { MediaLibrary, FileSystem } from 'expo';
 
 export function executeSQL(sql, params){
   return new Promise(async function(resolve, reject) {
@@ -87,17 +87,19 @@ export async function decodeID(id) {
 export async function exportDB() {
   try {
     /* La exportación la hago llevando la base al album */
-    const asset = await MediaLibrary.createAssetAsync(`${Expo.FileSystem.documentDirectory}SQLite/relevamiento.db`);
-    let album = await MediaLibrary.getAlbumAsync("Relevamiento")
+    const asset = await MediaLibrary.createAssetAsync(`${FileSystem.documentDirectory}SQLite/relevamiento.db`);
+    let album = await MediaLibrary.getAlbumAsync("Relevamiento");
     // Si no existe el album lo creo
     if(album == null) {
       album = await MediaLibrary.createAlbumAsync("Relevamiento", asset, true)
     } else {
-      // Si ya existía, solo guardo la imagen en el album
+      // Si ya existía, solo guardo la base en el album
       const assets = [asset];
-      MediaLibrary.addAssetsToAlbumAsync(assets, album, true)
+      MediaLibrary.addAssetsToAlbumAsync(assets, album, true);
     }
+    return "La base se exportó en el albúm Relevamiento";
   } catch(error) {
-    console.log("Error exportando la base:",error)
+    console.log("Error exportando la base:",error);
+    return "Error exportando la base: " + error;
   }     
 }

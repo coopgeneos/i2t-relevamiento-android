@@ -304,6 +304,7 @@ export default class ConfigurationScreen extends ValidationComponent {
       let last_answer = response.dataset[0].ult_rel;
       await this.updateSequence('Activity', last_task + 1);
       await this.updateSequence('Answer', last_answer + 1);
+      await this.resetLastSync();
     } catch (error) {
       throw error
     }
@@ -320,6 +321,14 @@ export default class ConfigurationScreen extends ValidationComponent {
     } catch(error) {
       throw error;
     }
+  }
+
+  async resetLastSync() {
+    let nld = '2000/01/01 00:00:01';
+    executeSQL('update user set lastSync = ?, lastDownload = ?, lastUpload = ?', [nld, nld, nld])
+    global.context.user.lastSync = nld;
+    global.context.user.lastDownload = nld;
+    global.context.user.lastUpload = nld;
   }
 
   showAlert() {
@@ -366,7 +375,14 @@ export default class ConfigurationScreen extends ValidationComponent {
   }
 
   async extraerDB() {
-    exportDB();
+    let msg = await exportDB();
+    ToastAndroid.showWithGravityAndOffset(
+      msg,
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      25,
+      50,
+    );
   }
 
   render() {
